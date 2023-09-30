@@ -20,5 +20,5 @@ body {
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover; /* o puedes usar 'contain' */
-  background-attachment: fixed;
+  background-attachment: fixed, scroll;
 }
