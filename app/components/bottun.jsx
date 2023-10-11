@@ -15,8 +15,14 @@ border-radius: 10px;
 }
 `;
 
-const SquareComponent = ({setHover}) => {
-  return (
+const SquareComponent = ({ img, setMessage}) => {
+    const textMappings = {
+        '/tiempo.png': 'El Tiempo se convierte en dinero cuando se invierte',
+        '/viaje.png': 'El viaje comienza cuando se toma accion',
+        '/deseo.png': 'El deseo',
+        '/construcion.png': 'El entorno '
+      };
+    return (
     <div style={{
       display: 'flex',
       justifyContent: 'center',
@@ -26,24 +32,17 @@ const SquareComponent = ({setHover}) => {
       backgroundColor: 'white',
       color: 'white',
       margin: '0 auto',
-      marginTop:'22%',
+      marginTop:'15%',
       position: "relative",
       border: '2px solid #FFFFFF',
       filter: 'drop-shadow(-1px 4px 4px rgba(0, 0, 0, 0.25))',
       borderRadius: '10px'
     }}>
    
-
-
-
-
-
-
-
-
-<StyledImage src="/tiempo.png" alt="icono tiempo hd" width={100} height={100}
-  onMouseEnter={() => setHover(true)} 
-  onMouseLeave={() => setHover(false)}
+<StyledImage src={img} alt="icono tiempo hd" width={100} height={100}
+  //onMouseEnter={() => {setHover(true); setMessage(textMappings[img])}} 
+  //onMouseLeave={() => {setHover(false);
+ //}}
    />
     </div>
   );

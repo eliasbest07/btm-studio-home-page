@@ -1,41 +1,54 @@
-"use client"
+
 import CircularImage from '../app/components/logo'
 import ScrollComponent from '../app/components/scroll-main'
 import RectangleComponent from '../app/components/rectangulo'
 import SquareComponent from '../app/components/bottun'
-import { useState } from 'react';
+import Navbar from '../app/components/navbar'
+import RectangleImg from '../app/components/cuadroimg'
 
 export default function Home() {
-    const [isHovered, setIsHovered] = useState(false);
+
 
   return (
-    <main className="flex  flex-col items-center justify-between "> 
-    <h1 > BTM Studio</h1>
+    <main className="flex  flex-col items-center justify-between ">
+    <Navbar/>
+   
     <div className="flex">
-    <SquareComponent setHover={setIsHovered} />
+    <SquareComponent   img={'/tiempo.png'} />
     <div  style={{
-      width: '10px',}}>
+      width: '120px',}}>
     </div>
-    <SquareComponent setHover={setIsHovered} />
+    <SquareComponent   img={'/viaje.png'} />
     <div  style={{
-      width: '200px',}}>
+      width: '240px',}}>
     </div>
-    <SquareComponent setHover={setIsHovered} />
+    <SquareComponent   img={'/deseo.png'} />
     <div  style={{
-      width: '10px',}}>
+      width: '120px',}}>
     </div>
-    <SquareComponent setHover={setIsHovered} />
+    <SquareComponent   img={'/construcion.png'} />
 
     </div>
-    <CircularImage src={'/logo.png'} alt={'BTM Studio logo'} />
+    <CircularImage src={'/btmstudio_logo.png'} alt={'BTM Studio logo'} />
     <ScrollComponent/>
     <br/>
     <br/>
     <br/>
 
-    {isHovered && <p style={{ color: 'white', fontSize: '30px' }}>El tiempo se convierte en dinero cuando se invierte</p>}
     <br/>
-    <RectangleComponent left={20} width={560} height={240}/>
+    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <RectangleImg width={285} height={320} img={'/marbel.png'}/>
+        <div
+        style={{ width:'100px' }}
+        >
+
+        </div>
+        <RectangleComponent left={0} width={560} height={260}/>
+    </div>
+    <br/>
+    <br/>
+    <br/>
+    <br/>
     <RectangleComponent left={20} width={460} height={240}/>
     <RectangleComponent left={20} width={560} height={240}/>
     <RectangleComponent left={20} width={460} height={440}/>
