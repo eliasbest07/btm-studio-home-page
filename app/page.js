@@ -37,24 +37,48 @@ export default function Home() {
 
     <br/>
     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <RectangleImg width={285} height={320} img={'/marbel.png'}/>
+        <RectangleImg width={285} height={462} img={'/marbel.png'}/>
         <div
         style={{ width:'100px' }}
         >
 
         </div>
-        <RectangleComponent left={0} width={560} height={260}/>
+        <div>
+            <RectangleComponent children={ <h1 style={{ marginLeft:'10px', marginRight:'10px' ,color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}>Donde algunos vieron dificultad, nosotros vemos oportunidades. Este es el mejor momento para que te descubran, somos tu aliado estratégico.</h1>} color={'rgba(41, 41, 38, 0.6)'}  left={0} width={560} height={260}/>
+            <div
+        style={{ height:'30px' }}
+        >
+
+        </div>
+            <RectangleComponent color={'rgba(158, 158, 149, 0.2)'}  left={0} width={560} height={160}/>
+
+        </div>
+    </div>
+    <br/>
+    <RectangleComponent color={'rgba(158, 158, 149, 0.2)'} left={20} width={860} height={100}/>
+    <br/>
+    <br/>
+    <div style={{ display: 'flex', justifyContent: 'space-between' }}> 
+    <RectangleComponent children={ <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}>Te invitamos a explorar nuestros servicios y descubrir cómo podemos trabajar juntos para convertir los desafíos en éxitos.</h1>} color={'rgba(41, 41, 38, 0.6)'}  left={0} width={560} height={260}/>
+    <div
+        style={{ width:'30px' }}
+        >
+
+        </div>
+    <RectangleImg width={285} height={318} img={'/sea.png'}/>
+
     </div>
     <br/>
     <br/>
     <br/>
-    <br/>
-    <RectangleComponent left={20} width={460} height={240}/>
-    <RectangleComponent left={20} width={560} height={240}/>
-    <RectangleComponent left={20} width={460} height={440}/>
-    <RectangleComponent left={20} width={560} height={440}/>
-    <RectangleComponent left={20} width={460} height={440}/>
-    <RectangleComponent left={20} width={560} height={40}/>
+    <RectangleComponent color={'rgba(158, 158, 149, 0.2)'} left={20} width={460} height={240}/>
+    <RectangleComponent color={'rgba(158, 158, 149, 0.2)'} left={20} width={560} height={240}/>
+    <RectangleComponent color={'rgba(158, 158, 149, 0.2)'} left={20} width={460} height={440}/>
+    <RectangleComponent color={'rgba(158, 158, 149, 0.2)'} left={20} width={560} height={440}/>
+    <RectangleComponent color={'rgba(158, 158, 149, 0.2)'} left={20} width={460} height={440}/>
+    <RectangleComponent color={'rgba(158, 158, 149, 0.2)'} left={20} width={560} height={40}/>
     </main>
   )
 }
+
+
