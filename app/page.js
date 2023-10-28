@@ -102,8 +102,60 @@ export default function Home() {
     <br/>
     <br/>
     <br/>
-    <RectangleComponent color={'rgba(158, 158, 149, 0.2)'} left={20} width={460} height={240}>
-    <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}>En construcción </h1>
+    <RectangleComponent color={'rgba(41, 41, 38, 0.6)'} left={20} width={460} height={240}>
+    <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}>Mi empresa solo ofrece servicios
+que enriquezcan a nuestros clientes desde un punto de vista ético</h1>
+    </RectangleComponent>
+
+    <RectangleComponent color={'rgba(41, 41, 38, 0.6)'} left={20} width={460} height={240}>
+    <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}>Solo me rodeo de
+seres humanos que estimulen mi alegría, que me den paz y me animen a ser
+un hombre mejor</h1>
+    </RectangleComponent>
+    
+    <RectangleComponent color={'rgba(41, 41, 38, 0.6)'} left={20} width={460} height={240}>
+    <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}>«Traido a la realidad es mejor que perfecto»</h1>
+    </RectangleComponent>
+
+    <RectangleComponent color={'rgba(41, 41, 38, 0.6)'} left={20} width={460} height={240}>
+    <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}>«El que suda más en la práctica, sangra menos en la guerra».
+</h1>
+    </RectangleComponent>
+    
+    <RectangleComponent color={'rgba(41, 41, 38, 0.6)'} left={20} width={460} height={240}>
+    <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}> «La mayor victoria se consigue en esas horas tempranas de
+la mañana, cuando nadie te mira y mientras todos duermen».</h1>
+    </RectangleComponent>
+
+    <RectangleComponent color={'rgba(41, 41, 38, 0.6)'} left={20} width={460} height={240}>
+    <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}> Cuando esta preparado el alumno aparece el maestro.</h1>
+    </RectangleComponent>
+
+    <RectangleComponent color={'rgba(41, 41, 38, 0.6)'} left={20} width={460} height={240}>
+    <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}> Solo oímos lo que estamos preparados para oír</h1>
+    </RectangleComponent>
+
+    <RectangleComponent color={'rgba(41, 41, 38, 0.6)'} left={20} width={460} height={240}>
+    <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}> «Si
+todo parece estar bajo control, significa que vas muy despacio».</h1>
+    </RectangleComponent>
+
+    <RectangleComponent color={'rgba(41, 41, 38, 0.6)'} left={20} width={460} height={240}>
+    <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}> Quien gana es el que más
+da.</h1>
+    </RectangleComponent>
+
+    <RectangleComponent color={'rgba(41, 41, 38, 0.6)'} left={20} width={460} height={240}>
+    <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}> «Todo cambio es duro al principio, desordenado a la mitad
+y precioso al final».</h1>
+    </RectangleComponent>
+    
+    <RectangleComponent color={'rgba(41, 41, 38, 0.6)'} left={20} width={460} height={240}>
+    <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}> A partir de hoy. Y si lo hacéis, la victoria está garantizada.</h1>
+    </RectangleComponent>
+
+    <RectangleComponent color={'rgba(41, 41, 38, 0.6)'} left={20} width={460} height={240}>
+    <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}> «Al final, todo irá bien. Y si no va todo bien, no es el final»</h1>
     </RectangleComponent>
     <RectangleComponent color={'rgba(158, 158, 149, 0.2)'} left={20} width={560} height={240}/>
     <RectangleComponent color={'rgba(158, 158, 149, 0.2)'} left={20} width={460} height={440}/>
