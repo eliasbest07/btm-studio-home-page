@@ -157,6 +157,45 @@ y precioso al final».</h1>
     <RectangleComponent color={'rgba(41, 41, 38, 0.6)'} left={20} width={460} height={240}>
     <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}> «Al final, todo irá bien. Y si no va todo bien, no es el final»</h1>
     </RectangleComponent>
+    
+    
+    <RectangleComponent color={'rgba(41, 41, 38, 0.6)'} left={20} width={460} height={240}>
+    <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}>«Renuncia a la gota,
+conviértete en el océano»</h1>
+    </RectangleComponent>
+    
+    <RectangleComponent color={'rgba(41, 41, 38, 0.6)'} left={20} width={460} height={240}>
+    <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}>Todos los atletas profesionales tienen entrenadores de alto
+rendimiento</h1>
+    </RectangleComponent>
+    
+    
+    <RectangleComponent color={'rgba(41, 41, 38, 0.6)'} left={20} width={460} height={240}>
+    <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}>«Ninguna idea funciona hasta que la
+llevas a cabo»</h1>
+    </RectangleComponent>
+     
+    <RectangleComponent color={'rgba(41, 41, 38, 0.6)'} left={20} width={460} height={240}>
+    <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}>«Siempre que crees belleza
+a tu alrededor, estás honrando tu propia alma»</h1>
+    </RectangleComponent>
+    
+    <RectangleComponent color={'rgba(41, 41, 38, 0.6)'} left={20} width={460} height={240}>
+    <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}>Todas las sombras de la inseguridad
+se diluyen en el cálido resplandor de la persistencia</h1>
+    </RectangleComponent>
+    
+    <RectangleComponent color={'rgba(41, 41, 38, 0.6)'} left={20} width={460} height={240}>
+    <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}>«Los sueños no se cumplen
+mientras duermes»</h1>
+    </RectangleComponent>
+    
+    <RectangleComponent color={'rgba(41, 41, 38, 0.6)'} left={20} width={460} height={240}>
+    <h1 style={{ color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}> «Todo el
+mundo sueña con ser una leyenda hasta que tiene que trabajar como una»</h1>
+    </RectangleComponent>
+   
+    
     <RectangleComponent color={'rgba(158, 158, 149, 0.2)'} left={20} width={560} height={240}/>
     <RectangleComponent color={'rgba(158, 158, 149, 0.2)'} left={20} width={460} height={440}/>
     <RectangleComponent color={'rgba(158, 158, 149, 0.2)'} left={20} width={560} height={440}/>
