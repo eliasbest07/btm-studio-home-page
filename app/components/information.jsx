@@ -13,7 +13,7 @@ export default function Information() {
             <div className="space-y-2">
               <h2 className="text-lg font-semibold tracking-wide uppercase text-white">About Me</h2>
               <p className="text-sm leading-loose md:text-base text-white">
-              I have been programming for 10 years, I started with the C and C++ language, then I started using a framework to create video games which has its own language called Game Maker Language, I gained a lot of experience creating mobile games and thanks to that I learned to create applications for Android using Java, I looked for an option to create applications for iOS and Android, it was then that I started learning Flutter and I currently have 4 years developing with Flutter, I also use the Next.js and React framework for web development, I use it every day artificial intelligence to enhance my work, I have personal projects in production, my greatest attribute is not stopping until I find a solution, I am passionate, fair and very disciplined, I am certain of what I want to achieve, at this moment I have the vision of creating a software that is used by thousands of people to make their lives more pleasant.
+              My experience has largely been in finding solutions and developing features for existing products. I am very good at team communication, very responsible and disciplined. I currently work with a freelancer and I also teach classes through a web platform where I teach flutter and other technologies. Based on my experience, it is very easy for me to learn any new technology. I am not intimidated by learning and taking on challenges.
               </p>
             </div>
             <div className="space-y-2">
