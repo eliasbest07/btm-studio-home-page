@@ -37,11 +37,11 @@ export default function Navbartwo() {
 
         </NavbarBrand>
       <div style={{ display: 'flex', flexDirection: 'column', }}>
-        <button className="mb-2 text-white inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-white hover:text-black h-9 px-3 rounded-full w-24 pl-4">
+        <button onClick={() => window.open('https://www.linkedin.com/in/elias-montilla-629110229/', '_blank')} className="mb-2 text-white inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-white hover:text-black h-9 px-3 rounded-full w-24 pl-4">
             
              LinkedIn </button>
        
-         <button className="text-white inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-white hover:text-black h-9 px-3 rounded-full w-24 pr-4"> GitHut </button>
+         <button onClick={() => window.open('https://github.com/eliasbest07', '_blank')} className="text-white inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-white hover:text-black h-9 px-3 rounded-full w-24 pr-4"> GitHut </button>
         
       </div>
       </NavbarContent>
@@ -54,9 +54,9 @@ export default function Navbartwo() {
 
         </NavbarBrand>
         <NavbarContent justify="end">
-        <button className="text-white inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-white hover:text-black h-9 px-3 rounded-full w-24 pl-4"> LinkedIn </button>
+        <button onClick={() => window.open('https://www.linkedin.com/in/elias-montilla-629110229/', '_blank')}  className="text-white inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-white hover:text-black h-9 px-3 rounded-full w-24 pl-4"> LinkedIn </button>
          
-          <button className="text-white inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-white hover:text-black h-9 px-3 rounded-full w-24 pr-4"> GitHut </button>
+          <button onClick={() => window.open('https://github.com/eliasbest07', '_blank')} className="text-white inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-white hover:text-black h-9 px-3 rounded-full w-24 pr-4"> GitHut </button>
           <div style={{width:'10px'}}></div>
         </NavbarContent>
 
