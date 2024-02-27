@@ -2,6 +2,7 @@
 import Image from "next/image"
 import RectangleComponent from "../components/rectangulo"
 import Navbartwo from '../components/navbartwo'
+import Information from '../components/information'
 
 export default function Home() {
  const boxStyle = {
@@ -58,10 +59,15 @@ export default function Home() {
                  <br />
             <h1 style={{ marginLeft:'10px', marginRight:'10px' ,color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}>Welcome,</h1>
             <br />
-<p className='text-white text-lg' >The next thing you`&apos;`re going to see is a summary of my experience as a web and mobile app developer</p>
+<p className='text-white text-lg' >The next thing you&apos;re going to see is a summary of my experience as a web and mobile app developer</p>
 <br />
             </div>
             <br />
+            <div style= {boxStyle}>
+   
+   <Information/>
+      
+   </div>
             <br />
     
             <div style= {boxStyle} className="flex flex-col lg:flex-row items-center justify-center">
@@ -90,12 +96,19 @@ export default function Home() {
     <p className="text-white text-lg pr-6" >Day by day I program, I have personal projects that I need to maintain, I teach classes providing support to other programmers, I have done several jobs as a Freelancer finding solutions by connecting APIs, setting up servers, finding faults in the programming logic…</p>
    </div>
    <br />
-   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-  <Image className=" rounded-lg" src="/img1.webp" alt="screenshot app mobile" width={240} height={260} style={{ width: '24%' }} />
-  <Image className=" rounded-lg" src="/img2.webp" alt="screenshot app mobile" width={240} height={260}  style={{ width: '24%' }} />
-  <Image className=" rounded-lg" src="/img3.webp" alt="screenshot app mobile"  width={240} height={260} style={{ width: '24%' }} />
-  <Image className=" rounded-lg" src="/img4.webp" alt="screenshot app mobile" width={240} height={260}  style={{ width: '24%' }} />
-</div>
+   <div className="flex flex-col lg:flex-row items-center justify-center lg:space-y-0 lg:space-x-4 space-y-4" >
+        <Image className=" rounded-lg " src="/img1.webp" alt="screenshot app mobile" width={220} height={260}  />
+        <Image className=" rounded-lg " src="/img2.webp" alt="screenshot app mobile" width={220} height={260}   />
+        <Image className="  rounded-lg " src="/img3.webp" alt="screenshot app mobile"  width={220} height={260}  />
+        <Image className="  rounded-lg " src="/img4.webp" alt="screenshot app mobile" width={220} height={260}   />
+    </div>
+    <br /> 
+      <div style= {boxStyle}>
+        <p className="text-white text-lg pr-6"> I purchased five Flutter courses, completed them, totaling over 120 hours of Flutter content. It took me 4 months to finish, during which I created more than 24 apps. Explored various functionalities including REST APIs, maps, sensors, databases, and connections to Firebase, Supabase, and AWS. 🚀📱💡</p>
+      </div>
+      <br /> 
+   
+
 
    <br /> <br />
    <br />
