@@ -58,7 +58,7 @@ export default function Home() {
                  <br />
             <h1 style={{ marginLeft:'10px', marginRight:'10px' ,color: '#57EBFF', textShadow: '2px 2px 4px #000000',textAlign: 'center', fontSize: '1.5em'  }}>Welcome,</h1>
             <br />
-<p className='text-white text-lg' >The next thing you're going to see is a summary of my experience as a web and mobile app developer</p>
+<p className='text-white text-lg' >The next thing you`&apos;`re going to see is a summary of my experience as a web and mobile app developer</p>
 <br />
             </div>
             <br />
