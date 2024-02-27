@@ -30,7 +30,7 @@ const ScrollComponent = () => {
     return (
         <div className='flex flex-col scroll-component' style={{
             height: '100%',
-            background: 'url(segundobg.png) center / cover no-repeat, #6E727C',
+            background: 'url(segundobgop.webp) center / cover no-repeat, #6E727C',
            
             position: 'fixed', // Cambiado de 'fixed' a 'sticky'
             top: '350px', 
