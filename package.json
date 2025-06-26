@@ -12,16 +12,18 @@
     "@nextui-org/react": "^2.2.9",
     "@supabase/supabase-js": "^2.39.3",
     "framer-motion": "^11.0.6",
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest",
+    "next": "^15.3.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "styled-components": "^6.0.8"
   },
   "devDependencies": {
-    "autoprefixer": "latest",
+    "@tailwindcss/postcss": "^4.1.6",
+    "@types/lodash.debounce": "^4.0.9",
+    "autoprefixer": "^10.4.21",
     "eslint": "latest",
-    "eslint-config-next": "latest",
-    "postcss": "latest",
-    "tailwindcss": "latest"
+    "eslint-config-next": "^15.3.2",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.1.6"
   }
 }
