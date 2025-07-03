@@ -10,7 +10,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear()
   // Simulación simple de cambio de idioma
   const toggleLanguage = () => {
-    alert("Funcionalidad de cambio de idioma no implementada completamente en esta demo.")
+    alert("Active Google Trasnlate to change language")
   }
 
   return (
@@ -26,13 +26,12 @@ export default function Footer() {
       <div className="container py-6 flex flex-col md:flex-row justify-between items-center gap-6 text-gray-300">
         <p className="text-sm">&copy; {currentYear} BTM Studio. Todos los derechos reservados.</p>
         <div className="flex gap-4 items-center">
-          <Link href="https://github.com" aria-label="GitHub" target="_blank" rel="noopener noreferrer">
+          <Link href="https://github.com/eliasbest07" aria-label="GitHub" target="_blank" rel="noopener noreferrer">
             <GithubIcon className="h-5 w-5 hover:text-white transition-colors" />
           </Link>
-          <Link href="https://twitter.com" aria-label="Twitter" target="_blank" rel="noopener noreferrer">
-            <TwitterIcon className="h-5 w-5 hover:text-white transition-colors" />
-          </Link>
-          <Link href="https://linkedin.com" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">
+          
+        
+          <Link href="https://www.linkedin.com/in/elias-montilla-629110229" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">
             <LinkedinIcon className="h-5 w-5 hover:text-white transition-colors" />
           </Link>
         </div>

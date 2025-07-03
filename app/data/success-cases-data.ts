@@ -60,27 +60,29 @@ export const successCasesData: SuccessCase[] = [
     id: "repolla", // Reemplazando project-alpha
     name: "Repolla",
     description: "Plataforma de gestión y ventas para Repolla, líder en su sector.",
-    imageUrl: "/images/style-inspiration/elegant-luxury.webp", // Placeholder, idealmente una imagen de Repolla
+    imageUrl: "/images/success-cases/repolla_520.png", // Placeholder, idealmente una imagen de Repolla
     investment: 4000,
     returnValue: 16000, // Retorno anual
     returnIsMonthly: false,
     roiPercentage: 300, // ROI: ((16000 - 4000) / 4000) * 100 = 300%
     details:
       "Desde 2009, Repolla ha visto un crecimiento sostenido gracias a la optimización de su plataforma digital, resultando en un retorno anual de $16,000 sobre una inversión inicial de $4,000.",
-    linkUrl: "#", // Actualizar si hay un link real
-    linkText: "Ver Caso de Estudio",
+    linkUrl: "https://play.google.com/store/apps/datasafety?id=com.natillera.repolla", // Actualizar si hay un link real
+    linkText: "Ver en Play Store",
     startYear: 2009,
     progressData: generateMockProgressData(16000, 4000),
   },
   {
     id: "project-beta",
-    name: "Logística Global App",
-    description: "Desarrollo de aplicación móvil para startup de logística.",
-    imageUrl: "/images/style-inspiration/dark-modern-tech.webp",
-    investment: 75000,
-    returnValue: 300000,
+    name: "Total-Time.app",
+    description: "Aplicación web para trackiar el desempeño de los empleados y coordinar tareas.",
+    imageUrl: "/images/success-cases/total-time_logo.png",
+    investment: 50,
+    returnValue: 5000,
     returnIsMonthly: false,
     roiPercentage: 300,
+    linkUrl: "https://total-time.app", // Actualizar si hay un link real
+    linkText: "Ver en Web",
     details:
       "La app móvil mejoró la eficiencia de las entregas en un 40% y aumentó la satisfacción del cliente en un 25% en los primeros 6 meses.",
     startYear: 2023,

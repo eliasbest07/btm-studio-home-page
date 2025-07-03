@@ -4,6 +4,33 @@ import SuccessCasesSection from "./components/SuccessCasesSection"
 import { successCasesData } from "./data/success-cases-data"
 import ServiceCard from "./components/ServiceCard"
 
+const carouselItems = [
+  {
+    id: 1,
+    title: "Innovación Digital",
+    description: "Creamos soluciones digitales que transforman negocios y experiencias de usuario.",
+    image: "/images/carousel-1.jpg",
+  },
+  {
+    id: 2,
+    title: "Diseño Estratégico",
+    description: "Cada pixel tiene un propósito, cada interacción está diseñada con intención.",
+    image: "/images/carousel-2.jpg",
+  },
+  {
+    id: 3,
+    title: "Desarrollo Tecnológico",
+    description: "Construimos con las tecnologías más avanzadas para crear productos escalables y robustos.",
+    image: "/images/carousel-3.jpg",
+  },
+  {
+    id: 4,
+    title: "Resultados Medibles",
+    description: "Nuestras soluciones generan impacto real y resultados cuantificables para tu negocio.",
+    image: "/images/carousel-4.jpg",
+  },
+]
+
 // Datos de servicios traducidos
 const servicesData = [
   {
@@ -51,7 +78,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      <ImageDisplaySection imageUrl={dynamicImageUrl} altText={imageAltText} title="Nuestra Inspiración Visual" />
+      {/* <ImageDisplaySection imageUrl={dynamicImageUrl} altText={imageAltText} title="Nuestra Inspiración Visual" /> */}
       <SuccessCasesSection cases={successCasesData} />
     </>
   )
