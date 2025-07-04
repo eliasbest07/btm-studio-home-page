@@ -12,7 +12,6 @@ import {
   CheckIcon,
   PlusIcon,
   Trash2Icon,
-  ArrowLeftIcon,
   PlayIcon,
   SparklesIcon,
   ImageIcon,
@@ -20,6 +19,7 @@ import {
   RefreshCwIcon,
   FileEditIcon,
   XIcon,
+  Save,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -62,6 +62,10 @@ export default function PlanPage() {
   const [editableDescription, setEditableDescription] = useState("")
   const [editableStylePrompt, setEditableStylePrompt] = useState("")
   const [isEnhancingSummary, setIsEnhancingSummary] = useState(false)
+
+  // State for submission
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const uniqueIdBase = useId()
   const router = useRouter()
@@ -173,10 +177,51 @@ export default function PlanPage() {
     setEditingTaskText("")
   }
 
-  const handleFinalizePlan = () => {
-    console.log("Plan Finalizado:", { context: currentProjectContext, tasks, suggestionId })
-    // sessionStorage.removeItem("projectPlanData"); // Keep for now if user wants to revisit
-    router.push("/")
+  const handleFinalizePlan = async () => {
+    if (!currentProjectContext || tasks.length === 0) {
+      setSubmitError("No hay suficiente información para crear el proyecto. Añade una descripción y tareas.")
+      return
+    }
+
+    setIsSubmitting(true)
+    setSubmitError(null)
+
+    const taskList = tasks.map((task) => task.text)
+    const projectName = currentProjectContext.description
+
+    try {
+      const response = await fetch('/api/create-project', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          projectName: projectName,
+          tasks: taskList,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Ocurrió un error al guardar el proyecto.')
+      }
+
+      // Success!
+      console.log("Plan Finalizado y Guardado:", { projectId: result.projectId })
+      // primero se debe generar un ID de proyecto y luego se debe redirigir al usuario a la pagina del proyecto.
+      // Aqui necesitom que se cree la pagina del proyecto y se redirija al usuario mostrando la informacion del proyecto para que se pueda editar.
+    //  sessionStorage.removeItem("projectPlanData") // Clean up session storage
+     // router.push("/") // Redirect to home
+      // Opcional: podrías redirigir a una página de éxito o a la página del nuevo proyecto.
+       router.push(`/proyecto/${result.projectId}`);
+
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Un error desconocido ocurrió."
+      setSubmitError(message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   // New feature functions
@@ -304,7 +349,7 @@ export default function PlanPage() {
                 variant="outline"
                 size="sm"
                 onClick={handleToggleEditSummary}
-                className="text-xs text-black font-semibold px-3 py-1 rounded-xl border border-white/10 bg-white/10 hover:bg-gray-700 hover:text-white transition-all"
+                className="text-xs text-white font-semibold px-3 py-1 rounded-xl border border-white/10 bg-white/10 hover:bg-gray-700 hover:text-white transition-all"
                 style={{
                   boxShadow:
                     '2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)',
@@ -560,9 +605,24 @@ export default function PlanPage() {
       </main>
 
       <footer className="mt-12 container mx-auto max-w-5xl text-center">
-        <Button onClick={handleFinalizePlan} size="lg" className="bg-green-500 hover:bg-green-600 text-white px-8">
-          Finalizar y Guardar Plan
-        </Button>
+        <div className="flex flex-col items-center">
+            <Button 
+                onClick={handleFinalizePlan} 
+                size="lg" 
+                className="bg-green-500 hover:bg-green-600 text-white px-8 w-full sm:w-auto"
+                disabled={isSubmitting}
+            >
+            {isSubmitting ? (
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+            ) : (
+                <Save className="h-5 w-5 mr-2" />
+            )}
+            {isSubmitting ? "Guardando..." : "Finalizar y Guardar Plan"}
+            </Button>
+            {submitError && (
+                <p className="text-sm text-red-400 mt-4">{submitError}</p>
+            )}
+        </div>
       </footer>
     </div>
   )
