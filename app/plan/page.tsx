@@ -216,7 +216,7 @@ export default function PlanPage() {
     //  sessionStorage.removeItem("projectPlanData") // Clean up session storage
      // router.push("/") // Redirect to home
       // Opcional: podrías redirigir a una página de éxito o a la página del nuevo proyecto.
-       router.push(`/proyecto/${result.projectId}`);
+       router.push(`/proyectos/${result.projectId}`);
 
     } catch (error) {
       const message = error instanceof Error ? error.message : "Un error desconocido ocurrió."
