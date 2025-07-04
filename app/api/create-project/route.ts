@@ -11,14 +11,14 @@ const supabase = createClient(
 
 export async function POST(req: NextRequest) {
   try {
-    const { projectName, tasks } = await req.json();
+    const { projectName, tasks, imageUrl } = await req.json(); // <-- imageUrl añadido
 
     if (!projectName || !tasks || !Array.isArray(tasks)) {
       return NextResponse.json({ error: 'Datos inválidos. Se requiere nombre del proyecto y una lista de tareas.' }, { status: 400 });
     }
 
     // 1. Obtener la IP y el país del solicitante
-    const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? '0.0.0.1';
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? '127.0.0.1';
     let country = 'Unknown';
     
     // Usamos un servicio gratuito para obtener el país desde la IP
@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
         nombre: projectName,
         ip_creacion: ip,
         pais_creacion: country,
+        imagen_url: imageUrl, // <-- Guardamos la URL de la imagen
       })
       .select()
       .single();
