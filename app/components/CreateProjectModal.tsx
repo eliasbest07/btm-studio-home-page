@@ -122,6 +122,8 @@ export default function CreateProjectModal({ isOpen, onOpenChange }: CreateProje
     onOpenChange(open)
   }
 
+  
+
   return (
     <Dialog open={isOpen} onOpenChange={handleCloseThisModal}>
       <DialogContent
