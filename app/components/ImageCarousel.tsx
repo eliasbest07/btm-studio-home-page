@@ -43,7 +43,12 @@ export default function ImageCarousel({
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi])
 
   const handleImageClick = (item: CarouselImageItem, index: number) => {
-    setSelectedIndex(index)
+    if(index != -1){
+      setSelectedIndex(index)
+
+    }else{
+      
+    }
     if (onImageSelect) {
       onImageSelect(item, index)
     }

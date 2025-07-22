@@ -8,7 +8,7 @@ import EditProjectClient from './EditProjectClient'; // Componente cliente para 
 // Creamos un cliente de Supabase que se ejecuta en el servidor
 // Usamos la SERVICE KEY para poder leer los datos del proyecto incluso si es privado
 const supabase = createClient(
-  'https://efiarbtzeotqfykaqpjq.supabase.co',
+  process.env.SUPABASE_URL!,
   process.env.SUPABASE_KEY!
 );
 
