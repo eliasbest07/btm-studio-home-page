@@ -178,53 +178,65 @@ export default function PlanPage() {
     setEditingTaskText("")
   }
 
-  const handleFinalizePlan = async () => {
-    if (!currentProjectContext || tasks.length === 0) {
-      setSubmitError("No hay suficiente información para crear el proyecto. Añade una descripción y tareas.")
-      return
-    }
-
-    setIsSubmitting(true)
-    setSubmitError(null)
-
-    const taskList = tasks.map((task) => task.text)
-    const projectName = currentProjectContext.description
-
-    try {
-      const response = await fetch('/api/create-project', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          projectName: projectName,
-          tasks: taskList,
-          imageUrl: finalImageUrl, // <-- NUEVA LÍNEA
-        }),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Ocurrió un error al guardar el proyecto.')
-      }
-
-      // Success!
-      console.log("Plan Finalizado y Guardado:", { projectId: result.projectId })
-      // primero se debe generar un ID de proyecto y luego se debe redirigir al usuario a la pagina del proyecto.
-      // Aqui necesitom que se cree la pagina del proyecto y se redirija al usuario mostrando la informacion del proyecto para que se pueda editar.
-    //  sessionStorage.removeItem("projectPlanData") // Clean up session storage
-     // router.push("/") // Redirect to home
-      // Opcional: podrías redirigir a una página de éxito o a la página del nuevo proyecto.
-       router.push(`/proyectos/${result.projectId}`);
-
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Un error desconocido ocurrió."
-      setSubmitError(message)
-    } finally {
-      setIsSubmitting(false)
-    }
+ const handleFinalizePlan = async () => {
+  if (!currentProjectContext || tasks.length === 0) {
+    setSubmitError("No hay suficiente información para crear el proyecto. Añade una descripción y tareas.")
+    return
   }
+
+  setIsSubmitting(true)
+  setSubmitError(null)
+
+  const taskList = tasks.map((task) => task.text)
+  const projectName = currentProjectContext.description
+
+  // Guardar en localStorage
+  try {
+    const planDataToSave = {
+      tasks: taskList,
+      projectContext: currentProjectContext,
+      suggestionId,
+      imageUrl: finalImageUrl || undefined,
+    }
+    localStorage.setItem("projectPlanData", JSON.stringify(planDataToSave))
+  } catch (e) {
+    console.error("Error al guardar en localStorage:", e)
+  }
+
+  try {
+    const response = await fetch('/api/create-project', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        projectName: projectName,
+        tasks: taskList,
+        imageUrl: finalImageUrl, // <-- NUEVA LÍNEA
+      }),
+    })
+
+    const result = await response.json()
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Ocurrió un error al guardar el proyecto.')
+    }
+
+    // Success!
+    console.log("Plan Finalizado y Guardado:", { projectId: result.projectId })
+
+    // Aquí se crea la página del proyecto y se redirige al usuario para editarla.
+    // sessionStorage.removeItem("projectPlanData") // Clean up session storage (opcional si quieres)
+    router.push(`/proyectos/${result.projectId}`)
+
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Un error desconocido ocurrió."
+    setSubmitError(message)
+  } finally {
+    setIsSubmitting(false)
+  }
+}
+
 
   const [imageGenerationError, setImageGenerationError] = useState<string | null>(null);
 

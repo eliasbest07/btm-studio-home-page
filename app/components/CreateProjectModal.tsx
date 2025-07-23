@@ -102,8 +102,10 @@ export default function CreateProjectModal({ isOpen, onOpenChange }: CreateProje
   const router = useRouter()
 
   const handleImageSelection = (item: CarouselImageItem) => {
-  if (selectedStyle?.alt === item.alt) {
-    setSelectedStyle(null) // Deselect if already selected
+  if (item.alt === "Ningún estilo") {
+    setSelectedStyle(null)
+  } else if (selectedStyle?.alt === item.alt) {
+    setSelectedStyle(null) // Toggle off si ya estaba seleccionado
   } else {
     setSelectedStyle(item)
   }
@@ -111,41 +113,55 @@ export default function CreateProjectModal({ isOpen, onOpenChange }: CreateProje
 }
 
 
-  const handleContinue = async () => {
-    if (projectDescription.trim() === "") {
-      setErrorMessage("Por favor, describe tu proyecto.")
-      return
-    }
-    setErrorMessage(null)
-    setIsGeneratingTasks(true)
 
-    const result = await generateTasksAction(' ', ' ', projectDescription, selectedStyle.prompt)
-
-    setIsGeneratingTasks(false)
-
-    if (result.error) {
-      setErrorMessage(result.error)
-    } else if (result.tasks) {
-      const planData = {
-        tasks: result.tasks,
-        projectContext: {
-          description: projectDescription,
-          stylePrompt: selectedStyle.prompt,
-        },
-        suggestionId: result.suggestionId,
-      }
-      try {
-        sessionStorage.setItem("projectPlanData", JSON.stringify(planData))
-        onOpenChange(false)
-        router.push("/plan")
-      } catch (error) {
-        console.error("Error saving to sessionStorage:", error)
-        setErrorMessage("No se pudo guardar el plan del proyecto. Intenta de nuevo.")
-      }
-    } else {
-      setErrorMessage("No se pudieron generar las tareas. Intenta de nuevo.")
-    }
+const handleContinue = async () => {
+  if (projectDescription.trim() === "") {
+    setErrorMessage("Por favor, describe tu proyecto.")
+    return
   }
+
+  setErrorMessage(null)
+  setIsGeneratingTasks(true)
+
+  try {
+    const result = await generateTasksAction(' ', ' ', projectDescription, selectedStyle?.prompt || '')
+
+    const planData = {
+      tasks: result.tasks || [], // vacío si hubo error
+      projectContext: {
+        description: projectDescription,
+        stylePrompt: selectedStyle?.prompt || "",
+      },
+      suggestionId: result.suggestionId || null,
+    }
+
+    sessionStorage.setItem("projectPlanData", JSON.stringify(planData))
+
+    // Cierra modal y redirige siempre, con o sin error
+    onOpenChange(false)
+    router.push("/plan")
+  } catch (error) {
+    console.error("Error llamando a OpenAI:", error)
+    setErrorMessage("No se pudieron generar las tareas, pero puedes continuar.")
+    
+    // Aún así guarda el contexto básico y avanza
+    const fallbackPlan = {
+      tasks: [],
+      projectContext: {
+        description: projectDescription,
+        stylePrompt: selectedStyle?.prompt || "",
+      },
+      suggestionId: null,
+    }
+
+    sessionStorage.setItem("projectPlanData", JSON.stringify(fallbackPlan))
+    onOpenChange(false)
+    router.push("/plan")
+  } finally {
+    setIsGeneratingTasks(false)
+  }
+}
+
 
   const handleCloseThisModal = (open: boolean) => {
     if (!open) {
@@ -218,29 +234,28 @@ export default function CreateProjectModal({ isOpen, onOpenChange }: CreateProje
 </div>
 
 {/* Descripción principal del proyecto */}
-<div>
-  <label htmlFor="projectDescription" className="block text-sm font-medium text-gray-200 mb-1.5">
+<div className="rounded-xl bg-white/10 border border-yellow-400/30 p-4 shadow-md transition-shadow hover:shadow-yellow-500/10">
+  <label htmlFor="projectDescription" className="block text-sm font-medium text-yellow-300 mb-1.5">
     Describe tu proyecto
   </label>
   <Textarea
-  id="projectDescription"
-  placeholder="Ej: Necesito una tienda online para vender artesanías, con un diseño moderno y fácil de usar..."
-  value={projectDescription}
-  onChange={(e) => {
-    setProjectDescription(e.target.value)
-    setErrorMessage(null)
-  }}
-  rows={7}
-  className="resize-none bg-white/5 focus:ring-gray-400 text-gray-100 placeholder:text-gray-400 textarea-hover-animated"
-/>
-
-  {/* Selector de tipo de proyecto */}
+    id="projectDescription"
+    placeholder="Ej: Necesito una tienda online para vender artesanías, con un diseño moderno y fácil de usar..."
+    value={projectDescription}
+    onChange={(e) => {
+      setProjectDescription(e.target.value)
+      setErrorMessage(null)
+    }}
+    rows={7}
+    className="resize-none bg-white/5 focus:ring-yellow-400 border border-yellow-500/20 text-gray-100 placeholder:text-yellow-200 transition-all duration-200"
+  />
   {projectType && (
-    <p className="text-xs text-gray-400 mt-1 ml-1">
-      Proyecto seleccionado: <span className="text-gray-200 font-semibold">{projectType}</span>
+    <p className="text-xs text-yellow-200 mt-1 ml-1">
+      Proyecto seleccionado: <span className="text-yellow-100 font-semibold">{projectType}</span>
     </p>
   )}
 </div>
+
 <div className="mt-6">
   <label className="block text-sm font-medium text-gray-200 mb-2">Selecciona una paleta de colores</label>
 
@@ -325,12 +340,19 @@ export default function CreateProjectModal({ isOpen, onOpenChange }: CreateProje
               
               <label className="block text-sm font-medium text-gray-200 mb-2">Elige un estilo de inspiración</label>
               <ImageCarousel
-                items={styleInspirations}
+  items={[
+    {
+      src: "/ningun_estilo.png", // una imagen genérica o ícono "sin estilo"
+      alt: "Ningún estilo",
+      prompt: "", // sin prompt
+    },
+    ...styleInspirations,
+  ]}
                 options={{ slidesToScroll: 1 }}
                 onImageSelect={handleImageSelection}
                 itemsToShow={4}
               />
-              {selectedStyle && (
+              {selectedStyle ? (
   <div className="mt-3 p-3 bg-white/5 rounded-md border border-white/10">
     <p className="text-xs text-gray-300">
       <span className="font-semibold text-gray-100">Estilo seleccionado:</span> {selectedStyle.alt}
@@ -339,7 +361,10 @@ export default function CreateProjectModal({ isOpen, onOpenChange }: CreateProje
       <span className="font-semibold text-gray-200">Prompt:</span> {selectedStyle.prompt}
     </p>
   </div>
+) : (
+  <p className="text-xs text-gray-400 mt-2">No se ha seleccionado ningún estilo de inspiración.</p>
 )}
+
 
             </div>
             {errorMessage && <p className="text-sm text-red-400 text-center mt-2">{errorMessage}</p>}
