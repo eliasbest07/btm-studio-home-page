@@ -78,11 +78,11 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
       <div className="container mx-auto max-w-4xl">
         <header className="mb-8">
        
-          <Button
-          className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(158,158,149,0.3)] hover:brightness-110 transition-all duration-200"
+        <Button
+          asChild                 // let the button render whatever is inside
+          className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(158,158,149,0.7)] hover:brightness-110 transition-all duration-200"
           style={{
-            background: `rgba(158, 158, 149, 0.2)`,
-            // Removed invalid hover property
+            background: 'rgba(158, 158, 149, 0.2)',
             border: '1px solid rgba(255, 255, 255, 0.08)',
             boxShadow:
               '2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)',
@@ -91,7 +91,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
             borderRadius: '20px',
           }}
         >
-          ⬅ Volver al Inicio
+          <Link href="/">⬅ Volver al Inicio</Link>
         </Button>
     
           <div className="flex justify-between items-start">

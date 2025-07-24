@@ -152,16 +152,21 @@ const handleContinue = async () => {
     setErrorMessage("No se pudieron generar las tareas, pero puedes continuar.")
     
     // Aún así guarda el contexto básico y avanza
-    const fallbackPlan = {
-      tasks: [],
-      projectContext: {
-        description: projectDescription,
-        stylePrompt: selectedStyle?.prompt || "",
-      },
-      suggestionId: null,
-    }
+  const planData = {
+  tasks: [],
+  projectContext: {
+    description: projectDescription,
+    stylePrompt: selectedStyle?.prompt || "",
+    type: projectType,
+    utility: projectUtility,
+    palette: selectedPalette,
+    colors: selectedPalette === "personalizada" ? customColors : null,
+  },
+  suggestionId: null,
+}
 
-    sessionStorage.setItem("projectPlanData", JSON.stringify(fallbackPlan))
+
+    sessionStorage.setItem("projectPlanData", JSON.stringify(planData))
     onOpenChange(false)
     router.push("/plan")
   } finally {
