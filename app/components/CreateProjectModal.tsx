@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef,useEffect,useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -98,7 +98,14 @@ export default function CreateProjectModal({ isOpen, onOpenChange }: CreateProje
   },
 ]
 
-
+  const descriptionRef = useRef<HTMLTextAreaElement | null>(null)
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => {
+        descriptionRef.current?.focus()
+      }, 100) // da un pequeño margen de tiempo
+    }
+  }, [isOpen])
   const router = useRouter()
 
   const handleImageSelection = (item: CarouselImageItem) => {
@@ -239,6 +246,7 @@ const handleContinue = async () => {
     Describe tu proyecto
   </label>
   <Textarea
+    ref={descriptionRef}
     id="projectDescription"
     placeholder="Ej: Necesito una tienda online para vender artesanías, con un diseño moderno y fácil de usar..."
     value={projectDescription}
