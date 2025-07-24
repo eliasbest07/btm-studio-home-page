@@ -3,22 +3,39 @@
 import { openai } from "@ai-sdk/openai"
 import { generateText } from "ai"
 
+
+
 export async function generateTasksAction(
+  baseTemplate: string,
+  utilityDescription: string, 
   projectDescription: string,
   stylePrompt: string,
+
 ): Promise<{ tasks?: string[]; error?: string; suggestionId?: string }> {
   if (!process.env.OPENAI_API_KEY) {
     return { error: "OpenAI API key no está configurada." }
   }
 
   const fullPrompt = `
-    Basado en la siguiente descripción de un proyecto y el estilo deseado, genera una lista de tareas de desarrollo y diseño.
-    Descripción del Proyecto: "${projectDescription}"
-    Estilo Deseado (basado en la siguiente inspiración): "${stylePrompt}"
-
-    Por favor, devuelve una lista concisa de 5 a 10 tareas clave.
-    Formato de respuesta estrictamente como un array JSON de strings. Ejemplo: ["Diseñar el logo", "Desarrollar la página de inicio", "Configurar la base de datos"]
-  `
+  Eres un planificador sénior de proyectos de software.
+  
+  Devuelve **solo** un array JSON con **5-8** tareas breves, relevantes y accionables, en orden cronológico, que aporten resultados alcanzables en el corto plazo.
+  
+  Entradas
+  - Plantilla base: “\${baseTemplate}”
+  - Utilidad / caso de uso (opcional): “\${utilityDescription}”
+  - Descripción del proyecto (obligatoria): “\${projectDescription}”
+  - Paleta de colores (opcional): “\${colorPalette}”
+  - Inspiración de diseño (opcional): “\${stylePrompt}”
+  
+  Guías
+  1. Empieza con las tareas fundamentales para “\${baseTemplate}”.
+  2. Si se aporta utilidad/caso de uso, alinea las tareas con ello.
+  3. Menciona la paleta de colores solo en tareas de diseño/branding.
+  4. Si hay inspiración de diseño, coloca sus tareas preparatorias al inicio.
+  5. Asegúrate de que cada tarea sea relevante y produzca un resultado tangible en poco tiempo.
+  6. La salida **debe** ser exclusivamente un array JSON, por ejemplo:  
+     ["Crear repositorio", "Configurar CI/CD", "Diseñar wireframes", "Aplicar paleta de colores", "Implementar autenticación"].`
 
   try {
     const { text, finishReason, usage } = await generateText({
@@ -29,9 +46,10 @@ export async function generateTasksAction(
 
     if (finishReason === "stop") {
       try {
-        const jsonMatch = text.match('/(\[.*?\])/s')
+        const jsonMatch = text.match(/\[[\s\S]*?\]/);  
         if (jsonMatch && jsonMatch[1]) {
           const parsedTasks = JSON.parse(jsonMatch[1])
+          console.log(text)
           if (Array.isArray(parsedTasks) && parsedTasks.every((task) => typeof task === "string")) {
             return { tasks: parsedTasks }
           }
@@ -46,6 +64,7 @@ export async function generateTasksAction(
         return { error: "La respuesta de OpenAI no pudo ser parseada como una lista de tareas." }
       } catch (parseError) {
         console.error("Error parsing OpenAI response:", parseError)
+
         const fallbackTasks = text
           .split("\n")
           .map((line) => line.replace(/^- /g, "").trim())
@@ -172,7 +191,7 @@ export async function generateImageAction(
   });
   
   // Cliente de Supabase con service key para poder escribir en el storage
-  const supabaseAdmin = createClient(  'https://efiarbtzeotqfykaqpjq.supabase.co',
+  const supabaseAdmin = createClient(  process.env.SUPABASE_URL!,
     process.env.SUPABASE_KEY!);
 
   const imagePrompt = `

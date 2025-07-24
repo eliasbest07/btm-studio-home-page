@@ -178,53 +178,65 @@ export default function PlanPage() {
     setEditingTaskText("")
   }
 
-  const handleFinalizePlan = async () => {
-    if (!currentProjectContext || tasks.length === 0) {
-      setSubmitError("No hay suficiente información para crear el proyecto. Añade una descripción y tareas.")
-      return
-    }
-
-    setIsSubmitting(true)
-    setSubmitError(null)
-
-    const taskList = tasks.map((task) => task.text)
-    const projectName = currentProjectContext.description
-
-    try {
-      const response = await fetch('/api/create-project', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          projectName: projectName,
-          tasks: taskList,
-          imageUrl: finalImageUrl, // <-- NUEVA LÍNEA
-        }),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Ocurrió un error al guardar el proyecto.')
-      }
-
-      // Success!
-      console.log("Plan Finalizado y Guardado:", { projectId: result.projectId })
-      // primero se debe generar un ID de proyecto y luego se debe redirigir al usuario a la pagina del proyecto.
-      // Aqui necesitom que se cree la pagina del proyecto y se redirija al usuario mostrando la informacion del proyecto para que se pueda editar.
-    //  sessionStorage.removeItem("projectPlanData") // Clean up session storage
-     // router.push("/") // Redirect to home
-      // Opcional: podrías redirigir a una página de éxito o a la página del nuevo proyecto.
-       router.push(`/proyectos/${result.projectId}`);
-
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Un error desconocido ocurrió."
-      setSubmitError(message)
-    } finally {
-      setIsSubmitting(false)
-    }
+ const handleFinalizePlan = async () => {
+  if (!currentProjectContext || tasks.length === 0) {
+    setSubmitError("No hay suficiente información para crear el proyecto. Añade una descripción y tareas.")
+    return
   }
+
+  setIsSubmitting(true)
+  setSubmitError(null)
+
+  const taskList = tasks.map((task) => task.text)
+  const projectName = currentProjectContext.description
+
+  // Guardar en localStorage
+  try {
+    const planDataToSave = {
+      tasks: taskList,
+      projectContext: currentProjectContext,
+      suggestion:suggestionId,
+      imageUrl: finalImageUrl || undefined,
+    }
+    localStorage.setItem("projectPlanData", JSON.stringify(planDataToSave))
+  } catch (e) {
+    console.error("Error al guardar en localStorage:", e)
+  }
+
+  try {
+    const response = await fetch('/api/create-project', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        projectName: projectName,
+        tasks: taskList,
+        imageUrl: finalImageUrl, // <-- NUEVA LÍNEA
+      }),
+    })
+
+    const result = await response.json()
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Ocurrió un error al guardar el proyecto.')
+    }
+
+    // Success!
+    console.log("Plan Finalizado y Guardado:", { projectId: result.projectId })
+
+    // Aquí se crea la página del proyecto y se redirige al usuario para editarla.
+    // sessionStorage.removeItem("projectPlanData") // Clean up session storage (opcional si quieres)
+    router.push(`/proyectos/${result.projectId}`)
+
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Un error desconocido ocurrió."
+    setSubmitError(message)
+  } finally {
+    setIsSubmitting(false)
+  }
+}
+
 
   const [imageGenerationError, setImageGenerationError] = useState<string | null>(null);
 
@@ -301,12 +313,11 @@ export default function PlanPage() {
         <h1 className="text-2xl font-bold mb-4">Error</h1>
         <p className="mb-6">{error || "No se pudo cargar el contexto del proyecto."}</p>
 
-        <Link href="/">
         <Button
+          asChild                
           className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(158,158,149,0.7)] hover:brightness-110 transition-all duration-200"
           style={{
-            background: `rgba(158, 158, 149, 0.2)`,
-            // Removed invalid hover property
+            background: 'rgba(158, 158, 149, 0.2)',
             border: '1px solid rgba(255, 255, 255, 0.08)',
             boxShadow:
               '2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)',
@@ -315,9 +326,8 @@ export default function PlanPage() {
             borderRadius: '20px',
           }}
         >
-          ⬅ Volver al Inicio
+          <Link href="/">⬅ Volver al Inicio</Link>
         </Button>
-        </Link>
       </div>
     )
   }

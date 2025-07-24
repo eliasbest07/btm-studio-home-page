@@ -8,6 +8,17 @@ body {
   scroll-behavior: smooth;
 }
 
+.textarea-hover-animated {
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-color: #facc15 ;
+  transition: border-color 0.3s ease !important;
+}
+
+.textarea-hover-animated:hover {
+  border-color: #facc15 !important; /* amarillo Tailwind (yellow-400) */ 
+}
+
+
 body {
   @apply bg-transparent text-gray-100; /* Fondo transparente para que se vea la imagen, texto claro por defecto */
   -webkit-font-smoothing: antialiased;

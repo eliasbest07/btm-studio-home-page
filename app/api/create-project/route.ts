@@ -4,8 +4,9 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 // Inicializa el cliente de Supabase.
 // Es seguro usar las claves aquí porque este código SOLO se ejecuta en el servidor.
+
 const supabase = createClient(
-  'https://efiarbtzeotqfykaqpjq.supabase.co',
+  process.env.SUPABASE_URL!,
   process.env.SUPABASE_KEY!
 );
 

@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Lock, Unlock, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface EditProjectClientProps {
   projectId: number;
@@ -41,6 +42,7 @@ export default function EditProjectClient({ projectId, initialIsPublic }: EditPr
   };
 
   return (
+    <Link href='/login'>
     <Button 
     className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(198,198,199,1)] hover:brightness-110 transition-all duration-200"
           style={{
@@ -63,5 +65,6 @@ export default function EditProjectClient({ projectId, initialIsPublic }: EditPr
       )}
       {isPublic ? 'Hacer Privado' : 'Hacer Público'}
     </Button>
+    </Link>
   );
 }

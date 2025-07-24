@@ -4,7 +4,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 // Usamos la SERVICE KEY para poder modificar proyectos aunque estén privados (bypass RLS)
 const supabase = createClient(
-  'https://efiarbtzeotqfykaqpjq.supabase.co',
+  process.env.SUPABASE_URL!,
   process.env.SUPABASE_KEY!
 );
 
