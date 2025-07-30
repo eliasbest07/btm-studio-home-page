@@ -131,7 +131,7 @@ const handleContinue = async () => {
   setIsGeneratingTasks(true)
 
   try {
-    const result = await generateTasksAction(' ', ' ', projectDescription, selectedStyle?.prompt || '')
+    const result = await generateTasksAction(projectType,projectUtility, projectDescription, selectedStyle?.prompt || '')
 
     const planData = {
       tasks: result.tasks || [], // vacío si hubo error

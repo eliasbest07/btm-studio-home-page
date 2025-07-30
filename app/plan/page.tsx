@@ -78,8 +78,18 @@ export default function PlanPage() {
       const storedData = sessionStorage.getItem("projectPlanData")
       if (storedData) {
         const parsedData: PlanData = JSON.parse(storedData)
+        // 🔽 Normaliza las tareas recibidas (quita [, ], comillas y comas)
+        const cleanTask = (txt: string) =>
+          txt
+            .trim()
+            .replace(/^["'\s]*|["',\s]*$/g, ""); // elimina comillas, comas y espacios sobrantes
+
+        const cleanedTasks = parsedData.tasks
+          .map(cleanTask)
+          .filter((t) => t && t !== "[" && t !== "]");
+
         setTasks(
-          parsedData.tasks.map((taskText, index) => ({
+          cleanedTasks.map((taskText, index) => ({
             id: `${uniqueIdBase}-task-${index}`,
             text: taskText,
             completed: false,
@@ -180,62 +190,81 @@ export default function PlanPage() {
 
  const handleFinalizePlan = async () => {
   if (!currentProjectContext || tasks.length === 0) {
-    setSubmitError("No hay suficiente información para crear el proyecto. Añade una descripción y tareas.")
-    return
+    setSubmitError("No hay suficiente información para crear el proyecto. Añade una descripción y tareas.");
+    return;
   }
 
-  setIsSubmitting(true)
-  setSubmitError(null)
+  setIsSubmitting(true);
+  setSubmitError(null);
 
-  const taskList = tasks.map((task) => task.text)
-  const projectName = currentProjectContext.description
+  const taskList = tasks.map((task) => task.text);
+  const projectName = currentProjectContext.description;
 
-  // Guardar en localStorage
+  const newPlan = {
+    tasks: taskList,
+    projectContext: {
+      description: currentProjectContext.description,
+      stylePrompt: currentProjectContext.stylePrompt,
+    },
+    finalImageUrl: finalImageUrl || null,
+    timestamp: new Date().toISOString(),
+  };
+
+  // ✅ Guardar en localStorage (acumulativo)
+  var nuewId = 0; // Inicializar nuewId
   try {
-    const planDataToSave = {
-      tasks: taskList,
-      projectContext: currentProjectContext,
-      suggestion:suggestionId,
-      imageUrl: finalImageUrl || undefined,
+    const raw = typeof window !== "undefined" ? window.localStorage.getItem("allProjectPlans") : null;
+    const existingPlans: any[] = raw ? JSON.parse(raw) : [];
+    const existingCount = existingPlans.length;
+    nuewId = existingCount !== 0 ? existingCount + 1 : 1;
+
+    const updatedPlans = [...existingPlans, newPlan];
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("allProjectPlans", JSON.stringify(updatedPlans));
     }
-    localStorage.setItem("projectPlanData", JSON.stringify(planDataToSave))
-  } catch (e) {
-    console.error("Error al guardar en localStorage:", e)
+  } catch (error) {
+    console.error("Error guardando en localStorage:", error);
+    setSubmitError("Ocurrió un error al guardar localmente el proyecto.");
+    setIsSubmitting(false);
+    return;
   }
 
+  // 🚫 Código comentado de Supabase o backend
+  /*
   try {
-    const response = await fetch('/api/create-project', {
-      method: 'POST',
+    const response = await fetch("/api/create-project", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         projectName: projectName,
         tasks: taskList,
-        imageUrl: finalImageUrl, // <-- NUEVA LÍNEA
+        imageUrl: finalImageUrl,
       }),
-    })
+    });
 
-    const result = await response.json()
+    const result = await response.json();
 
     if (!response.ok) {
-      throw new Error(result.error || 'Ocurrió un error al guardar el proyecto.')
+      throw new Error(result.error || "Ocurrió un error al guardar el proyecto.");
     }
 
-    // Success!
-    console.log("Plan Finalizado y Guardado:", { projectId: result.projectId })
-
-    // Aquí se crea la página del proyecto y se redirige al usuario para editarla.
-    // sessionStorage.removeItem("projectPlanData") // Clean up session storage (opcional si quieres)
-    router.push(`/proyectos/${result.projectId}`)
-
+    router.push(`/proyectos/${result.projectId}`);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Un error desconocido ocurrió."
-    setSubmitError(message)
-  } finally {
-    setIsSubmitting(false)
+    const message = error instanceof Error ? error.message : "Un error desconocido ocurrió.";
+    setSubmitError(message);
   }
-}
+  */
+
+  // ✅ Redirigir o dar feedback localmente
+  console.log("Plan guardado localmente:", newPlan,nuewId);
+  //router.push("/mis-proyectos");
+  
+  router.push(`/proyectos/${nuewId}`);
+  setIsSubmitting(false);
+};
+
 
 
   const [imageGenerationError, setImageGenerationError] = useState<string | null>(null);

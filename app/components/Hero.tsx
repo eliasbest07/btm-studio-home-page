@@ -1,9 +1,8 @@
 "use client" // Convertir a Client Component para manejar el estado del modal
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import CreateProjectModal from "./CreateProjectModal" // Importar el modal
+import ShowProjectsModal from "./showProjects" // Importar el modal
 import Image from "next/image"
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
@@ -179,7 +178,7 @@ export default function Hero() {
           </p>
         </div>
       </section>
-      <CreateProjectModal isOpen={isModalOpen} onOpenChange={setIsModalOpen} />
+      <ShowProjectsModal isOpen={isModalOpen} onOpenChange={setIsModalOpen} />
     </>
   )
 }
