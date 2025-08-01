@@ -1,10 +1,19 @@
 "use client"
 
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
+import { createClient } from "@supabase/supabase-js"
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export default function EstoyTrabajando() {
+  const [loadingId, setLoadingId] = useState<number | null>(null)
+
   const mockTasks = [
     {
       id: 1,
@@ -13,7 +22,7 @@ export default function EstoyTrabajando() {
       createdAt: "25 Jul 2025",
       focus: "Diseño UX/UI",
       tasksCount: 3,
-      image: "/placeholder.svg", // asegúrate que esta imagen existe
+      image: "/placeholder.svg",
     },
     {
       id: 2,
@@ -34,6 +43,38 @@ export default function EstoyTrabajando() {
       image: "/placeholder.svg",
     },
   ]
+
+  const handleSendProposal = async (task: typeof mockTasks[0]) => {
+    setLoadingId(task.id)
+
+    const { data, error } = await supabase
+      .from("bloque")
+      .insert([
+        {
+          user_email: "jesus_diaz_parra7@hotmail.com",
+          title: "taskss",
+          description: `Propuesta para: Elias`,
+         day: 2, // Esto da "2025-07-30T03:11:08.172Z
+          start_hour: 9,
+          end_hour: 10,
+          color: "#a3b18a", // Mock color
+          status: "pendiente",
+          assigned: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      ])
+      .select()
+
+    if (error) {
+      console.error("Error al enviar propuesta:", error)
+      alert("Ocurrió un error al enviar la propuesta.")
+    } else {
+      alert("✅ Propuesta enviada correctamente.")
+    }
+
+    setLoadingId(null)
+  }
 
   return (
     <section className="min-h-screen text-white py-16 px-4">
@@ -60,10 +101,21 @@ export default function EstoyTrabajando() {
               </div>
               <div className="p-6">
                 <h3 className="text-2xl font-bold mb-2">{task.title}</h3>
-                <p className="text-sm text-gray-400 mb-1">👤 Empleador: <span className="text-white">{task.employer}</span></p>
-                <p className="text-sm text-gray-400 mb-1">📅 {task.createdAt} · 🧩 {task.tasksCount} tareas</p>
+                <p className="text-sm text-gray-400 mb-1">
+                  👤 Empleador: <span className="text-white">{task.employer}</span>
+                </p>
+                <p className="text-sm text-gray-400 mb-1">
+                  📅 {task.createdAt} · 🧩 {task.tasksCount} tareas
+                </p>
                 <p className="text-sm text-gray-300 mb-4">🎯 Enfoque: {task.focus}</p>
-                <Button className="w-full" variant="secondary">Aplicar</Button>
+                <Button
+                  className="w-full"
+                  variant="secondary"
+                  disabled={loadingId === task.id}
+                  onClick={() => handleSendProposal(task)}
+                >
+                  {loadingId === task.id ? "Enviando..." : "Enviar propuesta"}
+                </Button>
               </div>
             </motion.article>
           ))}

@@ -1,8 +1,9 @@
-import Hero from "./components/Hero"
-import ImageDisplaySection from "./components/ImageDisplaySection"
-import SuccessCasesSection from "./components/SuccessCasesSection"
-import { successCasesData } from "./data/success-cases-data"
-import ServiceCard from "./components/ServiceCard"
+import Hero from "../components/Hero"
+import ImageDisplaySection from "../components/ImageDisplaySection"
+import SuccessCasesSection from "../components/SuccessCasesSection"
+import { successCasesData } from "../data/success-cases-data"
+import ServiceCard from "../components/ServiceCard"
+import {useTranslations} from "next-intl"
 
 const carouselItems = [
   {
@@ -62,6 +63,7 @@ const servicesData = [
 export default function HomePage() {
   const dynamicImageUrl = "https://picsum.photos/seed/btmstudio/1280/720"
   const imageAltText = "Paisaje montañoso abstracto generado dinámicamente"
+  const t = useTranslations("Index")
 
   return (
     <>
@@ -69,7 +71,7 @@ export default function HomePage() {
       <section className="py-12 md:py-20">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-10 md:mb-16 text-white drop-shadow-md">
-            Nuestros Servicios {/* Título traducido */}
+            {t("greeting")}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10 justify-items-center">
             {servicesData.map((service, index) => (
