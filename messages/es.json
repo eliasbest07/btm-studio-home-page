@@ -1,5 +1,59 @@
 {
-    "Index":{
-    "greeting" : "hola"
-}
+  "Index": {
+    "greeting": "Nuestros Servicios",
+    "services": [
+      {
+        "title": "Desarrollo Web",
+        "description": "Desarrollo web de alta calidad adaptado a tus necesidades."
+      },
+      {
+        "title": "Desarrollo de Apps",
+        "description": "Desarrollo de aplicaciones móviles de alta calidad adaptadas a tus necesidades."
+      },
+      {
+        "title": "Diseño UI/UX",
+        "description": "Diseño UI/UX de alta calidad adaptado a tus necesidades."
+      },
+      {
+        "title": "Branding",
+        "description": "Servicios de branding de alta calidad adaptados a tus necesidades."
+      },
+      {
+        "title": "Optimización SEO",
+        "description": "Optimización SEO de alta calidad adaptada a tus necesidades."
+      },
+      {
+        "title": "Marketing Digital",
+        "description": "Estrategias de marketing digital de alta calidad adaptadas a tus necesidades."
+      }
+    ],
+    "carousel": {
+      "1": {
+        "title": "Innovación Digital",
+        "description": "Creamos soluciones digitales que transforman negocios y experiencias de usuario."
+      },
+      "2": {
+        "title": "Diseño Estratégico",
+        "description": "Cada pixel tiene un propósito, cada interacción está diseñada con intención."
+      },
+      "3": {
+        "title": "Desarrollo Tecnológico",
+        "description": "Construimos con las tecnologías más avanzadas para crear productos escalables y robustos."
+      },
+      "4": {
+        "title": "Resultados Medibles",
+        "description": "Nuestras soluciones generan impacto real y resultados cuantificables para tu negocio."
+      }
+    }
+  },
+
+  "working": {
+    "title": "Estoy trabajando",
+    "description": "Estas son las últimas tareas ofertadas por empleadores.",
+    "employer": "Empleador",
+    "tasks": "tareas",
+    "focus": "Enfoque",
+    "send": "Enviar propuesta"
+  }
+  
 }

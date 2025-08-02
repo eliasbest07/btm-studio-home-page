@@ -1,5 +1,59 @@
 {
-    "Index":{
-    "greeting" : "hello"
-}
+  "Index": {
+    "greeting": "Our Services",
+    "services": [
+      {
+        "title": "Web Development",
+        "description": "High-quality web development tailored to your needs."
+      },
+      {
+        "title": "App Development",
+        "description": "High-quality mobile app development tailored to your needs."
+      },
+      {
+        "title": "UI/UX Design",
+        "description": "High-quality UI/UX design tailored to your needs."
+      },
+      {
+        "title": "Branding",
+        "description": "High-quality branding services tailored to your needs."
+      },
+      {
+        "title": "SEO Optimization",
+        "description": "High-quality SEO optimization tailored to your needs."
+      },
+      {
+        "title": "Digital Marketing",
+        "description": "High-quality digital marketing strategies tailored to your needs."
+      }
+    ],
+    "carousel": {
+      "1": {
+        "title": "Digital Innovation",
+        "description": "We create digital solutions that transform businesses and user experiences."
+      },
+      "2": {
+        "title": "Strategic Design",
+        "description": "Every pixel has a purpose, every interaction is intentionally designed."
+      },
+      "3": {
+        "title": "Technological Development",
+        "description": "We build with the most advanced technologies to create scalable, robust products."
+      },
+      "4": {
+        "title": "Measurable Results",
+        "description": "Our solutions generate real impact and measurable results for your business."
+      }
+    }
+  },
+  
+  "working": {
+    "title": "I'm working",
+    "description": "These are the latest tasks offered by employers.",
+    "employer": "Employer",
+    "tasks": "tasks",
+    "focus": "Focus",
+    "send": "Send proposal"
+  }
+
 }

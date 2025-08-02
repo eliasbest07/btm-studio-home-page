@@ -1,10 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { createClient } from "@supabase/supabase-js"
+import { useTranslations } from "next-intl"
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,6 +12,7 @@ const supabase = createClient(
 )
 
 export default function EstoyTrabajando() {
+  const t = useTranslations("working") // hook de next-intl para traducciones
   const [loadingId, setLoadingId] = useState<number | null>(null)
 
   const mockTasks = [
@@ -47,17 +48,17 @@ export default function EstoyTrabajando() {
   const handleSendProposal = async (task: typeof mockTasks[0]) => {
     setLoadingId(task.id)
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("bloque")
       .insert([
         {
           user_email: "jesus_diaz_parra7@hotmail.com",
           title: "taskss",
           description: `Propuesta para: Elias`,
-         day: 2, // Esto da "2025-07-30T03:11:08.172Z
+          day: 2,
           start_hour: 9,
           end_hour: 10,
-          color: "#a3b18a", // Mock color
+          color: "#a3b18a",
           status: "pendiente",
           assigned: true,
           created_at: new Date().toISOString(),
@@ -68,9 +69,9 @@ export default function EstoyTrabajando() {
 
     if (error) {
       console.error("Error al enviar propuesta:", error)
-      alert("Ocurrió un error al enviar la propuesta.")
+      alert(t("proposalError"))
     } else {
-      alert("✅ Propuesta enviada correctamente.")
+      alert(t("proposalSent"))
     }
 
     setLoadingId(null)
@@ -79,17 +80,14 @@ export default function EstoyTrabajando() {
   return (
     <section className="min-h-screen text-white py-16 px-4">
       <div className="max-w-2xl mx-auto">
-        <h2 className="text-4xl font-bold mb-4">🛠️ Estoy trabajando</h2>
-        <p className="text-gray-400 mb-10">Estas son las últimas tareas ofertadas por empleadores.</p>
+        <h2 className="text-4xl font-bold mb-4">{t("title")}</h2>
+        <p className="text-gray-400 mb-10">{t("description")}</p>
 
         <div className="flex flex-col gap-8">
           {mockTasks.map((task) => (
-            <motion.article
+            <article
               key={task.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: task.id * 0.1 }}
-              className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all shadow-md"
+              className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all shadow-md transition-opacity duration-300"
             >
               <div className="relative w-full h-64">
                 <Image
@@ -102,22 +100,27 @@ export default function EstoyTrabajando() {
               <div className="p-6">
                 <h3 className="text-2xl font-bold mb-2">{task.title}</h3>
                 <p className="text-sm text-gray-400 mb-1">
-                  👤 Empleador: <span className="text-white">{task.employer}</span>
+                  👤 {t("employer")}: <span className="text-white">{task.employer}</span>
                 </p>
                 <p className="text-sm text-gray-400 mb-1">
-                  📅 {task.createdAt} · 🧩 {task.tasksCount} tareas
+                  📅 {t("createdAtAndTasks", {
+                    createdAt: task.createdAt,
+                    tasksCount: task.tasksCount,
+                  })}
                 </p>
-                <p className="text-sm text-gray-300 mb-4">🎯 Enfoque: {task.focus}</p>
+                <p className="text-sm text-gray-300 mb-4">
+                  🎯 {t("focus")}: {task.focus}
+                </p>
                 <Button
                   className="w-full"
                   variant="secondary"
                   disabled={loadingId === task.id}
                   onClick={() => handleSendProposal(task)}
                 >
-                  {loadingId === task.id ? "Enviando..." : "Enviar propuesta"}
+                  {loadingId === task.id ? t("sending") : t("sendProposal")}
                 </Button>
               </div>
-            </motion.article>
+            </article>
           ))}
         </div>
       </div>

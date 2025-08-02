@@ -1,52 +1,50 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import Image from "next/image"
-import "./globals.css"
-import Header from "../components/Header" // Import Header here to make it part of the layout
-import Footer from "../components/Footer" // Importar el Footer
-import {getMessages} from "next-intl/server"
-import {NextIntlClientProvider} from "next-intl"
+import { NextIntlClientProvider, hasLocale } from 'next-intl';
+import { notFound } from 'next/navigation';
+import { routing } from '@/i18n/routing';
+import { Inter } from 'next/font/google';
+import Image from 'next/image';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import './globals.css';
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ['latin'] });
 
-export const metadata: Metadata = {
-  title: "BTM-Studio - Soluciones Creativas",
-  description: "Bienvenido a BTM Studio, creando experiencias digitales innovadoras.",
-    generator: 'v0.dev'
-}
-
-export default function RootLayout({
+export default async function LocaleLayout({
   children,
+  params,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
+  params: Promise<{ locale: string }>;
 }) {
-  return (
-    <NextIntlClientProvider>
-    <html lang="es">
-      <body className={`${inter.className} text-gray-100`}>
-        {/* Contenedor para la imagen de fondo y el overlay */}
-        <div className="fixed inset-0 -z-20">
-          <Image
-            src="/images/background-clouds.webp"
-            alt="Cielo dramático con nubes y sol brillante como fondo global"
-            fill
-            style={{ objectFit: "cover" }}
-            quality={80}
-            priority
-          />
-          {/* Overlay oscuro global para mejorar la legibilidad del texto */}
-          <div className="absolute inset-0 bg-black opacity-50"></div>
-        </div>
+  // Esperar params y validar locale
+  const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) {
+    notFound();
+  }
 
-        {/* Contenedor principal para el contenido que se desplaza */}
-        <div className="relative z-10 flex flex-col min-h-screen">
-          <Header /> {/* Header ahora es parte del layout global */}
-          <main className="flex-grow">{children}</main>
-          <Footer /> {/* Añadir el Footer al layout global */}
-        </div>
-      </body>
-    </html>
+  return (
+    <NextIntlClientProvider locale={locale}>
+      <html lang={locale}>
+        <body className={`${inter.className} text-gray-100`}>
+          <div className="fixed inset-0 -z-20">
+            <Image
+              src="/images/background-clouds.webp"
+              alt="Cielo dramático con nubes y sol brillante como fondo global"
+              fill
+              style={{ objectFit: 'cover' }}
+              quality={80}
+              priority
+            />
+            <div className="absolute inset-0 bg-black opacity-50"></div>
+          </div>
+
+          <div className="relative z-10 flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">{children}</main>
+            <Footer />
+          </div>
+        </body>
+      </html>
     </NextIntlClientProvider>
-  )
+  );
 }
