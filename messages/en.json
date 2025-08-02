@@ -55,5 +55,63 @@
     "focus": "Focus",
     "send": "Send proposal"
   }
+  ,
+  "hero": {
+    "slide1Title": "Digital Innovation",
+    "slide1Desc": "We create digital solutions that transform businesses and user experiences.",
+    "slide2Title": "Strategic Design",
+    "slide2Desc": "Every pixel has a purpose, every interaction is intentionally designed.",
+    "slide3Title": "Tech Development",
+    "slide3Desc": "We build with the latest technologies to create scalable, robust products.",
+    "slide4Title": "Measurable Results",
+    "slide4Desc": "Our solutions generate real impact and measurable outcomes for your business.",
+    "ctaContinue": "Continue Project",
+    "ctaPortfolio": "View Portfolio",
+    "headline": "Digital Experiences that Inspire",
+    "subtext": "We create custom web and mobile solutions that drive your business and captivate your audience."
+  }
+  ,
+  "successCases": {
+    "title": "Our Success Stories",
+     "started": "Started in",
+    "investment": "Investment",
+    "monthlyReturn": "Estimated Monthly Return",
+    "annualReturn": "Estimated Annual Return",
+    "estimatedRoi": "Estimated ROI",
+    "estimatedEvolution": "Estimated Evolution",
+    "initialInvestment": " vs Initial Investment",
+    "april":"abr",
+    "repuestos-merida": {
+      "name": "Repuestos Mérida App",
+      "description": "Mobile app for searching and quoting automotive parts.",
+      "details": "Development of an intuitive mobile app that connects customers to a wide range of spare parts, streamlining the purchasing process and significantly increasing sales since launch.",
+      "linkText": "View on Play Store"
+    },
+    "repolla": {
+      "name": "Repolla",
+      "description": "Management and sales platform for Repolla, a leader in its sector.",
+      "details": "Since 2009, Repolla has experienced steady growth thanks to digital platform optimization, resulting in an annual return of $16,000 on an initial investment of $4,000.",
+      "linkText": "View on Play Store"
+    },
+    "project-beta": {
+      "name": "Total-Time.app",
+      "description": "Web app for tracking employee performance and coordinating tasks.",
+      "details": "The mobile app improved delivery efficiency by 40% and customer satisfaction by 25% within the first 6 months.",
+      "linkText": "View Website"
+    }
+  }
+  
+  ,
+
+  "header": {
+    "createProject": "Create Project"
+  }
+,
+  "footer": {
+    "rights": "All rights reserved.",
+    "language": "Español"
+  }
+
+
 
 }

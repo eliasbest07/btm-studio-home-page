@@ -1,16 +1,21 @@
 "use client"
 
 import Link from "next/link"
-import { GithubIcon, TwitterIcon, LinkedinIcon, LanguagesIcon } from "lucide-react"
+import { GithubIcon, LinkedinIcon, LanguagesIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
-// En una implementación real, usarías un hook de una librería de i18n
-// import { useTranslation } from 'next-i18next';
+import { useTranslations } from "next-intl"
+import { usePathname, useRouter } from "next/navigation"
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
-  // Simulación simple de cambio de idioma
-  const toggleLanguage = () => {
-    alert("Active Google Trasnlate to change language")
+  const t = useTranslations("footer")
+   const router = useRouter()
+  const pathname = usePathname()
+
+ const toggleLanguage = () => {
+    const newLocale = pathname.startsWith("/es") ? "en" : "es"
+    const newPath = pathname.replace(/^\/(es|en)/, `/${newLocale}`)
+    router.push(newPath)
   }
 
   return (
@@ -24,14 +29,22 @@ export default function Footer() {
       }}
     >
       <div className="container py-6 flex flex-col md:flex-row justify-between items-center gap-6 text-gray-300">
-        <p className="text-sm">&copy; {currentYear} BTM Studio. Todos los derechos reservados.</p>
+        <p className="text-sm">&copy; {currentYear} BTM Studio. {t("rights")}</p>
         <div className="flex gap-4 items-center">
-          <Link href="https://github.com/eliasbest07" aria-label="GitHub" target="_blank" rel="noopener noreferrer">
+          <Link
+            href="https://github.com/eliasbest07"
+            aria-label="GitHub"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <GithubIcon className="h-5 w-5 hover:text-white transition-colors" />
           </Link>
-          
-        
-          <Link href="https://www.linkedin.com/in/elias-montilla-629110229" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">
+          <Link
+            href="https://www.linkedin.com/in/elias-montilla-629110229"
+            aria-label="LinkedIn"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <LinkedinIcon className="h-5 w-5 hover:text-white transition-colors" />
           </Link>
         </div>
@@ -42,7 +55,7 @@ export default function Footer() {
           className="bg-transparent border-gray-500 text-gray-300 hover:bg-white/10 hover:text-white"
         >
           <LanguagesIcon className="h-4 w-4 mr-2" />
-          English
+          {t("language")}
         </Button>
       </div>
     </footer>

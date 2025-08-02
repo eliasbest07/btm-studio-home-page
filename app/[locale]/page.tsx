@@ -3,7 +3,7 @@
 import Hero from "../components/Hero";
 import ImageDisplaySection from "../components/ImageDisplaySection";
 import SuccessCasesSection from "../components/SuccessCasesSection";
-import { successCasesData } from "../data/success-cases-data";
+import { getSuccessCasesData } from "../data/success-cases-data";
 import ServiceCard from "../components/ServiceCard";
 import { useTranslations } from "next-intl";
 
@@ -11,6 +11,7 @@ export default function HomePage() {
   const dynamicImageUrl = "https://picsum.photos/seed/btmstudio/1280/720";
   const imageAltText = "Paisaje montañoso abstracto generado dinámicamente";
   const t = useTranslations("Index");
+
 
   // Obtenemos los servicios desde el archivo de traducción
   const servicesData = t.raw("services") as {
@@ -46,7 +47,7 @@ export default function HomePage() {
         </div>
       </section>
       {/* <ImageDisplaySection imageUrl={dynamicImageUrl} altText={imageAltText} title="Nuestra Inspiración Visual" /> */}
-      <SuccessCasesSection cases={successCasesData} />
+      <SuccessCasesSection cases={getSuccessCasesData()} />
     </>
   );
 }

@@ -55,5 +55,62 @@
     "focus": "Enfoque",
     "send": "Enviar propuesta"
   }
+  ,
+  "hero": {
+    "slide1Title": "Innovación Digital",
+    "slide1Desc": "Creamos soluciones digitales que transforman negocios y experiencias de usuario.",
+    "slide2Title": "Diseño Estratégico",
+    "slide2Desc": "Cada pixel tiene un propósito, cada interacción está diseñada con intención.",
+    "slide3Title": "Desarrollo Tecnológico",
+    "slide3Desc": "Construimos con las tecnologías más avanzadas para crear productos escalables y robustos.",
+    "slide4Title": "Resultados Medibles",
+    "slide4Desc": "Nuestras soluciones generan impacto real y resultados cuantificables para tu negocio.",
+    "ctaContinue": "Continuar Proyecto",
+    "ctaPortfolio": "Ver Portfolio",
+    "headline": "Experiencias Digitales que Inspiran",
+    "subtext": "Creamos soluciones web y móviles a medida que impulsan tu negocio y cautivan a tu audiencia."
+  }
+
+  ,
+
+  "successCases": {
+    "title": "Nuestros Casos de Éxito",
+    "started": "Iniciado en",
+    "investment": "Inversión",
+    "monthlyReturn": "Retorno mensual estimado",
+    "annualReturn": "Retorno anual estimado",
+    "estimatedRoi": "ROI estimado",
+    "estimatedEvolution": "Evolución estimada",
+    "initialInvestment": "vs Inversión inicial",
+    "april":"Abr",
+    "repuestos-merida": {
+      "name": "Repuestos Mérida App",
+      "description": "Aplicación móvil para la búsqueda y cotización de repuestos automotrices.",
+      "details": "Desarrollo de una intuitiva aplicación móvil que conecta a clientes con un amplio catálogo de repuestos, agilizando el proceso de compra y generando un notable incremento en ventas desde su lanzamiento.",
+      "linkText": "Ver en Play Store"
+    },
+    "repolla": {
+      "name": "Repolla",
+      "description": "Plataforma de gestión y ventas para Repolla, líder en su sector.",
+      "details": "Desde 2009, Repolla ha visto un crecimiento sostenido gracias a la optimización de su plataforma digital, resultando en un retorno anual de $16,000 sobre una inversión inicial de $4,000.",
+      "linkText": "Ver en Play Store"
+    },
+    "project-beta": {
+      "name": "Total-Time.app",
+      "description": "Aplicación web para trackiar el desempeño de los empleados y coordinar tareas.",
+      "details": "La app móvil mejoró la eficiencia de las entregas en un 40% y aumentó la satisfacción del cliente en un 25% en los primeros 6 meses.",
+      "linkText": "Ver en Web"
+    }
+  }
+
+,"header": {
+    "createProject": "Crear Proyecto"
+  }
+  ,
+
+  "footer": {
+    "rights": "Todos los derechos reservados.",
+    "language": "English"
+  }
   
 }

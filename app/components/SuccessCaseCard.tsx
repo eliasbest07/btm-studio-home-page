@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { ExternalLinkIcon } from "lucide-react"
 import type { SuccessCase } from "@/app/data/success-cases-data"
+import { useTranslations } from "next-intl"
 
 interface SuccessCaseCardProps {
   project: SuccessCase
@@ -30,6 +31,8 @@ export default function SuccessCaseCard({
   cardColor = "rgba(41, 41, 38, 0.75)",
   cardOffset = 0,
 }: SuccessCaseCardProps) {
+  const t = useTranslations("successCases")
+
   const cardStyle: React.CSSProperties = {
     width: `${cardWidth}px`,
     background: cardColor,
@@ -56,11 +59,7 @@ export default function SuccessCaseCard({
   ]
 
   return (
-    <div
-      style={cardStyle}
-      className="group hover:-translate-y-1 hover:scale-[1.03]"
-    >
-      {/* Imagen cuadrada */}
+    <div style={cardStyle} className="group hover:-translate-y-1 hover:scale-[1.03]">
       <div className="relative w-full aspect-square mb-3 rounded-md overflow-hidden">
         <Image
           src={project.imageUrl || "/placeholder.svg"}
@@ -70,39 +69,39 @@ export default function SuccessCaseCard({
         />
       </div>
 
-      {/* Contenido */}
       <h3 className="text-xl font-bold mb-1 text-center text-gray-50">{project.name}</h3>
+
       {project.startYear && (
         <p className="text-xs text-gray-400 text-center mb-1.5">
-          Iniciado en {project.startYear}
+          {t("started")} {project.startYear}
         </p>
       )}
+
       <p className="text-sm text-gray-300 mb-2 text-center flex-grow overflow-y-auto max-h-[60px] custom-scrollbar px-1">
         {project.description}
       </p>
 
       <div className="my-2 text-center space-y-0.5">
         <p className="text-sm">
-          <span className="font-semibold text-gray-200">Inversión:</span>{" "}
+          <span className="font-semibold text-gray-200">{t("investment")}:</span>{" "}
           ${project.investment.toLocaleString()}
         </p>
         <p className="text-sm">
           <span className="font-semibold text-gray-200">
-            Retorno {project.returnIsMonthly ? "Mensual Estimado" : "Anual Estimado"}:
+            {t(project.returnIsMonthly ? "monthlyReturn" : "annualReturn")}:
           </span>{" "}
           ${project.returnValue.toLocaleString()}
         </p>
         {project.roiPercentage !== undefined && (
           <p className="text-base font-bold text-green-400">
-            ROI Estimado: {project.roiPercentage.toLocaleString()}%
+            {t("estimatedRoi")}: {project.roiPercentage.toLocaleString()}%
             {project.returnIsMonthly && (
-              <span className="text-xs font-normal text-gray-400"> (vs. inversión inicial)</span>
+              <span className="text-xs font-normal text-gray-400"> {t("initialInvestment")}</span>
             )}
           </p>
         )}
       </div>
 
-      {/* Gráfico */}
       <div className="w-full h-36 mt-1">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={progressData} margin={{ top: 5, right: 20, left: -20, bottom: 0 }}>
@@ -130,7 +129,7 @@ export default function SuccessCaseCard({
               height={20}
               iconType="plainline"
               wrapperStyle={{ fontSize: "10px", color: "#A0AEC0" }}
-              formatter={() => "Evolución Estimada"}
+              formatter={() => t("estimatedEvolution")}
             />
             <Line
               type="monotone"
@@ -144,7 +143,6 @@ export default function SuccessCaseCard({
         </ResponsiveContainer>
       </div>
 
-      {/* Botón de enlace */}
       {project.linkUrl && project.linkText && (
         <div className="mt-auto pt-3 text-center">
           <Button

@@ -1,11 +1,13 @@
 import SuccessCaseCard from "./SuccessCaseCard"
 import type { SuccessCase } from "@/app/data/success-cases-data"
+import { useTranslations } from "next-intl"
 
-interface SuccessCasesSectionProps {
+interface  SuccessCasesSectionProps {
   cases: SuccessCase[]
 }
 
 export default function SuccessCasesSection({ cases }: SuccessCasesSectionProps) {
+  const t = useTranslations("successCases")
   if (!cases || cases.length === 0) {
     return null
   }
@@ -16,7 +18,7 @@ export default function SuccessCasesSection({ cases }: SuccessCasesSectionProps)
       {/* Eliminado bg-secondary */}
       <div className="container mx-auto px-4">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-10 md:mb-16 text-white drop-shadow-md">
-          Nuestros Casos de Éxito
+          {t("title")}
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10 justify-items-center">
           {cases.map((project, index) => (
