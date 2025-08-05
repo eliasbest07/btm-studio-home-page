@@ -32,7 +32,7 @@ export default async function LocaleLayout({
               alt="Cielo dramático con nubes y sol brillante como fondo global"
               fill
               style={{ objectFit: 'cover' }}
-              quality={80}
+              quality={100}
               priority
             />
             <div className="absolute inset-0 bg-black opacity-50"></div>

@@ -1,8 +1,8 @@
 'use client'
 import Image from "next/image"
-import RectangleComponent from "../components/rectangulo"
+import RectangleComponent from "../../components/rectangulo"
 //import Navbartwo from '../components/navbartwo'
-import Information from '../components/information'
+import Information from '../../components/information'
 
 export default function Home() {
  const boxStyle = {
