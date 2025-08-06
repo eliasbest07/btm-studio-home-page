@@ -1,4 +1,5 @@
 {
+  
   "Index": {
     "greeting": "Nuestros Servicios",
     "services": [
@@ -111,6 +112,88 @@
   "footer": {
     "rights": "Todos los derechos reservados.",
     "language": "English"
+  },
+
+  "projects":{
+  "title": "Proyectos Guardados",
+  "noProjects": "No hay proyectos guardados localmente.",
+  "untitledProject": "Proyecto sin nombre",
+  "tasks": "tareas",
+  "access": "Acceder"
+
+}
+,
+"imageCarousel":
+{
+"selected":"Seleccionado"
+}
+,
+  "createProjectModal": {
+    "title": "Crea un nuevo proyecto",
+    "subtitle": "Cuéntanos lo que necesitas para empezar.",
+    "continueButton": "Continuar",
+    "projectType": {
+      "label": "Tipo de proyecto"
+    },
+    "projectTypes": {
+      "taskList": "Lista de tareas",
+      "webApp": "Web app",
+      "landingPage": "Landing page",
+      "illustration": "Ilustración",
+      "mobileApp": "Aplicación móvil",
+      "automation": "Automatizacion"
+    },
+    "utility": {
+      "label": "Utilidad del proyecto",
+      "optional": "opcional",
+      "placeholder": "¿Para qué se usará este proyecto? ¿Qué necesitas resolver?"
+    },
+    "description": {
+      "label": "Descripción detallada",
+      "placeholder": "Especifica todos los detalles importantes para este proyecto...",
+      "selectedProject": "Tipo de proyecto seleccionado:"
+    },
+    "palette": {
+      "label": "Selecciona una paleta",
+      "none": "Sin paleta",
+      "custom": "Personalizado",
+      "addColor": "+ Add color",
+      "names": {
+        "Minimalista": "Minimalista",
+        "Oscuro Neón": "Oscuro Neón",
+        "Tropical Vibrante": "Tropical Vibrante",
+        "Lujoso": "Lujoso",
+        "Natural Suave": "Natural Suave"
+      }
+    },
+    "style": {
+      "label": "Estilo de inspiración",
+      "selected": "Estilo seleccionado",
+      "prompt": "Prompt de estilo",
+      "noneSelected": "Ningún estilo seleccionado",
+      "noneImageSrc":"/ningun_estilo.png",
+      "names": {
+    "minimalistNeutral": "Estilo Minimalista y Neutro",
+    "darkModernTech": "Estilo Oscuro, Moderno y Tecnológico",
+    "vibrantPlayful": "Estilo Vibrante y Juguetón",
+    "elegantLuxury": "Estilo Elegante y Lujoso",
+    "ecoNatural": "Estilo Ecológico y Natural",
+    "retroFuturistic": "Estilo Retro-Futurista"
+  },
+  "prompts": {
+    "minimalistNeutral": "Diseño web minimalista con paleta de colores neutros (beige, gris claro, blanco roto), líneas limpias, mucho espacio en blanco, tipografía sofisticada y sombras sutiles.",
+    "darkModernTech": "Interfaz de sitio web tecnológico moderno en modo oscuro, con acento en colores vibrantes (azul eléctrico o verde neón), tipografía elegante, patrones geométricos, elementos brillantes, profesional e innovador.",
+    "vibrantPlayful": "Diseño web vibrante y juguetón, con paleta de colores brillantes (amarillo, rosa, turquesa), formas orgánicas, ilustraciones personalizadas, tipografía amigable, energético y atractivo.",
+    "elegantLuxury": "Diseño web de marca de lujo elegante, con colores profundos y ricos (burdeos, dorado, negro), tipografía serif, fotografías de producto de alta calidad, diseño sofisticado y sensación premium.",
+    "ecoNatural": "Sitio web de producto natural y ecológico, con tonos tierra (verdes, marrones, cremas), fondos texturizados, tipografías orgánicas o manuscritas, imágenes inspiradas en la naturaleza, limpio y confiable.",
+    "retroFuturistic": "Diseño web retro-futurista, estética synthwave de los 80, neones rosa y púrpura, líneas de cuadrícula, elementos pixelados, efectos de texto cromado, nostálgico pero moderno."
   }
-  
+      
+    }
+  },
+  "showProjectsModal": {
+    "noProjects": "No hay proyectos disponibles",
+    "access": "Acceder"
+  }
+
 }

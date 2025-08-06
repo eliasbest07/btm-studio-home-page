@@ -6,6 +6,7 @@ import useEmblaCarousel, { type EmblaOptionsType, type EmblaCarouselType } from 
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useTranslations } from "next-intl"
 
 export interface CarouselImageItem {
   src: string
@@ -33,6 +34,7 @@ export default function ImageCarousel({
   className,
   itemsToShow = 4,
 }: ImageCarouselProps) {
+  const t = useTranslations("imageCarousel")
   const options = { ...defaultOptions, ...userOptions }
   const [emblaRef, emblaApi] = useEmblaCarousel(options)
   const [prevBtnDisabled, setPrevBtnDisabled] = useState(true)
@@ -97,7 +99,7 @@ export default function ImageCarousel({
                 <Image src={item.src || "/placeholder.svg"} alt={item.alt} layout="fill" objectFit="cover" />
                 {selectedIndex === index && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center p-2">
-                    <span className="text-white font-semibold text-xs text-center">Seleccionado</span>
+                    <span className="text-white font-semibold text-xs text-center">{t("selected")}</span>
                   </div>
                 )}
               </div>
@@ -117,6 +119,7 @@ export default function ImageCarousel({
             aria-label="Imágenes anteriores"
           >
             <ChevronLeftIcon className="h-5 w-5" />
+            
           </Button>
           <Button
             variant="outline"

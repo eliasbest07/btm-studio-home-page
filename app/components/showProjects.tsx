@@ -1,9 +1,15 @@
 "use client"
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 
 type LocalProject = {
   tasks: string[]
@@ -21,9 +27,13 @@ interface ShowProjectsModalProps {
   onOpenChange: (open: boolean) => void
 }
 
-export default function ShowProjectsModal({ isOpen, onOpenChange }: ShowProjectsModalProps) {
+export default function ShowProjectsModal({
+  isOpen,
+  onOpenChange,
+}: ShowProjectsModalProps) {
   const [projects, setProjects] = useState<LocalProject[]>([])
   const router = useRouter()
+  const t = useTranslations("projects")
 
   useEffect(() => {
     if (!isOpen) return
@@ -34,7 +44,7 @@ export default function ShowProjectsModal({ isOpen, onOpenChange }: ShowProjects
         const parsed: LocalProject[] = JSON.parse(stored)
         setProjects(parsed)
       } catch (err) {
-        console.error("Error al leer los proyectos del localStorage:", err)
+        console.error("Error reading from localStorage:", err)
       }
     }
   }, [isOpen])
@@ -42,18 +52,18 @@ export default function ShowProjectsModal({ isOpen, onOpenChange }: ShowProjects
   const handleAccess = (project: LocalProject) => {
     sessionStorage.setItem("projectPlanData", JSON.stringify(project))
     onOpenChange(false)
-    router.push("/plan") // O cambia la ruta según lo que uses para cargar proyectos
+    router.push("/plan")
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl bg-white text-black">
         <DialogHeader>
-          <DialogTitle>Proyectos Guardados</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
         </DialogHeader>
 
         {projects.length === 0 ? (
-          <p className="text-sm text-gray-500">No hay proyectos guardados localmente.</p>
+          <p className="text-sm text-gray-500">{t("noProjects")}</p>
         ) : (
           <ul className="space-y-4 max-h-[400px] overflow-y-auto">
             {projects.map((project, index) => (
@@ -64,10 +74,11 @@ export default function ShowProjectsModal({ isOpen, onOpenChange }: ShowProjects
                 <div className="flex justify-between items-center">
                   <div>
                     <h3 className="font-semibold">
-                      {project.projectContext.description || "Proyecto sin nombre"}
+                      {project.projectContext.description ||
+                        t("untitledProject")}
                     </h3>
                     <p className="text-sm text-gray-500">
-                      {project.tasks.length} tareas
+                      {project.tasks.length} {t("tasks")}
                       {project.timestamp && (
                         <> • {new Date(project.timestamp).toLocaleString()}</>
                       )}
@@ -81,7 +92,7 @@ export default function ShowProjectsModal({ isOpen, onOpenChange }: ShowProjects
                     onClick={() => handleAccess(project)}
                     className="text-sm font-medium"
                   >
-                    Acceder
+                    {t("access")}
                   </Button>
                 </div>
               </li>
