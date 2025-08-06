@@ -1,12 +1,12 @@
 "use client";
 
 import Hero from "../components/Hero";
-import ImageDisplaySection from "../components/ImageDisplaySection";
+
 import SuccessCasesSection from "../components/SuccessCasesSection";
 import { getSuccessCasesData } from "../data/success-cases-data";
 import ServiceCard from "../components/ServiceCard";
 import { useTranslations } from "next-intl";
-import Carousel from "../components/carousel";
+
 
 export default function HomePage() {
   const dynamicImageUrl = "https://picsum.photos/seed/btmstudio/1280/720";
@@ -31,7 +31,6 @@ export default function HomePage() {
   return (
     <>
       <Hero />
-      <Carousel/>
       <section className="py-12 md:py-20">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-10 md:mb-16 text-white drop-shadow-md">
