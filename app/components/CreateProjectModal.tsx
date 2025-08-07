@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import ImageCarousel, { type CarouselImageItem } from "./ImageCarousel";
 import { generateTasksAction } from "@/app/actions/openai-actions";
 import { Loader2, Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 interface CreateProjectModalProps {
@@ -28,6 +28,8 @@ export default function CreateProjectModal({
 }: CreateProjectModalProps) {
   const t = useTranslations("createProjectModal");
   const router = useRouter();
+  const pathname = usePathname();
+
   const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
 
   const [projectDescription, setProjectDescription] = useState("");
@@ -51,41 +53,45 @@ export default function CreateProjectModal({
   const [newTask, setNewTask] = useState("");
 
   const handleAddTask = async () => {
-  if (newTask.trim()) {
-    const taskObj = {
-      id: Date.now(),
-      title: newTask.trim(),
-      description: "",
-      isManual: true,
-      completed: false
-    };
-
-    try {
-      // Crear el planData con solo la tarea manual
-      const planData = {
-        tasks: [taskObj], // Solo la tarea que se acaba de agregar
-        projectContext: {
-          description: "Proyecto Vacio",
-          stylePrompt: selectedStyle?.prompt || "Sin estilo",
-          type: "Sin tipo definido",
-          utility: "Sin utilidad definida",
-          palette: "Sin paleta definida",
-          colors: selectedPalette === "personalizada" ? customColors : null,
-        },
-        suggestionId: null,
+    if (newTask.trim()) {
+      const taskObj = {
+        id: Date.now(),
+        title: newTask.trim(),
+        description: "",
+        isManual: true,
+        completed: false,
       };
 
-      // Guardar en sessionStorage y navegar
-      sessionStorage.setItem("projectPlanData", JSON.stringify(planData));
-      onOpenChange(false);
-      router.push("/plan");
-      
-    } catch (error) {
-      console.error("Error al agregar tarea:", error);
-      // Manejar error si es necesario
+      try {
+        // Crear el planData con solo la tarea manual
+        const planData = {
+          tasks: [taskObj], // Solo la tarea que se acaba de agregar
+          projectContext: {
+            description: "Proyecto Vacio",
+            stylePrompt: selectedStyle?.prompt || "Sin estilo",
+            type: "Sin tipo definido",
+            utility: "Sin utilidad definida",
+            palette: "Sin paleta definida",
+            colors: selectedPalette === "personalizada" ? customColors : null,
+          },
+          suggestionId: null,
+        };
+
+        // Guardar en sessionStorage y navegar
+        sessionStorage.setItem("projectPlanData", JSON.stringify(planData));
+        onOpenChange(false);
+        console.log(pathname);
+        if (pathname === "/en/plan" || pathname === "/es/plan") {
+          window.location.reload(); // fuerza recarga si ya estás en /plan
+        } else {
+          router.push("/plan"); // redirige normalmente
+        }
+      } catch (error) {
+        console.error("Error al agregar tarea:", error);
+        // Manejar error si es necesario
+      }
     }
-  }
-};
+  };
 
   const projectTypes = [
     t("projectTypes.taskList"),
@@ -163,72 +169,82 @@ export default function CreateProjectModal({
     setErrorMessage(null);
   };
 
- const handleContinue = async () => {
-  if (projectDescription.trim() === "") {
-    setErrorMessage(t("errors.descriptionMissing"));
-    return;
-  }
+  const handleContinue = async () => {
+    if (projectDescription.trim() === "") {
+      setErrorMessage(t("errors.descriptionMissing"));
+      return;
+    }
 
-  setErrorMessage(null);
-  setIsGeneratingTasks(true);
+    setErrorMessage(null);
+    setIsGeneratingTasks(true);
 
-  try {
-    const result = await generateTasksAction(
-      projectType,
-      projectUtility,
-      projectDescription,
-      selectedStyle?.prompt || ""
-    );
-    
-    // Convertir las tareas del resultado a objetos Task
-    const processedTasks = (result.tasks || []).map((task, index) => {
-      if (typeof task === 'string') {
-        return {
-          id: `generated-${Date.now()}-${index}`,
-          title: task,
-          description: "",
-          isManual: false,
-          completed: false
-        };
-      } 
-    });
+    try {
+      const result = await generateTasksAction(
+        projectType,
+        projectUtility,
+        projectDescription,
+        selectedStyle?.prompt || ""
+      );
 
-    const planData = {
-      tasks: processedTasks, // Ahora son objetos Task
-      projectContext: {
-        description: projectDescription,
-        stylePrompt: selectedStyle?.prompt || "",
-      },
-      suggestionId: result.suggestionId || null,
-    };
+      // Convertir las tareas del resultado a objetos Task
+      const processedTasks = (result.tasks || []).map((task, index) => {
+        if (typeof task === "string") {
+          return {
+            id: `generated-${Date.now()}-${index}`,
+            title: task,
+            description: "",
+            isManual: false,
+            completed: false,
+          };
+        }
+      });
 
-    sessionStorage.setItem("projectPlanData", JSON.stringify(planData));
-    onOpenChange(false);
-    router.push("/plan");
-  } catch (error) {
-    console.error("Error llamando a OpenAI:", error);
-    setErrorMessage(t("errors.generationFailed"));
+      const planData = {
+        tasks: processedTasks, // Ahora son objetos Task
+        projectContext: {
+          description: projectDescription,
+          stylePrompt: selectedStyle?.prompt || "",
+        },
+        suggestionId: result.suggestionId || null,
+      };
 
-    const planData = {
-      tasks: [], // Array vacío de objetos Task
-      projectContext: {
-        description: projectDescription,
-        stylePrompt: selectedStyle?.prompt || "",
-        type: projectType,
-        utility: projectUtility,
-        palette: selectedPalette,
-        colors: selectedPalette === "personalizada" ? customColors : null,
-      },
-      suggestionId: null,
-    };
+      sessionStorage.setItem("projectPlanData", JSON.stringify(planData));
+      
+      onOpenChange(false);
+      if (pathname === "/en/plan" || pathname === "/es/plan") {
+        window.location.reload(); // fuerza recarga si ya estás en /plan
+      } else {
+        router.push("/plan"); // redirige normalmente
+      }
+    } catch (error) {
+      console.error("Error llamando a OpenAI:", error);
+      setErrorMessage(t("errors.generationFailed"));
 
-    sessionStorage.setItem("projectPlanData", JSON.stringify(planData));
-    onOpenChange(false);
-    router.push("/plan");
-  } finally {
-    setIsGeneratingTasks(false);
-  }
-};
+      const planData = {
+        tasks: [], // Array vacío de objetos Task
+        projectContext: {
+          description: projectDescription,
+          stylePrompt: selectedStyle?.prompt || "",
+          type: projectType,
+          utility: projectUtility,
+          palette: selectedPalette,
+          colors: selectedPalette === "personalizada" ? customColors : null,
+        },
+        suggestionId: null,
+      };
+
+      sessionStorage.setItem("projectPlanData", JSON.stringify(planData));
+      onOpenChange(false);
+      console.log(pathname);
+      if (pathname === "/en/plan" || pathname === "/es/plan") {
+        window.location.reload(); // fuerza recarga si ya estás en /plan
+      } else {
+        router.push("/plan"); // redirige normalmente
+      }
+    } finally {
+      setIsGeneratingTasks(false);
+    }
+  };
   const handleCloseThisModal = (open: boolean) => {
     if (!open) {
       setProjectDescription("");

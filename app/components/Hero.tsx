@@ -81,7 +81,7 @@ export default function Hero() {
             <Button variant="outline" size="lg" className="font-semibold border-gray-200 text-gray-200 bg-transparent hover:bg-white/20 hover:text-white hover:border-white/30">
               <Link href="/portfolio">{t("ctaPortfolio")}</Link>
             </Button>
-          </div>
+        </div>
       <ShowProjectsModal isOpen={isModalOpen} onOpenChange={setIsModalOpen} />
     </>
   )

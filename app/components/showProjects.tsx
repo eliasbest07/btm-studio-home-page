@@ -49,11 +49,10 @@ export default function ShowProjectsModal({
     }
   }, [isOpen])
 
-  const handleAccess = (project: LocalProject) => {
-    sessionStorage.setItem("projectPlanData", JSON.stringify(project))
-    onOpenChange(false)
-    router.push("/plan")
-  }
+  const handleAccess = (index: number) => {
+  onOpenChange(false)
+  router.push(`/proyectos/${index + 1}`)
+}
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -89,7 +88,7 @@ export default function ShowProjectsModal({
                   </div>
                   <Button
                     size="sm"
-                    onClick={() => handleAccess(project)}
+                    onClick={() => handleAccess(index)}
                     className="text-sm font-medium"
                   >
                     {t("access")}
