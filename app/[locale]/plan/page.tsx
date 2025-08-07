@@ -26,10 +26,14 @@ import Image from "next/image"
 import { generateSingleTaskAction, enhanceSummaryAction, generateImageAction } from "@/app/actions/openai-actions"
 import { cn } from "@/lib/utils"
 
+// ✅ Una sola interfaz Task (la más completa)
 interface Task {
-  id: string
-  text: string
-  completed: boolean
+  id: string;
+  title?: string;
+  text?: string;
+  description?: string;
+  isManual?: boolean;
+  completed: boolean;
 }
 
 interface ProjectContext {
@@ -38,9 +42,9 @@ interface ProjectContext {
 }
 
 interface PlanData {
-  tasks: string[]
-  projectContext: ProjectContext
-  suggestionId?: string
+  tasks: Task[];
+  projectContext: ProjectContext;
+  suggestionId?: string;
 }
 
 export default function PlanPage() {
@@ -57,12 +61,12 @@ export default function PlanPage() {
   // State for new features
   const [isGeneratingImage, setIsGeneratingImage] = useState(false)
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null)
-  const [imageGenerationCount, setImageGenerationCount] = useState(0) // To vary placeholder
+  const [imageGenerationCount, setImageGenerationCount] = useState(0)
   const [isEditingSummary, setIsEditingSummary] = useState(false)
   const [editableDescription, setEditableDescription] = useState("")
   const [editableStylePrompt, setEditableStylePrompt] = useState("")
   const [isEnhancingSummary, setIsEnhancingSummary] = useState(false)
-  const [finalImageUrl, setFinalImageUrl] = useState<string | null>(null); // <-- NUEVA LÍNEA
+  const [finalImageUrl, setFinalImageUrl] = useState<string | null>(null)
 
   // State for submission
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -73,28 +77,40 @@ export default function PlanPage() {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const justAddedTaskId = useRef<string | null>(null)
 
+  // ✅ useEffect corregido para manejar ambos formatos
   useEffect(() => {
     try {
       const storedData = sessionStorage.getItem("projectPlanData")
       if (storedData) {
         const parsedData: PlanData = JSON.parse(storedData)
-        // 🔽 Normaliza las tareas recibidas (quita [, ], comillas y comas)
-        const cleanTask = (txt: string) =>
-          txt
-            .trim()
-            .replace(/^["'\s]*|["',\s]*$/g, ""); // elimina comillas, comas y espacios sobrantes
+        
+        // Procesar las tareas para manejar ambos formatos
+        const processedTasks = parsedData.tasks.map((task, index) => {
+          if (typeof task === 'string') {
+            // Si es string (formato viejo)
+            const cleanTask = (task as string)
+              .trim()
+              .replace(/^["'\s]*|["',\s]*$/g, "");
+            
+            return {
+              id: `${uniqueIdBase}-task-${index}`,
+              text: cleanTask,
+              completed: false,
+            }
+          } else {
+            // Si es objeto Task (formato nuevo)
+            return {
+              id: task.id || `${uniqueIdBase}-task-${index}`,
+              text: task.title || task.text || '',
+              title: task.title || task.text || '',
+              description: task.description || '',
+              isManual: task.isManual || false,
+              completed: task.completed || false,
+            }
+          }
+        }).filter(task => task.text && task.text !== "[" && task.text !== "]");
 
-        const cleanedTasks = parsedData.tasks
-          .map(cleanTask)
-          .filter((t) => t && t !== "[" && t !== "]");
-
-        setTasks(
-          cleanedTasks.map((taskText, index) => ({
-            id: `${uniqueIdBase}-task-${index}`,
-            text: taskText,
-            completed: false,
-          })),
-        )
+        setTasks(processedTasks)
         setCurrentProjectContext(parsedData.projectContext)
         if (parsedData.projectContext) {
           setEditableDescription(parsedData.projectContext.description)
@@ -138,7 +154,12 @@ export default function PlanPage() {
   const handleAddTask = (taskText: string) => {
     if (taskText.trim() === "") return
     const newId = `${uniqueIdBase}-task-${tasks.length}-${Date.now()}`
-    const newTask: Task = { id: newId, text: taskText.trim(), completed: false }
+    const newTask: Task = { 
+      id: newId, 
+      text: taskText.trim(), 
+      title: taskText.trim(),
+      completed: false 
+    }
     setTasks((prevTasks) => [...prevTasks, newTask])
     justAddedTaskId.current = newId
     return newTask
@@ -155,12 +176,12 @@ export default function PlanPage() {
     const result = await generateSingleTaskAction(
       currentProjectContext.description,
       currentProjectContext.stylePrompt,
-      tasks.map((t) => t.text),
+      tasks.map((t) => t.text || t.title || ''),
     )
     if (result.task) {
       handleAddTask(result.task)
     } else if (result.error) {
-      console.error(result.error) // Consider showing a toast
+      console.error(result.error)
     }
     setIsGeneratingTask(false)
   }
@@ -175,101 +196,70 @@ export default function PlanPage() {
 
   const handleStartEditTask = (task: Task) => {
     setEditingTaskId(task.id)
-    setEditingTaskText(task.text)
+    setEditingTaskText(task.text || task.title || '')
   }
 
   const handleSaveEditTask = (id: string) => {
     if (editingTaskText.trim() === "") {
       handleDeleteTask(id)
     } else {
-      setTasks(tasks.map((task) => (task.id === id ? { ...task, text: editingTaskText.trim() } : task)))
+      setTasks(tasks.map((task) => (
+        task.id === id 
+          ? { ...task, text: editingTaskText.trim(), title: editingTaskText.trim() } 
+          : task
+      )))
     }
     setEditingTaskId(null)
     setEditingTaskText("")
   }
 
- const handleFinalizePlan = async () => {
-  if (!currentProjectContext || tasks.length === 0) {
-    setSubmitError("No hay suficiente información para crear el proyecto. Añade una descripción y tareas.");
-    return;
-  }
-
-  setIsSubmitting(true);
-  setSubmitError(null);
-
-  const taskList = tasks.map((task) => task.text);
-  const projectName = currentProjectContext.description;
-
-  const newPlan = {
-    tasks: taskList,
-    projectContext: {
-      description: currentProjectContext.description,
-      stylePrompt: currentProjectContext.stylePrompt,
-    },
-    finalImageUrl: finalImageUrl || null,
-    timestamp: new Date().toISOString(),
-  };
-
-  // ✅ Guardar en localStorage (acumulativo)
-  var nuewId = 0; // Inicializar nuewId
-  try {
-    const raw = typeof window !== "undefined" ? window.localStorage.getItem("allProjectPlans") : null;
-    const existingPlans: any[] = raw ? JSON.parse(raw) : [];
-    const existingCount = existingPlans.length;
-    nuewId = existingCount !== 0 ? existingCount + 1 : 1;
-
-    const updatedPlans = [...existingPlans, newPlan];
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("allProjectPlans", JSON.stringify(updatedPlans));
+  const handleFinalizePlan = async () => {
+    if (!currentProjectContext || tasks.length === 0) {
+      setSubmitError("No hay suficiente información para crear el proyecto. Añade una descripción y tareas.");
+      return;
     }
-  } catch (error) {
-    console.error("Error guardando en localStorage:", error);
-    setSubmitError("Ocurrió un error al guardar localmente el proyecto.");
-    setIsSubmitting(false);
-    return;
-  }
 
-  // 🚫 Código comentado de Supabase o backend
-  /*
-  try {
-    const response = await fetch("/api/create-project", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    const taskList = tasks.map((task) => task.text || task.title || '');
+    const projectName = currentProjectContext.description;
+
+    const newPlan = {
+      tasks: taskList,
+      projectContext: {
+        description: currentProjectContext.description,
+        stylePrompt: currentProjectContext.stylePrompt,
       },
-      body: JSON.stringify({
-        projectName: projectName,
-        tasks: taskList,
-        imageUrl: finalImageUrl,
-      }),
-    });
+      finalImageUrl: finalImageUrl || null,
+      timestamp: new Date().toISOString(),
+    };
 
-    const result = await response.json();
+    var nuewId = 0;
+    try {
+      const raw = typeof window !== "undefined" ? window.localStorage.getItem("allProjectPlans") : null;
+      const existingPlans: any[] = raw ? JSON.parse(raw) : [];
+      const existingCount = existingPlans.length;
+      nuewId = existingCount !== 0 ? existingCount + 1 : 1;
 
-    if (!response.ok) {
-      throw new Error(result.error || "Ocurrió un error al guardar el proyecto.");
+      const updatedPlans = [...existingPlans, newPlan];
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("allProjectPlans", JSON.stringify(updatedPlans));
+      }
+    } catch (error) {
+      console.error("Error guardando en localStorage:", error);
+      setSubmitError("Ocurrió un error al guardar localmente el proyecto.");
+      setIsSubmitting(false);
+      return;
     }
 
-    router.push(`/proyectos/${result.projectId}`);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Un error desconocido ocurrió.";
-    setSubmitError(message);
-  }
-  */
-
-  // ✅ Redirigir o dar feedback localmente
-  console.log("Plan guardado localmente:", newPlan,nuewId);
-  //router.push("/mis-proyectos");
-  
-  router.push(`/proyectos/${nuewId}`);
-  setIsSubmitting(false);
-};
-
-
+    console.log("Plan guardado localmente:", newPlan, nuewId);
+    router.push(`/proyectos/${nuewId}`);
+    setIsSubmitting(false);
+  };
 
   const [imageGenerationError, setImageGenerationError] = useState<string | null>(null);
 
-  // New feature functions
   const handleGenerateImage = async () => {
     if (!currentProjectContext) return;
     setIsGeneratingImage(true);
@@ -283,7 +273,7 @@ export default function PlanPage() {
 
     if (result.imageUrl) {
       setGeneratedImageUrl(result.imageUrl);
-      setFinalImageUrl(result.imageUrl); // <-- NUEVA LÍNEA
+      setFinalImageUrl(result.imageUrl);
     } else {
       setImageGenerationError(result.error || "Ocurrió un error desconocido al generar la imagen.");
     }
@@ -320,10 +310,10 @@ export default function PlanPage() {
         description: result.enhancedDescription,
       }
       setCurrentProjectContext(updatedContext)
-      setEditableDescription(result.enhancedDescription) // Update editable field too
+      setEditableDescription(result.enhancedDescription)
       updateSessionStorageProjectContext(updatedContext)
     } else if (result.error) {
-      console.error(result.error) // Show toast
+      console.error(result.error)
     }
     setIsEnhancingSummary(false)
   }
@@ -363,6 +353,7 @@ export default function PlanPage() {
 
   return (
     <div className="min-h-screen flex flex-col text-gray-100 pt-8 pb-16 px-4 sm:px-6 lg:px-8">
+      {/* El resto del JSX permanece igual... */}
       <header className="mb-8">
         <div className="container mx-auto max-w-5xl">
         <Link href="/">
@@ -370,7 +361,6 @@ export default function PlanPage() {
           className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(158,158,149,0.7)] hover:brightness-110 transition-all duration-200"
           style={{
             background: `rgba(158, 158, 149, 0.2)`,
-            // Removed invalid hover property
             border: '1px solid rgba(255, 255, 255, 0.08)',
             boxShadow:
               '2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)',
@@ -523,7 +513,7 @@ export default function PlanPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={handleGenerateImage} // Same action, will increment count for new query
+                      onClick={handleGenerateImage}
                       className="text-xs bg-gray-700 border-gray-500 text-gray-300 hover:bg-gray-500 hover:text-white"
                     >
                       <RefreshCwIcon className="h-4 w-4 mr-1" />
@@ -599,7 +589,7 @@ export default function PlanPage() {
                           }`}
                           onClick={() => handleStartEditTask(task)}
                         >
-                          {task.text}
+                          {task.text || task.title}
                         </span>
                       )}
                     </div>

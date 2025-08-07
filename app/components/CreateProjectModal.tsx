@@ -1,160 +1,242 @@
-'use client'
+"use client";
 
-import { useRef, useEffect, useState } from "react"
+import { useRef, useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import ImageCarousel, { type CarouselImageItem } from "./ImageCarousel"
-import { generateTasksAction } from "@/app/actions/openai-actions"
-import { Loader2 } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useTranslations } from "next-intl"
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import ImageCarousel, { type CarouselImageItem } from "./ImageCarousel";
+import { generateTasksAction } from "@/app/actions/openai-actions";
+import { Loader2, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 interface CreateProjectModalProps {
-  isOpen: boolean
-  onOpenChange: (open: boolean) => void
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
+export default function CreateProjectModal({
+  isOpen,
+  onOpenChange,
+}: CreateProjectModalProps) {
+  const t = useTranslations("createProjectModal");
+  const router = useRouter();
+  const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
 
+  const [projectDescription, setProjectDescription] = useState("");
+  const [selectedStyle, setSelectedStyle] = useState<CarouselImageItem | null>(
+    null
+  );
+  const [isGeneratingTasks, setIsGeneratingTasks] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [projectType, setProjectType] = useState<string>(
+    t("projectTypes.taskList")
+  );
+  const [projectUtility, setProjectUtility] = useState("");
+  const [selectedPalette, setSelectedPalette] = useState<string | null>(
+    "ninguna"
+  );
+  const [customColors, setCustomColors] = useState<string[]>([
+    "#ffffff",
+    "#000000",
+    "#cccccc",
+  ]);
+  const [newTask, setNewTask] = useState("");
 
-export default function CreateProjectModal({ isOpen, onOpenChange }: CreateProjectModalProps) {
-  const t = useTranslations("createProjectModal")
-  const router = useRouter()
-  const descriptionRef = useRef<HTMLTextAreaElement | null>(null)
+  const handleAddTask = async () => {
+  if (newTask.trim()) {
+    const taskObj = {
+      id: Date.now(),
+      title: newTask.trim(),
+      description: "",
+      isManual: true,
+      completed: false
+    };
 
-  const [projectDescription, setProjectDescription] = useState("")
-  const [selectedStyle, setSelectedStyle] = useState<CarouselImageItem | null>(null)
-  const [isGeneratingTasks, setIsGeneratingTasks] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [projectType, setProjectType] = useState<string>(t("projectTypes.taskList"))
-  const [projectUtility, setProjectUtility] = useState("")
-  const [selectedPalette, setSelectedPalette] = useState<string | null>("ninguna")
-  const [customColors, setCustomColors] = useState<string[]>(["#ffffff", "#000000", "#cccccc"])
+    try {
+      // Crear el planData con solo la tarea manual
+      const planData = {
+        tasks: [taskObj], // Solo la tarea que se acaba de agregar
+        projectContext: {
+          description: "Proyecto Vacio",
+          stylePrompt: selectedStyle?.prompt || "Sin estilo",
+          type: "Sin tipo definido",
+          utility: "Sin utilidad definida",
+          palette: "Sin paleta definida",
+          colors: selectedPalette === "personalizada" ? customColors : null,
+        },
+        suggestionId: null,
+      };
 
-  const projectTypes = [t("projectTypes.taskList"), t("projectTypes.webApp"), t("projectTypes.landingPage"), t("projectTypes.mobileApp"), t("projectTypes.automation")]
+      // Guardar en sessionStorage y navegar
+      sessionStorage.setItem("projectPlanData", JSON.stringify(planData));
+      onOpenChange(false);
+      router.push("/plan");
+      
+    } catch (error) {
+      console.error("Error al agregar tarea:", error);
+      // Manejar error si es necesario
+    }
+  }
+};
+
+  const projectTypes = [
+    t("projectTypes.taskList"),
+    t("projectTypes.webApp"),
+    t("projectTypes.landingPage"),
+    t("projectTypes.mobileApp"),
+    t("projectTypes.automation"),
+  ];
   const styleInspirations: CarouselImageItem[] = [
-  {
-    src: "/minimalist-neutral.webp",
-    alt: t("style.names.minimalistNeutral"),
-    prompt: t("style.prompts.minimalistNeutral"),
-  },
-  {
-    src: "/dark-modern-tech.webp",
-    alt: t("style.names.darkModernTech"),
-    prompt: t("style.prompts.darkModernTech"),
-  },
-  {
-    src: "/vibrant-playful.webp",
-    alt: t("style.names.vibrantPlayful"),
-    prompt: t("style.prompts.vibrantPlayful"),
-  },
-  {
-    src: "/elegant-luxury.webp",
-    alt: t("style.names.elegantLuxury"),
-    prompt: t("style.prompts.elegantLuxury"),
-  },
-  {
-    src: "/eco-natural.webp",
-    alt: t("style.names.ecoNatural"),
-    prompt: t("style.prompts.ecoNatural"),
-  },
-  {
-    src: "/retro-futuristic.webp",
-    alt: t("style.names.retroFuturistic"),
-    prompt: t("style.prompts.retroFuturistic"),
-  },
-];
+    {
+      src: "/minimalist-neutral.webp",
+      alt: t("style.names.minimalistNeutral"),
+      prompt: t("style.prompts.minimalistNeutral"),
+    },
+    {
+      src: "/dark-modern-tech.webp",
+      alt: t("style.names.darkModernTech"),
+      prompt: t("style.prompts.darkModernTech"),
+    },
+    {
+      src: "/vibrant-playful.webp",
+      alt: t("style.names.vibrantPlayful"),
+      prompt: t("style.prompts.vibrantPlayful"),
+    },
+    {
+      src: "/elegant-luxury.webp",
+      alt: t("style.names.elegantLuxury"),
+      prompt: t("style.prompts.elegantLuxury"),
+    },
+    {
+      src: "/eco-natural.webp",
+      alt: t("style.names.ecoNatural"),
+      prompt: t("style.prompts.ecoNatural"),
+    },
+    {
+      src: "/retro-futuristic.webp",
+      alt: t("style.names.retroFuturistic"),
+      prompt: t("style.prompts.retroFuturistic"),
+    },
+  ];
 
   const colorPalettes = [
     { name: "Minimalista", colors: ["#f5f5f4", "#d4d4d4", "#a3a3a3"] },
-    { name: "Oscuro Neón", colors: ["#0f172a", "#1e293b", "#22d3ee", "#a78bfa"] },
-    { name: "Tropical Vibrante", colors: ["#f59e0b", "#10b981", "#ec4899", "#f87171"] },
+    {
+      name: "Oscuro Neón",
+      colors: ["#0f172a", "#1e293b", "#22d3ee", "#a78bfa"],
+    },
+    {
+      name: "Tropical Vibrante",
+      colors: ["#f59e0b", "#10b981", "#ec4899", "#f87171"],
+    },
     { name: "Lujoso", colors: ["#111827", "#78350f", "#facc15"] },
-    { name: "Natural Suave", colors: ["#a3b18a", "#588157", "#dad7cd", "#344e41"] },
-  ]
+    {
+      name: "Natural Suave",
+      colors: ["#a3b18a", "#588157", "#dad7cd", "#344e41"],
+    },
+  ];
 
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => {
-        descriptionRef.current?.focus()
-      }, 100)
+        descriptionRef.current?.focus();
+      }, 100);
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   const handleImageSelection = (item: CarouselImageItem) => {
     if (item.alt === "Ningún estilo") {
-      setSelectedStyle(null)
+      setSelectedStyle(null);
     } else if (selectedStyle?.alt === item.alt) {
-      setSelectedStyle(null)
+      setSelectedStyle(null);
     } else {
-      setSelectedStyle(item)
+      setSelectedStyle(item);
     }
-    setErrorMessage(null)
+    setErrorMessage(null);
+  };
+
+ const handleContinue = async () => {
+  if (projectDescription.trim() === "") {
+    setErrorMessage(t("errors.descriptionMissing"));
+    return;
   }
 
-  const handleContinue = async () => {
-    if (projectDescription.trim() === "") {
-      setErrorMessage(t("errors.descriptionMissing"))
-      return
-    }
+  setErrorMessage(null);
+  setIsGeneratingTasks(true);
 
-    setErrorMessage(null)
-    setIsGeneratingTasks(true)
+  try {
+    const result = await generateTasksAction(
+      projectType,
+      projectUtility,
+      projectDescription,
+      selectedStyle?.prompt || ""
+    );
+    
+    // Convertir las tareas del resultado a objetos Task
+    const processedTasks = (result.tasks || []).map((task, index) => {
+      if (typeof task === 'string') {
+        return {
+          id: `generated-${Date.now()}-${index}`,
+          title: task,
+          description: "",
+          isManual: false,
+          completed: false
+        };
+      } 
+    });
 
-    try {
-      const result = await generateTasksAction(projectType, projectUtility, projectDescription, selectedStyle?.prompt || "")
-      const planData = {
-        tasks: result.tasks || [],
-        projectContext: {
-          description: projectDescription,
-          stylePrompt: selectedStyle?.prompt || "",
-        },
-        suggestionId: result.suggestionId || null,
-      }
+    const planData = {
+      tasks: processedTasks, // Ahora son objetos Task
+      projectContext: {
+        description: projectDescription,
+        stylePrompt: selectedStyle?.prompt || "",
+      },
+      suggestionId: result.suggestionId || null,
+    };
 
-      sessionStorage.setItem("projectPlanData", JSON.stringify(planData))
-      onOpenChange(false)
-      router.push("/plan")
-    } catch (error) {
-      console.error("Error llamando a OpenAI:", error)
-      setErrorMessage(t("errors.generationFailed"))
+    sessionStorage.setItem("projectPlanData", JSON.stringify(planData));
+    onOpenChange(false);
+    router.push("/plan");
+  } catch (error) {
+    console.error("Error llamando a OpenAI:", error);
+    setErrorMessage(t("errors.generationFailed"));
 
-      const planData = {
-        tasks: [],
-        projectContext: {
-          description: projectDescription,
-          stylePrompt: selectedStyle?.prompt || "",
-          type: projectType,
-          utility: projectUtility,
-          palette: selectedPalette,
-          colors: selectedPalette === "personalizada" ? customColors : null,
-        },
-        suggestionId: null,
-      }
+    const planData = {
+      tasks: [], // Array vacío de objetos Task
+      projectContext: {
+        description: projectDescription,
+        stylePrompt: selectedStyle?.prompt || "",
+        type: projectType,
+        utility: projectUtility,
+        palette: selectedPalette,
+        colors: selectedPalette === "personalizada" ? customColors : null,
+      },
+      suggestionId: null,
+    };
 
-      sessionStorage.setItem("projectPlanData", JSON.stringify(planData))
-      onOpenChange(false)
-      router.push("/plan")
-    } finally {
-      setIsGeneratingTasks(false)
-    }
+    sessionStorage.setItem("projectPlanData", JSON.stringify(planData));
+    onOpenChange(false);
+    router.push("/plan");
+  } finally {
+    setIsGeneratingTasks(false);
   }
-
+};
   const handleCloseThisModal = (open: boolean) => {
     if (!open) {
-      setProjectDescription("")
-      setSelectedStyle(null)
-      setErrorMessage(null)
+      setProjectDescription("");
+      setSelectedStyle(null);
+      setErrorMessage(null);
     }
-    onOpenChange(open)
-  }
+    onOpenChange(open);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleCloseThisModal}>
@@ -202,8 +284,14 @@ export default function CreateProjectModal({ isOpen, onOpenChange }: CreateProje
 
             {/* Project Utility */}
             <div>
-              <label htmlFor="projectUtility" className="block text-sm font-medium text-gray-200 mb-1.5">
-                {t("utility.label")} <span className="text-gray-400 italic text-xs">({t("utility.optional")})</span>
+              <label
+                htmlFor="projectUtility"
+                className="block text-sm font-medium text-gray-200 mb-1.5"
+              >
+                {t("utility.label")}{" "}
+                <span className="text-gray-400 italic text-xs">
+                  ({t("utility.optional")})
+                </span>
               </label>
               <Textarea
                 id="projectUtility"
@@ -217,7 +305,10 @@ export default function CreateProjectModal({ isOpen, onOpenChange }: CreateProje
 
             {/* Description */}
             <div className="rounded-xl bg-white/10 border border-yellow-400/30 p-4 shadow-md transition-shadow hover:shadow-yellow-500/10">
-              <label htmlFor="projectDescription" className="block text-sm font-medium text-yellow-300 mb-1.5">
+              <label
+                htmlFor="projectDescription"
+                className="block text-sm font-medium text-yellow-300 mb-1.5"
+              >
                 {t("description.label")}
               </label>
               <Textarea
@@ -226,22 +317,27 @@ export default function CreateProjectModal({ isOpen, onOpenChange }: CreateProje
                 placeholder={t("description.placeholder")}
                 value={projectDescription}
                 onChange={(e) => {
-                  setProjectDescription(e.target.value)
-                  setErrorMessage(null)
+                  setProjectDescription(e.target.value);
+                  setErrorMessage(null);
                 }}
                 rows={7}
                 className="resize-none bg-white/5 focus:ring-yellow-400 border border-yellow-500/20 text-gray-100 placeholder:text-yellow-200 transition-all duration-200"
               />
               {projectType && (
                 <p className="text-xs text-yellow-200 mt-1 ml-1">
-                  {t("description.selectedProject")} <span className="text-yellow-100 font-semibold">{projectType}</span>
+                  {t("description.selectedProject")}{" "}
+                  <span className="text-yellow-100 font-semibold">
+                    {projectType}
+                  </span>
                 </p>
               )}
             </div>
 
             {/* Palette Selection */}
             <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-200 mb-2">{t("palette.label")}</label>
+              <label className="block text-sm font-medium text-gray-200 mb-2">
+                {t("palette.label")}
+              </label>
               <div className="flex flex-wrap gap-4">
                 {/* None */}
                 <div
@@ -268,10 +364,16 @@ export default function CreateProjectModal({ isOpen, onOpenChange }: CreateProje
                   >
                     <div className="flex space-x-1 rounded-lg overflow-hidden">
                       {palette.colors.map((color, idx) => (
-                        <div key={idx} className="w-6 h-6" style={{ backgroundColor: color }} />
+                        <div
+                          key={idx}
+                          className="w-6 h-6"
+                          style={{ backgroundColor: color }}
+                        />
                       ))}
                     </div>
-                    <p className="text-xs text-center mt-1 text-gray-300">{t(`palette.names.${palette.name}`)}</p>
+                    <p className="text-xs text-center mt-1 text-gray-300">
+                      {t(`palette.names.${palette.name}`)}
+                    </p>
                   </div>
                 ))}
 
@@ -286,10 +388,16 @@ export default function CreateProjectModal({ isOpen, onOpenChange }: CreateProje
                 >
                   <div className="flex space-x-1">
                     {customColors.map((color, idx) => (
-                      <div key={idx} className="w-6 h-6" style={{ backgroundColor: color }} />
+                      <div
+                        key={idx}
+                        className="w-6 h-6"
+                        style={{ backgroundColor: color }}
+                      />
                     ))}
                   </div>
-                  <p className="text-xs text-center mt-1 text-gray-300">{t("palette.custom")}</p>
+                  <p className="text-xs text-center mt-1 text-gray-300">
+                    {t("palette.custom")}
+                  </p>
                 </div>
               </div>
 
@@ -301,9 +409,9 @@ export default function CreateProjectModal({ isOpen, onOpenChange }: CreateProje
                       type="color"
                       value={color}
                       onChange={(e) => {
-                        const newColors = [...customColors]
-                        newColors[idx] = e.target.value
-                        setCustomColors(newColors)
+                        const newColors = [...customColors];
+                        newColors[idx] = e.target.value;
+                        setCustomColors(newColors);
                       }}
                       className="w-10 h-10 rounded border border-gray-400"
                     />
@@ -311,7 +419,9 @@ export default function CreateProjectModal({ isOpen, onOpenChange }: CreateProje
                   {customColors.length < 4 && (
                     <button
                       type="button"
-                      onClick={() => setCustomColors([...customColors, "#888888"])}
+                      onClick={() =>
+                        setCustomColors([...customColors, "#888888"])
+                      }
                       className="text-xs text-gray-200 underline hover:text-yellow-400"
                     >
                       {t("palette.addColor")}
@@ -323,7 +433,9 @@ export default function CreateProjectModal({ isOpen, onOpenChange }: CreateProje
 
             {/* Style */}
             <div>
-              <label className="block text-sm font-medium text-gray-200 mb-2">{t("style.label")}</label>
+              <label className="block text-sm font-medium text-gray-200 mb-2">
+                {t("style.label")}
+              </label>
               <ImageCarousel
                 items={[
                   {
@@ -340,33 +452,68 @@ export default function CreateProjectModal({ isOpen, onOpenChange }: CreateProje
               {selectedStyle ? (
                 <div className="mt-3 p-3 bg-white/5 rounded-md border border-white/10">
                   <p className="text-xs text-gray-300">
-                    <span className="font-semibold text-gray-100">{t("style.selected")}:</span> {selectedStyle.alt}
+                    <span className="font-semibold text-gray-100">
+                      {t("style.selected")}:
+                    </span>{" "}
+                    {selectedStyle.alt}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    <span className="font-semibold text-gray-200">{t("style.prompt")}:</span> {selectedStyle.prompt}
+                    <span className="font-semibold text-gray-200">
+                      {t("style.prompt")}:
+                    </span>{" "}
+                    {selectedStyle.prompt}
                   </p>
                 </div>
               ) : (
-                <p className="text-xs text-gray-400 mt-2">{t("style.noneSelected")}</p>
+                <p className="text-xs text-gray-400 mt-2">
+                  {t("style.noneSelected")}
+                </p>
               )}
             </div>
 
             {/* Error */}
-            {errorMessage && <p className="text-sm text-red-400 text-center mt-2">{errorMessage}</p>}
+            {errorMessage && (
+              <p className="text-sm text-red-400 text-center mt-2">
+                {errorMessage}
+              </p>
+            )}
           </div>
         </div>
 
         <DialogFooter className="sm:justify-end gap-2 flex-shrink-0 px-6 pb-6 pt-4 border-t border-white/10">
-          <Button
-            type="button"
-            onClick={handleContinue}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-900 min-w-[100px]"
-            disabled={isGeneratingTasks || projectDescription.trim() === ""}
-          >
-            {isGeneratingTasks ? <Loader2 className="h-4 w-4 animate-spin" /> : t("continueButton")}
-          </Button>
+          {/* Input para añadir tareas */}
+          <div className="flex gap-2 mb-4 items-center w-full">
+            <input
+              type="text"
+              value={newTask}
+              onChange={(e) => setNewTask(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && handleAddTask()}
+              placeholder="Añadir tarea"
+              className="flex-1 min-w-0 h-10 px-4 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <Button
+              onClick={handleAddTask}
+              disabled={!newTask.trim()}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium h-10 px-4 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+              Añadir Tarea
+            </Button>
+            <Button
+              type="button"
+              onClick={handleContinue}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-900 h-10 px-4 rounded-lg flex-shrink-0"
+              disabled={isGeneratingTasks || projectDescription.trim() === ""}
+            >
+              {isGeneratingTasks ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                t("continueButton")
+              )}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
