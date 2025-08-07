@@ -63,6 +63,7 @@ export default function Hero() {
         <div className="relative z-10">
 
         <Carousel/>
+
           {/* Headline */}
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-gray-50 drop-shadow-xl">
             {t("headline")}
@@ -71,7 +72,16 @@ export default function Hero() {
             {t("subtext")}
           </p>
         </div>
+        
       </section>
+      <div className="flex flex-col sm:flex-row gap-4 justify-center mb-2">
+            <Button size="lg" className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold" onClick={() => setIsModalOpen(true)}>
+              {t("ctaContinue")}
+            </Button>
+            <Button variant="outline" size="lg" className="font-semibold border-gray-200 text-gray-200 bg-transparent hover:bg-white/20 hover:text-white hover:border-white/30">
+              <Link href="/portfolio">{t("ctaPortfolio")}</Link>
+            </Button>
+          </div>
       <ShowProjectsModal isOpen={isModalOpen} onOpenChange={setIsModalOpen} />
     </>
   )
