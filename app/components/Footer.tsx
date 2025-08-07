@@ -28,8 +28,8 @@ export default function Footer() {
         borderTop: "1px solid rgba(255, 255, 255, 0.08)",
       }}
     >
-      <div className="container py-6 flex flex-col md:flex-row justify-between items-center gap-6 text-gray-300">
-        <p className="text-sm">&copy; {currentYear} BTM Studio. {t("rights")}</p>
+      <div className="container py-6 mx-auto flex flex-col gap-6 md:flex-row justify-between items-center gap-6 text-gray-300">
+        <p className="text-sm">&copy; {currentYear} BTM-Studio. {t("rights")}</p>
         <div className="flex gap-4 items-center">
           <Link
             href="https://github.com/eliasbest07"

@@ -4,24 +4,48 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
 
+/* ---------- Image card with placeholder ---------- */
+const CarouselImage = ({ src, alt }: { src: string; alt: string }) => {
+  const [loaded, setLoaded] = useState(false);
+
+  return (
+    <div className="relative w-full aspect-[4/3] overflow-hidden rounded-xl bg-black/20 border border-white/10">
+      <img
+        src="/placeholder.png"
+        alt="placeholder"
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+          loaded ? "opacity-0" : "opacity-100"
+        }`}
+      />
+      <img
+        src={src}
+        alt={alt}
+        onLoad={() => setLoaded(true)}
+        onError={(e) => (e.currentTarget.src = "/placeholder.png")}
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+          loaded ? "opacity-100" : "opacity-0"
+        }`}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+    </div>
+  );
+};
+
+/* ------------------------- Carousel ------------------------- */
 const Carousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsPerView, setItemsPerView] = useState(4);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  const carouselItems = [
-    { id: 1, title: "Imagen 1", image: "https://picsum.photos/800/600?random=1" },
-    { id: 2, title: "Imagen 2", image: "https://picsum.photos/800/600?random=2" },
-    { id: 3, title: "Imagen 3", image: "https://picsum.photos/800/600?random=3" },
-    { id: 4, title: "Imagen 4", image: "https://picsum.photos/800/600?random=4" },
-    { id: 5, title: "Imagen 5", image: "https://picsum.photos/800/600?random=5" },
-    { id: 6, title: "Imagen 6", image: "https://picsum.photos/800/600?random=6" },
-    { id: 7, title: "Imagen 7", image: "https://picsum.photos/800/600?random=7" },
-    { id: 8, title: "Imagen 8", image: "https://picsum.photos/800/600?random=8" }
-  ];
+  const carouselItems = Array.from({ length: 8 }).map((_, i) => ({
+    id: i + 1,
+    title: `Imagen ${i + 1}`,
+    image: `https://picsum.photos/800/600?random=${i + 1}`,
+  }));
 
   const t = useTranslations("Index");
 
+  /* responsive slides per view */
   useEffect(() => {
     const handleResize = () => {
       setItemsPerView(window.innerWidth >= 768 ? 4 : 2);
@@ -32,85 +56,86 @@ const Carousel = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const nextSlide = () => {
-    const maxIndex = carouselItems.length - itemsPerView;
-    setCurrentIndex(prev => (prev >= maxIndex ? 0 : prev + 1));
-  };
-
-  const prevSlide = () => {
-    const maxIndex = carouselItems.length - itemsPerView;
-    setCurrentIndex(prev => (prev <= 0 ? maxIndex : prev - 1));
-  };
-
+  /* auto-advance every 4 s */
   useEffect(() => {
-    const interval = setInterval(() => nextSlide(), 4000);
-    return () => clearInterval(interval);
+    const id = setInterval(() => nextSlide(), 4000);
+    return () => clearInterval(id);
   }, [itemsPerView]);
 
-  const visibleItems = carouselItems.slice(currentIndex, currentIndex + itemsPerView);
+  const maxIndex = carouselItems.length - itemsPerView;
+  const nextSlide = () => setCurrentIndex((i) => (i >= maxIndex ? 0 : i + 1));
+  const prevSlide = () => setCurrentIndex((i) => (i <= 0 ? maxIndex : i - 1));
+
+  const visible = carouselItems.slice(
+    currentIndex,
+    currentIndex + itemsPerView
+  );
 
   return (
-    <div className="w-full mx-auto px-4 py-8">
+    <div className="w-full px-4 py-2">
       <div className="relative overflow-hidden rounded-2xl bg-black/50 backdrop-blur-sm border border-white/10 p-6">
-        <h2 className="text-3xl font-bold text-white mb-6 text-center">{t("title-imageCarousel")}</h2>
+        <h2 className="text-3xl font-bold text-white mb-6 text-center">
+          {t("title-imageCarousel")}
+        </h2>
 
-        {/* Botones */}
-        <button onClick={prevSlide} className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 bg-black/30 text-white rounded-full h-12 w-12 flex items-center justify-center">
+        {/* nav buttons */}
+        <button
+          onClick={prevSlide}
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 text-white rounded-full h-12 w-12 flex items-center justify-center"
+        >
           <ChevronLeft className="h-6 w-6" />
         </button>
-        <button onClick={nextSlide} className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 bg-black/30 text-white rounded-full h-12 w-12 flex items-center justify-center">
+        <button
+          onClick={nextSlide}
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 text-white rounded-full h-12 w-12 flex items-center justify-center"
+        >
           <ChevronRight className="h-6 w-6" />
         </button>
 
-        {/* Carrusel */}
+        {/* slides */}
         <div className="flex gap-3 h-80">
           <AnimatePresence mode="wait">
-            {visibleItems.map((item, index) => (
+            {visible.map((item, idx) => (
               <motion.div
                 key={item.id}
-                className="relative flex-shrink-0 basis-1/4 md:basis-1/4 w-full cursor-pointer"
+                className="shrink-0 grow-0 basis-1/2 md:basis-1/4 cursor-pointer"
                 onClick={() => setSelectedImage(item.image)}
-                initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -50, scale: 0.8 }}
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -40 }}
                 transition={{
                   type: "spring",
-                  stiffness: 100,
-                  damping: 20,
-                  delay: index * 0.15
+                  stiffness: 90,
+                  damping: 18,
+                  delay: idx * 0.15, // stagger
                 }}
               >
-                <div className="relative h-full rounded-xl overflow-hidden bg-black/20 border border-white/10 shadow-lg hover:scale-105 transition-all duration-300">
-                  <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
-                </div>
+                <CarouselImage src={item.image} alt={item.title} />
               </motion.div>
             ))}
           </AnimatePresence>
         </div>
       </div>
 
-      {/* ✅ Modal imagen ampliada */}
+      {/* full-screen image */}
       <AnimatePresence>
         {selectedImage && (
           <motion.div
-            className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/90 flex items-start justify-center z-50 p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedImage(null)}
           >
-            <div className="relative max-w-5xl w-full max-h-[90vh]">
-              <motion.img
-                src={selectedImage}
-                alt="Vista ampliada"
-                className="w-full max-h-[85vh] mt-10 object-contain rounded-lg shadow-lg cursor-pointer"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 100, damping: 15 }}
-              />
-            </div>
+            <motion.img
+              src={selectedImage}
+              alt="Zoomed"
+              className="max-w-5xl w-full max-h-[85vh] mt-16 object-contain rounded-lg shadow-lg"
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 90, damping: 18 }}
+            />
           </motion.div>
         )}
       </AnimatePresence>

@@ -17,13 +17,42 @@ export default function Login() {
   const handleLogin = async () => {
     setIsLoading(true);
     setErrorMsg('');
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data: loginData, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       setErrorMsg(error.message);
       setIsLoading(false);
       return;
     }
+        const userId = loginData.user.id;
+        const { data: userData, error: userError } = await supabase
+      .from('usuario')
+      .select('*')
+      .eq('id_usuario', userId)
+      .single();
+
+    if (userError || !userData) {
+      setErrorMsg(`No se encontraron datos del usuario en la base de datos. ${userError}`);
+      console.error('Error fetching user data:', userError);
+      setIsLoading(false);
+      return;
+    }
+
+  // Guardar en localStorage
+    localStorage.setItem('loggedIn', 'true');
+    localStorage.setItem('userData', JSON.stringify({
+      nombre: userData.nombre,
+      idea: userData.idea,
+      avatar: userData.avatar,
+      role: userData.role,
+      correo: userData.correo,
+      admin: userData.admin
+    }));
+
+    router.push('/');
+
+
+
 
     router.push('/');
   };
