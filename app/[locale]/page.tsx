@@ -6,6 +6,7 @@ import SuccessCasesSection from "../components/SuccessCasesSection";
 import { getSuccessCasesData } from "../data/success-cases-data";
 import ServiceCard from "../components/ServiceCard";
 import { useTranslations } from "next-intl";
+import Carousel from "../components/carousel";
 
 
 export default function HomePage() {
@@ -30,6 +31,7 @@ export default function HomePage() {
 
   return (
     <>
+      <Carousel/>
       <Hero />
       <section className="py-12 md:py-20">
         <div className="container mx-auto px-4">

@@ -8,7 +8,7 @@ import Image from "next/image"
 import { Car, ChevronLeft, ChevronRight } from "lucide-react"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { useTranslations } from "next-intl"
-import Carousel from "./carousel"
+
 
 export default function Hero() {
   const t = useTranslations("hero")
@@ -58,23 +58,22 @@ export default function Hero() {
   }, [carouselItems.length])
 
   return (
-    <>
-      <section className="relative text-white min-h-[calc(100vh-4rem-80px)] md:min-h-[calc(100vh-4rem-120px)] flex items-center justify-center text-center py-2 px-4">
-        <div className="relative z-10">
+   
+      <section
+  className="mt-4 text-white 
+             flex flex-col items-center justify-start text-center"
+>
+  <div className="relative z-10">
+    {/* remove default h1 top-margin */}
+    <h1 className="mt-0 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-gray-50 drop-shadow-xl">
+      {t("headline")}
+    </h1>
 
-        <Carousel/>
-
-          {/* Headline */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-gray-50 drop-shadow-xl">
-            {t("headline")}
-          </h1>
-          <p className="text-lg sm:text-xl md:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto drop-shadow-lg">
-            {t("subtext")}
-          </p>
-        </div>
-        
-      </section>
-      <div className="flex flex-col sm:flex-row gap-4 justify-center mb-2">
+    <p className="text-lg sm:text-xl md:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto drop-shadow-lg">
+      {t("subtext")}
+    </p>
+  </div>
+     <div className="flex flex-col sm:flex-row gap-4 justify-center mb-2">
             <Button size="lg" className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold" onClick={() => setIsModalOpen(true)}>
               {t("ctaContinue")}
             </Button>
@@ -83,6 +82,8 @@ export default function Hero() {
             </Button>
         </div>
       <ShowProjectsModal isOpen={isModalOpen} onOpenChange={setIsModalOpen} />
-    </>
+</section>
+   
+   
   )
 }

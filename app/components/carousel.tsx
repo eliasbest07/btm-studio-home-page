@@ -58,7 +58,7 @@ const Carousel = () => {
 
   /* auto-advance every 4 s */
   useEffect(() => {
-    const id = setInterval(() => nextSlide(), 4000);
+    const id = setInterval(() => nextSlide(), 8000);
     return () => clearInterval(id);
   }, [itemsPerView]);
 
