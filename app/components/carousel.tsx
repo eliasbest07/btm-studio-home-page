@@ -7,7 +7,6 @@ import { useTranslations } from "next-intl";
 /* ---------- Image card with placeholder ---------- */
 const CarouselImage = ({ src, alt }: { src: string; alt: string }) => {
   const [loaded, setLoaded] = useState(false);
-
   return (
     <div className="relative w-full aspect-[4/3] overflow-hidden rounded-xl bg-black/20 border border-white/10">
       <img
@@ -36,6 +35,7 @@ const Carousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsPerView, setItemsPerView] = useState(4);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const t = useTranslations("Index");
 
   const carouselItems = Array.from({ length: 8 }).map((_, i) => ({
     id: i + 1,
@@ -43,9 +43,6 @@ const Carousel = () => {
     image: `https://picsum.photos/800/600?random=${i + 1}`,
   }));
 
-  const t = useTranslations("Index");
-
-  /* responsive slides per view */
   useEffect(() => {
     const handleResize = () => {
       setItemsPerView(window.innerWidth >= 768 ? 4 : 2);
@@ -56,7 +53,6 @@ const Carousel = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  /* auto-advance every 4 s */
   useEffect(() => {
     const id = setInterval(() => nextSlide(), 8000);
     return () => clearInterval(id);
@@ -66,34 +62,32 @@ const Carousel = () => {
   const nextSlide = () => setCurrentIndex((i) => (i >= maxIndex ? 0 : i + 1));
   const prevSlide = () => setCurrentIndex((i) => (i <= 0 ? maxIndex : i - 1));
 
-  const visible = carouselItems.slice(
-    currentIndex,
-    currentIndex + itemsPerView
-  );
+  const visible = carouselItems.slice(currentIndex, currentIndex + itemsPerView);
 
   return (
     <div className="w-full px-4 py-2">
-      <div className="relative overflow-hidden rounded-2xl bg-black/50 backdrop-blur-sm border border-white/10 p-6">
-        <h2 className="text-3xl font-bold text-white mb-6 text-center">
+      <div className="relative overflow-hidden rounded-2xl bg-black/50 backdrop-blur-sm border border-white/10 p-0 md:p-6 mb-[10px]">
+        <h2 className="text-3xl font-bold text-white mb-4 md:mb-6 text-center">
           {t("title-imageCarousel")}
         </h2>
 
-        {/* nav buttons */}
-        <button
-          onClick={prevSlide}
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 text-white rounded-full h-12 w-12 flex items-center justify-center"
-        >
-          <ChevronLeft className="h-6 w-6" />
-        </button>
-        <button
-          onClick={nextSlide}
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 text-white rounded-full h-12 w-12 flex items-center justify-center"
-        >
-          <ChevronRight className="h-6 w-6" />
-        </button>
+        {/* nav buttons (desktop only) */}
+  <button
+  onClick={prevSlide}
+  className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 text-white rounded-full h-10 w-10 md:h-12 md:w-12 flex items-center justify-center"
+>
+  <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
+</button>
 
-        {/* slides */}
-        <div className="flex gap-3 h-80">
+<button
+  onClick={nextSlide}
+  className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 text-white rounded-full h-10 w-10 md:h-12 md:w-12 flex items-center justify-center"
+>
+  <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
+</button>
+
+        {/* slides: auto height on mobile (image height), fixed on desktop */}
+        <div className="flex mb-2 gap-3 md:h-80">
           <AnimatePresence mode="wait">
             {visible.map((item, idx) => (
               <motion.div
@@ -103,12 +97,7 @@ const Carousel = () => {
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -40 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 90,
-                  damping: 18,
-                  delay: idx * 0.15, // stagger
-                }}
+                transition={{ type: "spring", stiffness: 90, damping: 18, delay: idx * 0.15 }}
               >
                 <CarouselImage src={item.image} alt={item.title} />
               </motion.div>
