@@ -73,18 +73,18 @@ const Carousel = () => {
 
         {/* nav buttons (desktop only) */}
   <button
-  onClick={prevSlide}
-  className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 text-white rounded-full h-10 w-10 md:h-12 md:w-12 flex items-center justify-center"
->
-  <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
-</button>
+    onClick={prevSlide}
+    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 text-white rounded-full h-10 w-10 md:h-12 md:w-12 flex items-center justify-center"
+  >
+    <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
+  </button>
 
-<button
-  onClick={nextSlide}
-  className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 text-white rounded-full h-10 w-10 md:h-12 md:w-12 flex items-center justify-center"
->
-  <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
-</button>
+  <button
+    onClick={nextSlide}
+    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 text-white rounded-full h-10 w-10 md:h-12 md:w-12 flex items-center justify-center"
+  >
+    <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
+  </button>
 
         {/* slides: auto height on mobile (image height), fixed on desktop */}
         <div className="flex mb-2 gap-3 md:h-80">
