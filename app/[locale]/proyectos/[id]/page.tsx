@@ -2,6 +2,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Pencil, Lock, Unlock, Loader2 } from "lucide-react";
+
 
 // Stored plan shape in localStorage
 type Plan = {
@@ -16,6 +18,32 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
   const { id } = React.use(params); // Next.js now passes params as a Promise
   const [plan, setPlan] = React.useState<Plan | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [isPublic, setIsPublic] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const visibilityKey = `project-${id}-visibility`;
+
+// Al cargar el componente, leer si es público
+React.useEffect(() => {
+  const stored = localStorage.getItem(visibilityKey);
+  if (stored !== null) {
+    setIsPublic(stored === "public");
+  }
+}, [id]);
+
+
+
+const togglePrivacy = () => {
+  setIsLoading(true);
+  setTimeout(() => {
+    const newState = !isPublic;
+    setIsPublic(newState);
+    localStorage.setItem(visibilityKey, newState ? "public" : "private");
+    setIsLoading(false);
+  }, 1000);
+};
+
+
 
   React.useEffect(() => {
     try {
@@ -56,55 +84,104 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
     );
   }
 
-  return (
-    <div className="min-h-screen text-white pt-8 pb-16 px-4 sm:px-6 lg:px-8">
-      <div className="container mx-auto max-w-4xl">
-        <header className="mb-8">
-        <Button
-          asChild                 // let the button render whatever is inside
-          className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(158,158,149,0.7)] hover:brightness-110 transition-all duration-200"
-          style={{
-            background: 'rgba(158, 158, 149, 0.2)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            boxShadow:
-              '2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)',
-            backdropFilter: 'blur(6px)',
-            WebkitBackdropFilter: 'blur(6px)',
-            borderRadius: '20px',
-          }}
-        >
-          <Link href="/">⬅ Volver al Inicio</Link>
-        </Button>
-          <div className="mt-6">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-50">
-              {plan.projectContext.description || "Proyecto sin título"}
-            </h1>
-            <p className="text-sm text-gray-400 mt-2">Índice local: {id}</p>
-          </div>
-        </header>
+ return (
+  <div className="min-h-screen text-white pt-8 pb-16 px-4 sm:px-6 lg:px-8">
+    <div className="container mx-auto max-w-4xl">
+      <header className="mb-8">
+        {/* Contenedor flex para alinear botones */}
+        <div className="flex justify-between items-start mb-6">
+          <Button
+            asChild
+            className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(158,158,149,0.7)] hover:brightness-110 transition-all duration-200"
+            style={{
+              background: 'rgba(158, 158, 149, 0.2)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              boxShadow:
+                '2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              borderRadius: '20px',
+            }}
+          >
+            <Link href="/">⬅ Volver al Inicio</Link>
+          </Button>
 
-        <main>
-          <section className="p-6 rounded-lg border border-white/10 bg-black/20 space-y-4">
-            <p><span className="font-medium">Estilo:</span> {plan.projectContext.stylePrompt}</p>
-
-            <h2 className="text-2xl font-semibold">Tareas</h2>
-            {plan.tasks?.length ? (
-              <ul className="list-disc ml-5 space-y-1">
-                {plan.tasks.map((t, i) => (
-                  <li key={i}>{t}</li>
-                ))}
-              </ul>
+          {/* Botón de privacidad movido a la derecha */}
+          <Button
+            className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(198,198,199,1)] hover:brightness-110 transition-all duration-200"
+            style={{
+              background: `rgba(158, 158, 149, 0.2)`,
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              boxShadow:
+                '2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              borderRadius: '20px',
+            }}
+            onClick={togglePrivacy}
+            variant="outline"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : isPublic ? (
+              <Unlock className="h-4 w-4 mr-2" />
             ) : (
-              <p className="text-gray-400">Sin tareas.</p>
+              <Lock className="h-4 w-4 mr-2" />
             )}
+            {isPublic ? 'Hacer Privado' : 'Hacer Público'}
+          </Button>
+        </div>
 
-            {plan.finalImageUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={plan.finalImageUrl} alt="Imagen del proyecto" className="rounded-lg border border-white/10 mt-6" />
-            )}
-          </section>
-        </main>
-      </div>
+        {/* Título y descripción */}
+        <div className="space-y-2">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-50">
+            {plan.projectContext.description || "Proyecto sin título"}
+          </h1>
+          <p className="text-sm text-gray-400">Índice local: {id}</p>
+          
+          {/* Botón de editar */}
+          <Button
+            className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(158,158,149,0.7)] hover:brightness-110 transition-all duration-200"
+            style={{
+              background: 'rgba(158, 158, 149, 0.2)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              boxShadow:
+                '2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              borderRadius: '20px',
+            }}
+            onClick={() => {/* Aquí va la función de editar */}}
+            variant="outline"
+          >
+            ✏️ Editar
+          </Button>
+        </div>
+      </header>
+
+      <main>
+        <section className="p-6 rounded-lg border border-white/10 bg-black/20 space-y-4">
+          <p><span className="font-medium">Estilo:</span> {plan.projectContext.stylePrompt}</p>
+
+          <h2 className="text-2xl font-semibold">Tareas</h2>
+          {plan.tasks?.length ? (
+            <ul className="list-disc ml-5 space-y-1">
+              {plan.tasks.map((t, i) => (
+                <li key={i}>{t}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-400">Sin tareas.</p>
+          )}
+
+          {plan.finalImageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={plan.finalImageUrl} alt="Imagen del proyecto" className="rounded-lg border border-white/10 mt-6" />
+          )}
+        </section>
+      </main>
     </div>
-  );
+  </div>
+);
 }
