@@ -37,8 +37,12 @@ interface Task {
 }
 
 interface ProjectContext {
-  description: string
-  stylePrompt: string
+  description: string;
+  stylePrompt: string;
+  type: string;
+  utility: string;
+  palette: string;
+  colors: string[] | null; 
 }
 
 interface PlanData {
@@ -81,6 +85,7 @@ export default function PlanPage() {
   useEffect(() => {
     try {
       const storedData = sessionStorage.getItem("projectPlanData")
+      console.log(storedData)
       if (storedData) {
         const parsedData: PlanData = JSON.parse(storedData)
         
@@ -230,17 +235,23 @@ export default function PlanPage() {
       projectContext: {
         description: currentProjectContext.description,
         stylePrompt: currentProjectContext.stylePrompt,
+        type: currentProjectContext.type,
+        utility: currentProjectContext.utility,
+        palette: currentProjectContext.palette,
+        colors: currentProjectContext.colors
       },
       finalImageUrl: finalImageUrl || null,
       timestamp: new Date().toISOString(),
     };
 
-    var nuewId = 0;
+    console.log(newPlan)
+
+    var newID = 0;
     try {
       const raw = typeof window !== "undefined" ? window.localStorage.getItem("allProjectPlans") : null;
       const existingPlans: any[] = raw ? JSON.parse(raw) : [];
       const existingCount = existingPlans.length;
-      nuewId = existingCount !== 0 ? existingCount + 1 : 1;
+      newID = existingCount !== 0 ? existingCount + 1 : 1;
 
       const updatedPlans = [...existingPlans, newPlan];
       if (typeof window !== "undefined") {
@@ -253,8 +264,8 @@ export default function PlanPage() {
       return;
     }
 
-    console.log("Plan guardado localmente:", newPlan, nuewId);
-    router.push(`/proyectos/${nuewId}`);
+    console.log("Plan guardado localmente:", newPlan, newID);
+    router.push(`/proyectos/${newID}`);
     setIsSubmitting(false);
   };
 
@@ -289,16 +300,20 @@ export default function PlanPage() {
     setIsEditingSummary(!isEditingSummary)
   }
 
-  const handleSaveSummary = () => {
-    if (!currentProjectContext) return
-    const updatedContext = {
-      description: editableDescription,
-      stylePrompt: editableStylePrompt,
-    }
-    setCurrentProjectContext(updatedContext)
-    updateSessionStorageProjectContext(updatedContext)
-    setIsEditingSummary(false)
-  }
+ const handleSaveSummary = () => {
+  if (!currentProjectContext) return;
+
+  const updatedContext = {
+    ...currentProjectContext, // conservar propiedades existentes
+    description: editableDescription ?? currentProjectContext.description,
+    stylePrompt: editableStylePrompt ?? currentProjectContext.stylePrompt,
+  };
+
+  setCurrentProjectContext(updatedContext);
+  updateSessionStorageProjectContext(updatedContext);
+  setIsEditingSummary(false);
+};
+
 
   const handleEnhanceSummaryWithAI = async () => {
     if (!currentProjectContext) return

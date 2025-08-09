@@ -47,7 +47,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error:
-            "Datos inválidos. Datos invalidos",
+            "Datos inválidos. Se requieren datos validos. " + projectContext.stylePrompt + projectContext.utility + projectContext.palette ,
         },
         { status: 400 }
       );
@@ -78,12 +78,11 @@ export async function POST(req: Request) {
         utility: projectContext.utility,
         palette: projectContext.palette,
         colors: projectContext.colors,
-        final_image_url: finalImageUrl,
+        imagen_url: finalImageUrl,
         timestamp: timestamp ? new Date(timestamp) : new Date(),
         ip_creacion: ip,
         pais_creacion: country,
-        publico: false,
-        imagen_url: finalImageUrl,
+        publico: publico ?? true,
       })
       .select()
       .single();

@@ -72,7 +72,10 @@ export default function CreateProjectModal({
             type: "Sin tipo definido",
             utility: "Sin utilidad definida",
             palette: "Sin paleta definida",
-            colors: selectedPalette === "personalizada" ? customColors : null,
+            colors: selectedPalette === "personalizada"
+  ? customColors
+  : colorPalettes.find(p => p.name === selectedPalette)?.colors || []
+
           },
           suggestionId: null,
         };
@@ -204,6 +207,13 @@ export default function CreateProjectModal({
         projectContext: {
           description: projectDescription,
           stylePrompt: selectedStyle?.prompt || "",
+           type: projectType,
+          utility: projectUtility,
+          palette: selectedPalette,
+          colors: selectedPalette === "personalizada"
+  ? customColors
+  : colorPalettes.find(p => p.name === selectedPalette)?.colors || []
+
         },
         suggestionId: result.suggestionId || null,
       };
@@ -228,7 +238,10 @@ export default function CreateProjectModal({
           type: projectType,
           utility: projectUtility,
           palette: selectedPalette,
-          colors: selectedPalette === "personalizada" ? customColors : null,
+          colors: selectedPalette === "personalizada"
+  ? customColors
+  : colorPalettes.find(p => p.name === selectedPalette)?.colors || []
+
         },
         suggestionId: null,
       };

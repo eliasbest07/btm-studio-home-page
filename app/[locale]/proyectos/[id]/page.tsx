@@ -1,49 +1,115 @@
-"use client" 
+"use client";
 import * as React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Pencil, Lock, Unlock, Loader2 } from "lucide-react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useRouter } from "next/navigation";
 
+const supabaseClient = createClientComponentClient();
+
+type ProjectContext = {
+  description: string;
+  stylePrompt: string;
+  type: string;
+  utility: string;
+  palette: string;
+  colors: string[] | null;
+};
 
 // Stored plan shape in localStorage
 type Plan = {
   projectId?: string; // may be missing in older saves
   tasks: string[];
-  projectContext: { description: string; stylePrompt: string };
+  projectContext: ProjectContext;
   finalImageUrl: string | null;
   timestamp: string;
 };
 
-export default function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
+export default function ProjectPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = React.use(params); // Next.js now passes params as a Promise
   const [plan, setPlan] = React.useState<Plan | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [isPublic, setIsPublic] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
-
+  const router = useRouter();
   const visibilityKey = `project-${id}-visibility`;
 
-// Al cargar el componente, leer si es público
-React.useEffect(() => {
-  const stored = localStorage.getItem(visibilityKey);
-  if (stored !== null) {
-    setIsPublic(stored === "public");
-  }
-}, [id]);
+  // Al cargar el componente, leer si es público
+  React.useEffect(() => {
+    const stored = localStorage.getItem(visibilityKey);
+    if (stored !== null) {
+      setIsPublic(stored === "public");
+    }
+  }, [id]);
 
+  const goPrivate = async () => {
+    setIsLoading(true);
 
+    try {
+      const {
+        data: { session },
+      } = await supabaseClient.auth.getSession();
 
-const togglePrivacy = () => {
-  setIsLoading(true);
-  setTimeout(() => {
-    const newState = !isPublic;
-    setIsPublic(newState);
-    localStorage.setItem(visibilityKey, newState ? "public" : "private");
-    setIsLoading(false);
-  }, 1000);
-};
+      if (!session) {
+        alert("Debes iniciar sesión para cambiar la visibilidad del proyecto.");
+        setIsLoading(false);
+        router.push("/login");
+        return;
+      }
 
+      // Obtener el plan desde localStorage usando la misma lógica
+      const raw = window.localStorage.getItem("allProjectPlans");
+      const plans: Plan[] = raw ? JSON.parse(raw) : [];
 
+      const n = Number(id);
+      let chosen: Plan | null = Number.isFinite(n)
+        ? plans[n - 1] ?? null
+        : null;
+
+      if (!chosen) {
+        chosen = plans.find((p) => p.projectId === id) ?? null;
+      }
+
+      if (!chosen || !chosen.projectContext) {
+        alert("No se encontró el plan para guardar.");
+        setIsLoading(false);
+        return;
+      }
+
+      const newState = !isPublic;
+
+      // Enviar el plan con la visibilidad actualizada
+      const response = await fetch("../api/create-project", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...chosen,
+          publico: newState,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || "Error al guardar la visibilidad.");
+        setIsLoading(false);
+        return;
+      }
+
+      setIsPublic(newState);
+      localStorage.setItem(visibilityKey, newState ? "public" : "private");
+    } catch (error) {
+      alert(error);
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   React.useEffect(() => {
     try {
@@ -52,11 +118,13 @@ const togglePrivacy = () => {
 
       // Primary: id is the position in the array (user requirement)
       const n = Number(id);
-      let chosen: Plan | null = Number.isFinite(n) ? (plans[n - 1] ?? null) : null; // 1-based index
+      let chosen: Plan | null = Number.isFinite(n)
+        ? plans[n - 1] ?? null
+        : null; // 1-based index
 
       // Fallback: if not found, try by stored projectId (for future saves)
       if (!chosen) {
-        chosen = plans.find(p => p.projectId === id) ?? null;
+        chosen = plans.find((p) => p.projectId === id) ?? null;
       }
 
       setPlan(chosen);
@@ -69,14 +137,21 @@ const togglePrivacy = () => {
   }, [id]);
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-gray-100">Loading…</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-100">
+        Loading…
+      </div>
+    );
   }
 
   if (!plan) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen text-center text-white px-4">
         <h1 className="text-2xl font-bold mb-4">Proyecto no encontrado</h1>
-        <p className="mb-6">No hay un plan con id <span className="font-mono">{id}</span> en este navegador.</p>
+        <p className="mb-6">
+          No hay un plan con id <span className="font-mono">{id}</span> en este
+          navegador.
+        </p>
         <Button asChild>
           <Link href="/plan">Crear un nuevo plan</Link>
         </Button>
@@ -84,104 +159,110 @@ const togglePrivacy = () => {
     );
   }
 
- return (
-  <div className="min-h-screen text-white pt-8 pb-16 px-4 sm:px-6 lg:px-8">
-    <div className="container mx-auto max-w-4xl">
-      <header className="mb-8">
-        {/* Contenedor flex para alinear botones */}
-        <div className="flex justify-between items-start mb-6">
-          <Button
-            asChild
-            className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(158,158,149,0.7)] hover:brightness-110 transition-all duration-200"
-            style={{
-              background: 'rgba(158, 158, 149, 0.2)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              boxShadow:
-                '2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-              borderRadius: '20px',
-            }}
-          >
-            <Link href="/">⬅ Volver al Inicio</Link>
-          </Button>
+  return (
+    <div className="min-h-screen text-white pt-8 pb-16 px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto max-w-4xl">
+        <header className="mb-8">
+          {/* Contenedor flex para alinear botones */}
+          <div className="flex justify-between items-start mb-6">
+            <Button
+              asChild
+              className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(158,158,149,0.7)] hover:brightness-110 transition-all duration-200"
+              style={{
+                background: "rgba(158, 158, 149, 0.2)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                boxShadow:
+                  "2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)",
+                backdropFilter: "blur(6px)",
+                WebkitBackdropFilter: "blur(6px)",
+                borderRadius: "20px",
+              }}
+            >
+              <Link href="/">⬅ Volver al Inicio</Link>
+            </Button>
 
-          {/* Botón de privacidad movido a la derecha */}
-          <Button
-            className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(198,198,199,1)] hover:brightness-110 transition-all duration-200"
-            style={{
-              background: `rgba(158, 158, 149, 0.2)`,
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              boxShadow:
-                '2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-              borderRadius: '20px',
-            }}
-            onClick={togglePrivacy}
-            variant="outline"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : isPublic ? (
-              <Unlock className="h-4 w-4 mr-2" />
-            ) : (
-              <Lock className="h-4 w-4 mr-2" />
+            {/* Botón de privacidad movido a la derecha */}
+            {!isPublic && (
+              <Button
+                className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(198,198,199,1)] hover:brightness-110 transition-all duration-200"
+                style={{
+                  background: `rgba(158, 158, 149, 0.2)`,
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  boxShadow:
+                    "2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)",
+                  backdropFilter: "blur(6px)",
+                  WebkitBackdropFilter: "blur(6px)",
+                  borderRadius: "20px",
+                }}
+                onClick={goPrivate}
+                variant="outline"
+                disabled={isLoading}
+              >
+                <Lock className="h-4 w-4 mr-2" />
+                {"Hacer Privado"}
+              </Button>
             )}
-            {isPublic ? 'Hacer Privado' : 'Hacer Público'}
-          </Button>
-        </div>
+          </div>
 
-        {/* Título y descripción */}
-        <div className="space-y-2">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-50">
-            {plan.projectContext.description || "Proyecto sin título"}
-          </h1>
-          <p className="text-sm text-gray-400">Índice local: {id}</p>
-          
-          {/* Botón de editar */}
-          <Button
-            className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(158,158,149,0.7)] hover:brightness-110 transition-all duration-200"
-            style={{
-              background: 'rgba(158, 158, 149, 0.2)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              boxShadow:
-                '2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-              borderRadius: '20px',
-            }}
-            onClick={() => {/* Aquí va la función de editar */}}
-            variant="outline"
-          >
-            ✏️ Editar
-          </Button>
-        </div>
-      </header>
+          {/* Título y descripción */}
+          <div className="space-y-2">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-50">
+              {plan.projectContext.description || "Proyecto sin título"}
+            </h1>
+            <p className="text-sm text-gray-400">Índice local: {id}</p>
 
-      <main>
-        <section className="p-6 rounded-lg border border-white/10 bg-black/20 space-y-4">
-          <p><span className="font-medium">Estilo:</span> {plan.projectContext.stylePrompt}</p>
+            {/* Botón de editar */}
+            <Button
+              className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(158,158,149,0.7)] hover:brightness-110 transition-all duration-200"
+              style={{
+                background: "rgba(158, 158, 149, 0.2)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                boxShadow:
+                  "2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)",
+                backdropFilter: "blur(6px)",
+                WebkitBackdropFilter: "blur(6px)",
+                borderRadius: "20px",
+              }}
+              onClick={() => {
+                /* Aquí va la función de editar */
+              }}
+              variant="outline"
+            >
+              <Pencil className="h-4 w-4 mr-2" />
+              Editar
+            </Button>
+          </div>
+        </header>
 
-          <h2 className="text-2xl font-semibold">Tareas</h2>
-          {plan.tasks?.length ? (
-            <ul className="list-disc ml-5 space-y-1">
-              {plan.tasks.map((t, i) => (
-                <li key={i}>{t}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-400">Sin tareas.</p>
-          )}
+        <main>
+          <section className="p-6 rounded-lg border border-white/10 bg-black/20 space-y-4">
+            <p>
+              <span className="font-medium">Estilo:</span>{" "}
+              {plan.projectContext.stylePrompt}
+            </p>
 
-          {plan.finalImageUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={plan.finalImageUrl} alt="Imagen del proyecto" className="rounded-lg border border-white/10 mt-6" />
-          )}
-        </section>
-      </main>
+            <h2 className="text-2xl font-semibold">Tareas</h2>
+            {plan.tasks?.length ? (
+              <ul className="list-disc ml-5 space-y-1">
+                {plan.tasks.map((t, i) => (
+                  <li key={i}>{t}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-400">Sin tareas.</p>
+            )}
+
+            {plan.finalImageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={plan.finalImageUrl}
+                alt="Imagen del proyecto"
+                className="rounded-lg border border-white/10 mt-6"
+              />
+            )}
+          </section>
+        </main>
+      </div>
     </div>
-  </div>
-);
+  );
 }
