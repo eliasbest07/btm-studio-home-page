@@ -48,7 +48,7 @@ export default function PerfilPage() {
         avatar: usuario.avatar,
       })
       .eq("correo", usuario.correo);
-
+      console.log("Usuario actualizado error:", error);
     if (!error) {
       // Actualiza localStorage + notifica a toda la app (Header incluido)
       saveUserData(usuario);
