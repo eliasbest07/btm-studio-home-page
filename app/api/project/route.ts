@@ -7,6 +7,7 @@ function supabase() {
 }
 
 export async function POST(req: Request) {
+  console.log(req)
   try {
     const supabaseClient = supabase();
 
