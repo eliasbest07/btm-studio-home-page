@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Pencil, Lock, Unlock, Loader2 } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
+import ProductCheckModal from "@/app/components/showInputProducto";
 
 const supabaseClient = createClientComponentClient();
 
@@ -36,6 +37,7 @@ export default function ProjectPage({
   const [loading, setLoading] = React.useState(true);
   const [isPublic, setIsPublic] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [productModalOpen, setProductModalOpen] = React.useState(false); // ← nuevo estado
   const router = useRouter();
   const visibilityKey = `project-${id}-visibility`;
 
@@ -47,7 +49,11 @@ export default function ProjectPage({
     }
   }, [id]);
 
-  const goPrivate = async () => {
+  // Guardar tras elegir el “producto” y luego cambiar la visibilidad
+  // (Eliminado duplicado de handleProductSave)
+
+  // Modifica goPrivate para aceptar el producto
+  const goPrivate = async (producto?: string) => {
     setIsLoading(true);
 
     try {
@@ -83,12 +89,13 @@ export default function ProjectPage({
 
       const newState = !isPublic;
 
-      // Enviar el plan con la visibilidad actualizada
+      // Enviar el plan con la visibilidad actualizada y el campo producto
       const response = await fetch("../api/create-project", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...chosen,
+          producto: producto, // ← aquí se agrega el campo producto
           publico: newState,
         }),
       });
@@ -159,72 +166,88 @@ export default function ProjectPage({
     );
   }
 
+  // Abrir el modal
+  function togglePrivacy() {
+    setProductModalOpen(true);
+  }
+
+  // Guardar tras elegir el “producto” y luego cambiar la visibilidad
+  const handleProductSave = async (producto: string) => {
+    setProductModalOpen(false);      // 1. Cierra el modal primero
+    await goPrivate(producto);       // 2. Pasa el producto a la función
+  };
+
   return (
     <div className="min-h-screen text-white pt-8 pb-16 px-4 sm:px-6 lg:px-8">
       <div className="container mx-auto max-w-4xl">
         <header className="mb-8">
           {/* Contenedor flex para alinear botones */}
           <div className="flex justify-between items-start mb-6">
+            {/* ← 1. Botón “Volver” (sin cambios) */}
             <Button
               asChild
               className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(158,158,149,0.7)] hover:brightness-110 transition-all duration-200"
               style={{
-                background: "rgba(158, 158, 149, 0.2)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
+                background: 'rgba(158, 158, 149, 0.2)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
                 boxShadow:
-                  "2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)",
-                backdropFilter: "blur(6px)",
-                WebkitBackdropFilter: "blur(6px)",
-                borderRadius: "20px",
+                  '2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(6px)',
+                WebkitBackdropFilter: 'blur(6px)',
+                borderRadius: '20px',
               }}
             >
               <Link href="/">⬅ Volver al Inicio</Link>
             </Button>
 
-            {/* Botón de privacidad movido a la derecha */}
-            {!isPublic && (
-              <Button
-                className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(198,198,199,1)] hover:brightness-110 transition-all duration-200"
-                style={{
-                  background: `rgba(158, 158, 149, 0.2)`,
-                  border: "1px solid rgba(255, 255, 255, 0.08)",
-                  boxShadow:
-                    "2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)",
-                  backdropFilter: "blur(6px)",
-                  WebkitBackdropFilter: "blur(6px)",
-                  borderRadius: "20px",
-                }}
-                onClick={goPrivate}
-                variant="outline"
-                disabled={isLoading}
-              >
+            {/* ← 2. Botón de visibilidad ahora a la derecha */}
+            <Button
+              className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(198,198,199,1)] hover:brightness-110 transition-all duration-200"
+              style={{
+                background: 'rgba(158, 158, 149, 0.2)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                boxShadow:
+                  '2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(6px)',
+                WebkitBackdropFilter: 'blur(6px)',
+                borderRadius: '20px',
+              }}
+              onClick={togglePrivacy}
+              variant="outline"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : isPublic ? (
+                <Unlock className="h-4 w-4 mr-2" />
+              ) : (
                 <Lock className="h-4 w-4 mr-2" />
-                {"Hacer Privado"}
-              </Button>
-            )}
+              )}
+              {isPublic ? 'Hacer Privado' : ''}
+            </Button>
           </div>
 
           {/* Título y descripción */}
           <div className="space-y-2">
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-50">
-              {plan.projectContext.description || "Proyecto sin título"}
+              {plan.projectContext.description || 'Proyecto sin título'}
             </h1>
             <p className="text-sm text-gray-400">Índice local: {id}</p>
 
-            {/* Botón de editar */}
+            {/* Botón Editar (se mantiene) */}
             <Button
               className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(158,158,149,0.7)] hover:brightness-110 transition-all duration-200"
               style={{
-                background: "rgba(158, 158, 149, 0.2)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
+                background: 'rgba(158, 158, 149, 0.2)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
                 boxShadow:
-                  "2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)",
-                backdropFilter: "blur(6px)",
-                WebkitBackdropFilter: "blur(6px)",
-                borderRadius: "20px",
+                  '2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(6px)',
+                WebkitBackdropFilter: 'blur(6px)',
+                borderRadius: '20px',
               }}
               onClick={() => {
-                /* Aquí va la función de editar */
+                /* función editar */
               }}
               variant="outline"
             >
@@ -263,6 +286,13 @@ export default function ProjectPage({
           </section>
         </main>
       </div>
+
+      {/* Modal de producto */}
+      <ProductCheckModal
+        isOpen={productModalOpen}
+        onOpenChange={setProductModalOpen}
+        onSave={handleProductSave}
+      />
     </div>
   );
 }

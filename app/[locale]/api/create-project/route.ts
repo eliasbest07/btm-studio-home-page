@@ -33,7 +33,8 @@ export async function POST(req: Request) {
       tasks,
       finalImageUrl,
       timestamp,
-      publico, // si quieres que el frontend mande si es público o no
+      publico,
+      producto, // ← extrae producto del body
     } = await req.json();
 
     if (
@@ -83,6 +84,7 @@ export async function POST(req: Request) {
         ip_creacion: ip,
         pais_creacion: country,
         publico: publico ?? true,
+        producto, // ← guarda el producto aquí
       })
       .select()
       .single();
