@@ -1,14 +1,16 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import clsx from "clsx";
 
 export type WeeklyEvent = {
   id: string;
   title: string;
-  dayIndex: number;      // 0 = Monday
+  subtitle?: string;
+  dayIndex: number;      // 0 = Monday, -1 = unscheduled
   startHour: number;     // 24h
   endHour?: number;
   color?: string;        // Tailwind bg-* e.g. "bg-blue-500"
+  time?: string;         // Display time for mobile view
 };
 
 type Props = {
@@ -17,12 +19,16 @@ type Props = {
   endHour?: number;      // default 21
   days?: number;         // default 7
   events?: WeeklyEvent[];
+  onEventMove?: (eventId: string, dayIndex: number, hour?: number) => void;
+  onEventRemove?: (eventId: string) => void;
   onCellClick?: (dayIndex: number, hour: number) => void;
   renderEvent?: (ev: WeeklyEvent) => React.ReactNode;
   className?: string;
 };
 
 const dayNames = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const dayNamesFull = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+const monthNames = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
 function getLabelDate(weekStart: Date, idx: number) {
   const d = new Date(weekStart);
@@ -35,6 +41,22 @@ function formatHour(h: number) {
   if (h === 12) return "12 PM";
   if (h > 12) return `${h - 12} PM`;
   return `${h} AM`;
+}
+
+function getWeekRange(weekStart: Date, days: number) {
+  const start = new Date(weekStart);
+  const end = new Date(weekStart);
+  end.setDate(end.getDate() + days - 1);
+  
+  const startMonth = monthNames[start.getMonth()];
+  const endMonth = monthNames[end.getMonth()];
+  const startDate = start.getDate();
+  const endDate = end.getDate();
+  
+  if (startMonth === endMonth) {
+    return `${startMonth} ${startDate} - ${endDate}`;
+  }
+  return `${startMonth} ${startDate} - ${endMonth} ${endDate}`;
 }
 
 /* === Glass styles === */
@@ -79,109 +101,6 @@ const headerStickyStyle: React.CSSProperties = {
   backdropFilter: "blur(6px)",
   WebkitBackdropFilter: "blur(6px)",
 };
-/* ==================== */
-
-export function WeeklyCalendar({
-  weekStart = getMonday(new Date()),
-  startHour = 7,
-  endHour = 21,
-  days = 7,
-  events = [],
-  onCellClick,
-  renderEvent,
-  className,
-}: Props) {
-  const hours = Array.from({ length: endHour - startHour + 1 }, (_, i) => startHour + i);
-  const cols = Array.from({ length: days }, (_, i) => i);
-
-  const eventsBySlot = (dayIndex: number, hour: number) =>
-    events.filter((e) => e.dayIndex === dayIndex && e.startHour === hour);
-
-  return (
-    <div className={clsx("w-full rounded-lg bg-transparent", className)}>
-      {/* Header row */}
-     {/* Header row (sticky) */}
-<div
-  className="sticky top-0 z-20 grid border-b border-white/10"
-  style={{
-    ...headerStickyStyle,
-    gridTemplateColumns: `120px repeat(${days}, minmax(0,1fr))`,
-  }}
->
-  {/* top-left spacer */}
-  <div className="p-2">
-    <div className="w-full h-14" />
-  </div>
-
-  {cols.map((d) => (
-    <div key={d} className="px-2 flex items-center justify-center">
-      <div style={headerCardStyle} className="w-full text-center">
-        <span className="text-[11px] font-medium text-white/80">
-          {dayNames[d] ?? `Day ${d + 1}`}
-        </span>
-        <span className="text-xl leading-none font-semibold text-white mt-1">
-          {getLabelDate(weekStart, d)}
-        </span>
-      </div>
-    </div>
-  ))}
-</div>
-
-
-      {/* Grid */}
-      <div
-        className="grid"
-        style={{
-          gridTemplateColumns: `120px repeat(${days}, minmax(0, 1fr))`,
-        }}
-      >
-        {hours.map((h) => (
-          <React.Fragment key={h}>
-            {/* hour gutter with glass card */}
-            <div className="p-2">
-              <div style={hourCardStyle} className="w-full h-16 font-medium text-sm">
-                {formatHour(h)}
-              </div>
-            </div>
-
-            {/* day cells */}
-            {cols.map((d) => (
-              <div
-                key={`${d}-${h}`}
-                className="h-18 border-l border-gray-100 p-1 relative hover:bg-gray-50 cursor-pointer"
-                onClick={() => onCellClick?.(d, h)}
-              >
-                <div className="space-y-1 ">
-                  {eventsBySlot(d, h).map((ev) => (
-                    <div
-                      key={ev.id}
-                      className={clsx(
-                        "text-xs rounded-md px-2 py-1 leading-tight shadow-sm",
-                        ev.color ?? "bg-blue-500",
-                        (ev.color ?? "bg-blue-500").includes("yellow")
-                          ? "text-black"
-                          : "text-white"
-                      )}
-                      title={`${ev.title} — ${formatHour(ev.startHour)}${
-                        ev.endHour ? `–${formatHour(ev.endHour)}` : ""
-                      }`}
-                    >
-                      {renderEvent ? (
-                        renderEvent(ev)
-                      ) : (
-                        <div className="font-medium truncate">{ev.title}</div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </React.Fragment>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 /* Helpers */
 function getMonday(d: Date) {
@@ -192,4 +111,416 @@ function getMonday(d: Date) {
   return date;
 }
 
-export default WeeklyCalendar;
+function getColorClasses(color?: string): string {
+  if (!color) return "bg-blue-500 text-white";
+  
+  // Handle text color based on background
+  if (color.includes("yellow") || color.includes("lime") || color.includes("amber")) {
+    return `${color} text-black`;
+  }
+  return `${color} text-white`;
+}
+
+// Helper to check if today is within the current week
+function isDateInWeek(date: Date, weekStart: Date, days: number): number {
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + days);
+  
+  if (date >= weekStart && date < weekEnd) {
+    const dayDiff = Math.floor((date.getTime() - weekStart.getTime()) / (1000 * 60 * 60 * 24));
+    return dayDiff;
+  }
+  return -1;
+}
+
+export function WeeklyCalendar({
+  weekStart = getMonday(new Date()),
+  startHour = 7,
+  endHour = 21,
+  days = 7,
+  events = [],
+  onEventMove,
+  onEventRemove,
+  onCellClick,
+  renderEvent,
+  className,
+}: Props) {
+  const [draggedEvent, setDraggedEvent] = useState<WeeklyEvent | null>(null);
+  const [isDraggingFromCalendar, setIsDraggingFromCalendar] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update current time every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const hours = Array.from({ length: endHour - startHour + 1 }, (_, i) => startHour + i);
+  const cols = Array.from({ length: days }, (_, i) => i);
+
+  // Check if current time should show the indicator
+  const todayIndex = isDateInWeek(currentTime, weekStart, days);
+  const currentHour = currentTime.getHours();
+  const currentMinutes = currentTime.getMinutes();
+  const showTimeIndicator = todayIndex >= 0 && currentHour >= startHour && currentHour <= endHour;
+  
+  // Calculate position of time indicator (percentage from top of current hour)
+  const timeIndicatorPosition = showTimeIndicator 
+    ? ((currentHour - startHour) + (currentMinutes / 60)) / (endHour - startHour + 1) * 100
+    : 0;
+
+  // Get unscheduled events (dayIndex === -1)
+  const unscheduledEvents = events.filter(e => e.dayIndex === -1);
+  
+  // Get scheduled events for a specific slot
+  const eventsBySlot = (dayIndex: number, hour: number) =>
+    events.filter((e) => e.dayIndex === dayIndex && e.startHour === hour);
+
+  // Get all events for a specific day (mobile view)
+  const getEventsForDay = (dayIndex: number) =>
+    events.filter((e) => e.dayIndex === dayIndex).sort((a, b) => a.startHour - b.startHour);
+
+  // Drag handlers
+  const handleDragStart = (e: React.DragEvent, event: WeeklyEvent, fromCalendar: boolean) => {
+    setDraggedEvent(event);
+    setIsDraggingFromCalendar(fromCalendar);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (e: React.DragEvent, dayIndex: number, hour?: number) => {
+    e.preventDefault();
+    if (draggedEvent && onEventMove) {
+      onEventMove(draggedEvent.id, dayIndex, hour);
+    }
+    setDraggedEvent(null);
+    setIsDraggingFromCalendar(false);
+  };
+
+  const handleEventDoubleClick = (eventId: string) => {
+    if (onEventRemove) {
+      onEventRemove(eventId);
+    }
+  };
+
+  // Mobile day data
+  const mobileDays = cols.map(idx => {
+    const date = getLabelDate(weekStart, idx);
+    const dayDate = new Date(weekStart);
+    dayDate.setDate(dayDate.getDate() + idx);
+    
+    return {
+      key: idx,
+      name: dayNamesFull[idx],
+      shortName: dayNames[idx],
+      date,
+      isToday: todayIndex === idx
+    };
+  });
+
+  return (
+    <div className={clsx("w-full", className)}>
+      {/* Desktop View */}
+      <div className="hidden lg:block rounded-lg bg-transparent">
+        {/* Header row (sticky) */}
+        <div
+          className="sticky top-0 z-20 grid border-b border-white/10"
+          style={{
+            ...headerStickyStyle,
+            gridTemplateColumns: `120px repeat(${days}, minmax(0,1fr))`,
+          }}
+        >
+          {/* top-left spacer */}
+          <div className="p-2">
+            <div className="w-full h-14" />
+          </div>
+
+          {cols.map((d) => (
+            <div key={d} className="px-2 flex items-center justify-center">
+              <div style={headerCardStyle} className="w-full text-center">
+                <span className="text-[11px] font-medium text-white/80">
+                  {dayNames[d] ?? `Day ${d + 1}`}
+                </span>
+                <span className="text-xl leading-none font-semibold text-white mt-1">
+                  {getLabelDate(weekStart, d)}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Unscheduled events tray */}
+        {unscheduledEvents.length > 0 && (
+          <div className="bg-gray-50 p-3 border-b border-gray-200">
+            <div className="text-sm font-medium text-gray-700 mb-2">Tareas sin programar:</div>
+            <div className="flex flex-wrap gap-2">
+              {unscheduledEvents.map((ev) => (
+                <div
+                  key={ev.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, ev, false)}
+                  className={clsx(
+                    "px-3 py-2 rounded-md text-sm cursor-move shadow-sm hover:shadow-md transition-shadow",
+                    getColorClasses(ev.color)
+                  )}
+                >
+                  <div className="font-medium">{ev.title}</div>
+                  {ev.subtitle && <div className="text-xs opacity-75">{ev.subtitle}</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Grid */}
+        <div
+          className="grid relative"
+          style={{
+            gridTemplateColumns: `120px repeat(${days}, minmax(0, 1fr))`,
+          }}
+        >
+          {/* Time indicator line - Desktop */}
+          {showTimeIndicator && (
+            <div 
+              className="absolute left-0 right-0 z-10 pointer-events-none"
+              style={{
+                top: `${timeIndicatorPosition}%`,
+                transform: 'translateY(-1px)'
+              }}
+            >
+              <div className="flex items-center">
+                <div className="w-[120px] pr-2 flex justify-end">
+                  <div className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">
+                    {currentTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+                <div className="flex-1 h-0.5 bg-red-500 shadow-sm" />
+              </div>
+            </div>
+          )}
+
+          {hours.map((h) => (
+            <React.Fragment key={h}>
+              {/* hour gutter with glass card */}
+              <div className="p-2">
+                <div style={hourCardStyle} className="w-full h-16 font-medium text-sm">
+                  {formatHour(h)}
+                </div>
+              </div>
+
+              {/* day cells */}
+              {cols.map((d) => (
+                <div
+                  key={`${d}-${h}`}
+                  className="h-18 border-l border-gray-100 p-1 relative hover:bg-gray-50 cursor-pointer"
+                  onClick={() => onCellClick?.(d, h)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, d, h)}
+                >
+                  <div className="space-y-1">
+                    {eventsBySlot(d, h).map((ev) => (
+                      <div
+                        key={ev.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, ev, true)}
+                        onDoubleClick={() => handleEventDoubleClick(ev.id)}
+                        className={clsx(
+                          "text-xs rounded-md px-2 py-1 leading-tight shadow-sm cursor-move hover:opacity-80",
+                          getColorClasses(ev.color)
+                        )}
+                        title={`${ev.title} — ${formatHour(ev.startHour)}${
+                          ev.endHour ? `–${formatHour(ev.endHour)}` : ""
+                        } (Doble click para desprogramar)`}
+                      >
+                        {renderEvent ? (
+                          renderEvent(ev)
+                        ) : (
+                          <>
+                            <div className="font-medium truncate">{ev.title}</div>
+                            {ev.subtitle && <div className="text-xs opacity-75 truncate">{ev.subtitle}</div>}
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+
+      {/* Mobile View */}
+      <div className="lg:hidden">
+        <div className="bg-gray-600 text-white p-3 rounded-t-lg text-center text-sm font-medium">
+          Semana: {getWeekRange(weekStart, days)}
+        </div>
+        
+        {/* Unscheduled tasks */}
+        {unscheduledEvents.length > 0 && (
+          <div className="bg-white p-3 border-x border-gray-300">
+            <div className="text-xs font-medium text-gray-700 mb-2">Tareas sin programar:</div>
+            <div className="flex space-x-2 overflow-x-auto pb-2">
+              {unscheduledEvents.map((t) => (
+                <div
+                  key={t.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, t, false)}
+                  className={clsx(
+                    "min-w-[120px] p-2 rounded text-xs cursor-move flex-shrink-0",
+                    getColorClasses(t.color)
+                  )}
+                >
+                  <div className="font-medium">{t.title}</div>
+                  {t.subtitle && <div className="opacity-75">{t.subtitle}</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="bg-white border border-gray-300 rounded-b-lg overflow-hidden relative">
+          {/* Time indicator for mobile */}
+          {showTimeIndicator && (
+            <>
+              {/* Calculate which day section to show the indicator */}
+              {mobileDays.map((d, idx) => {
+                if (d.isToday) {
+                  const dayHeight = 100; // Approximate height of each day row
+                  const hourRange = endHour - startHour + 1;
+                  const currentPosition = ((currentHour - startHour) + (currentMinutes / 60)) / hourRange;
+                  const topPosition = idx * dayHeight + 80 * currentPosition; // 80px is min-height of content area
+                  
+                  return (
+                    <div
+                      key={`time-indicator-${idx}`}
+                      className="absolute left-0 right-0 z-10 pointer-events-none flex items-center"
+                      style={{
+                        top: `${topPosition}px`,
+                      }}
+                    >
+                      <div className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-r-full font-medium">
+                        {currentTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                      <div className="flex-1 h-0.5 bg-red-500" />
+                    </div>
+                  );
+                }
+                return null;
+              })}
+            </>
+          )}
+
+          {mobileDays.map((d) => (
+            <div key={d.key} className="border-b border-gray-300 last:border-b-0">
+              <div className="flex">
+                <div className="w-16 bg-gray-100 border-r border-gray-300 flex flex-col items-center justify-center py-4">
+                  <div className="text-xs text-gray-600 font-medium">
+                    {d.shortName.toLowerCase()}
+                  </div>
+                  <div
+                    className={clsx(
+                      "text-sm font-bold mt-1",
+                      d.isToday
+                        ? "bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs"
+                        : "text-gray-800"
+                    )}
+                  >
+                    {d.date}
+                  </div>
+                </div>
+                <div
+                  className="flex-1 p-2 min-h-[80px] flex flex-wrap content-start gap-1"
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, d.key)}
+                >
+                  {getEventsForDay(d.key).map((t) => (
+                    <div
+                      key={t.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, t, true)}
+                      onDoubleClick={() => handleEventDoubleClick(t.id)}
+                      className={clsx(
+                        "px-2 py-1 rounded text-xs cursor-move hover:opacity-80",
+                        getColorClasses(t.color)
+                      )}
+                      title="Arrastra para mover o doble click para remover"
+                    >
+                      <div className="font-medium">{t.time || formatHour(t.startHour)}</div>
+                      <div className="opacity-90">{t.title}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4 text-xs lg:text-sm text-gray-600 text-center space-y-1">
+        <div>• Arrastra las tareas hacia el calendario para programarlas</div>
+        <div>• Arrastra tareas programadas para cambiar su horario</div>
+        <div>• Doble click en una tarea programada para desprogramarla</div>
+      </div>
+    </div>
+  );
+}
+
+// Example usage component
+export default function CalendarExample() {
+  const [events, setEvents] = useState<WeeklyEvent[]>([
+    { id: "1", title: "Reunión equipo", subtitle: "Zoom", dayIndex: -1, startHour: 9, color: "bg-blue-500" },
+    { id: "2", title: "Presentación", subtitle: "Cliente A", dayIndex: -1, startHour: 10, color: "bg-green-500" },
+    { id: "3", title: "Almuerzo", dayIndex: 1, startHour: 12, time: "12:00", color: "bg-yellow-500" },
+    { id: "4", title: "Código review", dayIndex: 2, startHour: 14, time: "2:00 PM", color: "bg-purple-500" },
+    { id: "5", title: "Planning", subtitle: "Sprint 24", dayIndex: -1, startHour: 11, color: "bg-red-500" },
+  ]);
+
+  const handleEventMove = (eventId: string, dayIndex: number, hour?: number) => {
+    setEvents(prev => prev.map(e => {
+      if (e.id === eventId) {
+        return {
+          ...e,
+          dayIndex,
+          startHour: hour ?? e.startHour,
+          time: hour ? formatHour(hour) : e.time
+        };
+      }
+      return e;
+    }));
+  };
+
+  const handleEventRemove = (eventId: string) => {
+    setEvents(prev => prev.map(e => {
+      if (e.id === eventId) {
+        return { ...e, dayIndex: -1 };
+      }
+      return e;
+    }));
+  };
+
+  const handleCellClick = (dayIndex: number, hour: number) => {
+    console.log(`Clicked cell: Day ${dayIndex}, Hour ${hour}`);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-4">
+      <h1 className="text-2xl font-bold mb-6 text-gray-800">Calendario Semanal con Drag & Drop</h1>
+      <WeeklyCalendar
+        events={events}
+        onEventMove={handleEventMove}
+        onEventRemove={handleEventRemove}
+        onCellClick={handleCellClick}
+        startHour={7}
+        endHour={24}
+      />
+    </div>
+  );
+}

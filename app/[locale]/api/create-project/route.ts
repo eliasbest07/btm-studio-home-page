@@ -83,7 +83,7 @@ export async function POST(req: Request) {
         timestamp: timestamp ? new Date(timestamp) : new Date(),
         ip_creacion: ip,
         pais_creacion: country,
-        publico: publico ?? true,
+        publico: publico ?? false,
         producto, // ← guarda el producto aquí
       })
       .select()

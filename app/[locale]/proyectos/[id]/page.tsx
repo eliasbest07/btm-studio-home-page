@@ -67,7 +67,7 @@ export default function ProjectPage({
     if (stored !== null) {
       setIsPublic(stored === "public");
     }
-  }, [id]);
+  }, [id, isFromSupabase]);
 
   // Load plan from allProjectPlans like both files do
   React.useEffect(() => {
@@ -256,6 +256,24 @@ export default function ProjectPage({
   };
   // ---------------- end editing functions ----------------
 
+  // Función para determinar si se debe mostrar el botón de privacidad
+  const shouldShowPrivacyButton = React.useMemo(() => {
+    // Si aún está cargando el usuario, no mostrar el botón
+    if (isUserLoading) return false;
+
+    // Si es proyecto local (localStorage), siempre mostrar el botón
+    if (!isFromSupabase) return true;
+
+    // Si es proyecto de Supabase, solo mostrar si:
+    // 1. Hay usuario logueado Y
+    // 2. El usuario es propietario del proyecto
+    if (isFromSupabase && supabaseProject) {
+      return currentUser && currentUser.id === supabaseProject.user_id;
+    }
+
+    return false;
+  }, [isUserLoading, isFromSupabase, currentUser, supabaseProject]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-100">
@@ -271,9 +289,14 @@ export default function ProjectPage({
         <p className="mb-6">
           No hay un plan con id <span className="font-mono">{id}</span> en este navegador.
         </p>
-        <Button asChild>
-          <Link href="/plan">Crear un nuevo plan</Link>
-        </Button>
+        <div className="space-x-4">
+          <Button asChild>
+            <Link href="/plan">Crear un nuevo plan</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/">Volver al inicio</Link>
+          </Button>
+        </div>
       </div>
     );
   }
