@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Loader2, Lock } from "lucide-react";
 import { saveUserData } from "@/app/utils/userSession";
@@ -9,11 +9,21 @@ import { saveUserData } from "@/app/utils/userSession";
 export default function Login() {
   const supabase = createClientComponentClient();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [returnTo, setReturnTo] = useState<string | null>(null);
+
+  // Capturar el parámetro returnTo al cargar la página
+  useEffect(() => {
+    const returnToParam = searchParams.get('returnTo');
+    if (returnToParam) {
+      setReturnTo(decodeURIComponent(returnToParam));
+    }
+  }, [searchParams]);
 
   const handleLogin = async () => {
     setIsLoading(true);
@@ -51,7 +61,12 @@ export default function Login() {
       admin: userData.admin,
     });
 
-    router.replace("/"); // navegación limpia
+    // Redirigir a la página original o a home
+    if (returnTo) {
+      router.replace(returnTo);
+    } else {
+      router.replace("/");
+    }
   };
 
   return (
@@ -69,6 +84,14 @@ export default function Login() {
         }}
       >
         <h2 className="text-white text-2xl mb-6">Iniciar sesión</h2>
+        
+        {returnTo && (
+          <div className="mb-4 p-3 bg-blue-900/30 border border-blue-600/30 rounded-md text-center">
+            <p className="text-blue-200 text-sm">
+              Después del login serás redirigido a tu proyecto
+            </p>
+          </div>
+        )}
 
         <input
           type="email"

@@ -47,6 +47,14 @@ export default function ProjectPage({
 
   // Product modal / privacy flow from code1
   const [productModalOpen, setProductModalOpen] = React.useState(false);
+  
+  // Supabase integration states
+  const [isFromSupabase, setIsFromSupabase] = React.useState(false);
+  const [supabaseProject, setSupabaseProject] = React.useState<any>(null);
+  const [isFromCache, setIsFromCache] = React.useState(false);
+  const [currentUser, setCurrentUser] = React.useState<any>(null);
+  const [isUserLoading, setIsUserLoading] = React.useState(true);
+  
   const router = useRouter();
   const visibilityKey = `project-${id}-visibility`;
 
@@ -61,34 +69,171 @@ export default function ProjectPage({
     }
   };
 
+  // Verificar usuario logueado al cargar el componente
+  React.useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        setCurrentUser(session?.user || null);
+      } catch (error) {
+        console.error("Error checking user session:", error);
+        setCurrentUser(null);
+      } finally {
+        setIsUserLoading(false);
+      }
+    };
+
+    checkUser();
+  }, []);
+
   // On mount: read visibility
   React.useEffect(() => {
-    const stored = safeLocalGet(visibilityKey);
-    if (stored !== null) {
-      setIsPublic(stored === "public");
+    if (!isFromSupabase) {
+      const stored = safeLocalGet(visibilityKey);
+      if (stored !== null) {
+        setIsPublic(stored === "public");
+      }
     }
   }, [id, isFromSupabase]);
 
-  // Load plan from allProjectPlans like both files do
-  React.useEffect(() => {
+  // Función para buscar proyecto en Supabase (con cache)
+  const fetchProjectFromSupabase = async (identifier: string) => {
     try {
-      const raw = safeLocalGet("allProjectPlans");
-      const plans: Plan[] = raw ? JSON.parse(raw) : [];
-
-      const n = Number(id);
-      let chosen: Plan | null = Number.isFinite(n) ? plans[n - 1] ?? null : null;
-
-      if (!chosen) {
-        chosen = plans.find((p) => p.projectId === id) ?? null;
+      // 1. Primero verificar cache en sessionStorage
+      const cacheKey = `supabase-project-${identifier}`;
+      const cachedData = sessionStorage.getItem(cacheKey);
+      
+      if (cachedData) {
+        console.log('Usando datos cacheados para:', identifier);
+        const parsedData = JSON.parse(cachedData);
+        // Marcar que viene de cache
+        parsedData._fromCache = true;
+        // Limpiar cache después de usarlo para evitar datos obsoletos
+        sessionStorage.removeItem(cacheKey);
+        return parsedData;
       }
 
-      setPlan(chosen);
+      // 2. Si no hay cache, hacer petición a Supabase
+      const numericId = parseInt(identifier, 10);
+      const isNumericId = !isNaN(numericId) && numericId.toString() === identifier;
+      
+      let query = supabaseClient
+        .from('proyectos')
+        .select(`
+          *,
+          tareas (*)
+        `);
+
+      if (isNumericId) {
+        query = query.eq('id', numericId);
+      } else {
+        query = query.eq('producto', identifier);
+      }
+
+      const { data, error } = await query.single();
+
+      if (error) {
+        console.error('Error fetching project from Supabase:', error);
+        return null;
+      }
+
+      console.log('Datos obtenidos de Supabase para:', identifier);
+      return data;
     } catch (e) {
-      console.error("Error reading localStorage", e);
-      setPlan(null);
-    } finally {
-      setLoading(false);
+      console.error('Error in fetchProjectFromSupabase:', e);
+      return null;
     }
+  };
+
+  // Función para verificar si el usuario puede ver el proyecto
+  const canUserViewProject = async (project: any) => {
+    // Si es público, cualquiera puede verlo
+    if (project.publico === true) {
+      return true;
+    }
+
+    // Si es privado, verificar si el usuario es el propietario
+    if (project.publico === false) {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session && session.user && session.user.id === project.user_id) {
+        return true;
+      }
+      return false;
+    }
+
+    // Si publico es null/undefined, asumir que es público
+    return true;
+  };
+
+  // Load plan from allProjectPlans or Supabase
+  React.useEffect(() => {
+    const loadProject = async () => {
+      try {
+        // 1. Primero buscar en localStorage (comportamiento original)
+        const raw = safeLocalGet("allProjectPlans");
+        const plans: Plan[] = raw ? JSON.parse(raw) : [];
+
+        const n = Number(id);
+        let chosen: Plan | null = Number.isFinite(n) ? plans[n - 1] ?? null : null;
+
+        if (!chosen) {
+          chosen = plans.find((p) => p.projectId === id) ?? null;
+        }
+
+        if (chosen) {
+          // Encontrado en localStorage
+          setPlan(chosen);
+          setIsFromSupabase(false);
+          setLoading(false);
+          return;
+        }
+
+        // 2. Si no se encuentra en localStorage, buscar en Supabase
+        const supabaseProject = await fetchProjectFromSupabase(id);
+        
+        if (supabaseProject) {
+          // Verificar si el usuario puede ver este proyecto
+          const canView = await canUserViewProject(supabaseProject);
+          
+          if (!canView) {
+            setPlan(null);
+            setLoading(false);
+            return;
+          }
+
+          // Convertir el proyecto de Supabase al formato Plan
+          const convertedPlan: Plan = {
+            projectId: supabaseProject.id?.toString(),
+            tasks: (supabaseProject.tareas || []).map((tarea: any) => tarea.descripcion),
+            projectContext: {
+              description: supabaseProject.description || supabaseProject.nombre || '',
+              stylePrompt: supabaseProject.style_prompt || '',
+              type: supabaseProject.type || '',
+              utility: supabaseProject.utility || '',
+              palette: supabaseProject.palette || '',
+              colors: supabaseProject.colors || null
+            },
+            finalImageUrl: supabaseProject.imagen_url || null,
+            timestamp: supabaseProject.timestamp || new Date().toISOString()
+          };
+
+          setPlan(convertedPlan);
+          setSupabaseProject(supabaseProject);
+          setIsFromSupabase(true);
+          setIsFromCache(supabaseProject._fromCache || false);
+          setIsPublic(supabaseProject.publico === true);
+        } else {
+          setPlan(null);
+        }
+      } catch (e) {
+        console.error("Error loading project:", e);
+        setPlan(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProject();
   }, [id]);
 
   // KEEP the privacy flow from code1 (accept product, open modal, send product + publico)
@@ -101,9 +246,13 @@ export default function ProjectPage({
       } = await supabaseClient.auth.getSession();
 
       if (!session) {
-        alert("Debes iniciar sesión para cambiar la visibilidad del proyecto.");
+
         setIsLoading(false);
-        router.push("/login");
+        
+        // Guardar la URL actual para redirigir después del login
+        const currentUrl = window.location.pathname;
+        const loginUrl = `/login?returnTo=${encodeURIComponent(currentUrl)}`;
+        router.push(loginUrl);
         return;
       }
 
@@ -149,6 +298,40 @@ export default function ProjectPage({
 
       setIsPublic(newState);
       safeLocalSet(visibilityKey, newState ? "public" : "private");
+      
+      // Si se creó exitosamente y tiene producto, redirigir y cachear datos
+      if (data.projectId && producto) {
+        // Crear objeto completo del proyecto para cache
+        const fullProjectData = {
+          id: data.projectId,
+          user_id: session.user.id,
+          nombre: chosen.projectContext.description,
+          description: chosen.projectContext.description,
+          style_prompt: chosen.projectContext.stylePrompt,
+          type: chosen.projectContext.type,
+          utility: chosen.projectContext.utility,
+          palette: chosen.projectContext.palette,
+          colors: chosen.projectContext.colors,
+          imagen_url: chosen.finalImageUrl,
+          timestamp: chosen.timestamp,
+          publico: newState,
+          producto: producto,
+          tareas: chosen.tasks.map((taskDesc: string, index: number) => ({
+            id: `temp-${index}`,
+            descripcion: taskDesc,
+            proyecto_id: data.projectId,
+            estado: "pendiente"
+          }))
+        };
+
+        // Cachear los datos del proyecto
+        const cacheKey = `supabase-project-${producto}`;
+        sessionStorage.setItem(cacheKey, JSON.stringify(fullProjectData));
+        
+        // Redirigir a la nueva URL con el producto
+        router.push(`/proyectos/${producto}`);
+        return;
+      }
     } catch (error) {
       alert(error);
       console.error(error);
@@ -157,10 +340,66 @@ export default function ProjectPage({
     }
   };
 
-  // Toggle privacy: open product modal (so user can pick product) — same UX as code1
-  function togglePrivacy() {
-    setProductModalOpen(true);
+  // Función para manejar cambio de privacidad
+  async function togglePrivacy() {
+    if (isFromSupabase && supabaseProject) {
+      // Si es proyecto de Supabase, usar el endpoint de toggle
+      await toggleSupabaseProjectPrivacy();
+    } else {
+      // Si es proyecto de localStorage, abrir modal para crear en Supabase
+      setProductModalOpen(true);
+    }
   }
+
+  // Nueva función para cambiar privacidad de proyectos existentes en Supabase
+  const toggleSupabaseProjectPrivacy = async () => {
+    setIsLoading(true);
+    
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      
+      if (!session) {
+        alert("Debes iniciar sesión para cambiar la visibilidad del proyecto.");
+        setIsLoading(false);
+        
+        // Guardar la URL actual para redirigir después del login
+        const currentUrl = window.location.pathname;
+        const loginUrl = `/login?returnTo=${encodeURIComponent(currentUrl)}`;
+        router.push(loginUrl);
+        return;
+      }
+
+      // Verificar que el usuario es el propietario
+      if (session.user.id !== supabaseProject.user_id) {
+        alert("No tienes permisos para modificar este proyecto.");
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await fetch(`/api/proyectos/${supabaseProject.id}/toggle-privacy`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || "Error al cambiar la visibilidad del proyecto.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Actualizar el estado local
+      setIsPublic(data.newStatus);
+      setSupabaseProject((prev: any) => ({ ...prev, publico: data.newStatus }));
+      
+    } catch (error) {
+      console.error("Error toggling privacy:", error);
+      alert("Error al cambiar la visibilidad del proyecto.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Called when ProductCheckModal saves the chosen producto
   const handleProductSave = async (producto: string) => {
@@ -326,31 +565,38 @@ export default function ProjectPage({
               <Link href="/">⬅ Volver al Inicio</Link>
             </Button>
 
-            {/* Botón de visibilidad: abre modal para elegir producto -> luego goPrivate(producto) */}
-            <Button
-              className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(198,198,199,1)] hover:brightness-110 transition-all duration-200"
-              style={{
-                background: "rgba(158, 158, 149, 0.2)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
-                boxShadow:
-                  "2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)",
-                backdropFilter: "blur(6px)",
-                WebkitBackdropFilter: "blur(6px)",
-                borderRadius: "20px",
-              }}
-              onClick={togglePrivacy}
-              variant="outline"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : isPublic ? (
-                <Unlock className="h-4 w-4 mr-2" />
-              ) : (
-                <Lock className="h-4 w-4 mr-2" />
-              )}
-              {isPublic ? "Hacer Privado" : "Hacer Público"}
-            </Button>
+            {/* Botón de visibilidad: mostrar solo si cumple condiciones */}
+            {shouldShowPrivacyButton && (
+              <Button
+                className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(198,198,199,1)] hover:brightness-110 transition-all duration-200"
+                style={{
+                  background: "rgba(158, 158, 149, 0.2)",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  boxShadow:
+                    "2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)",
+                  backdropFilter: "blur(6px)",
+                  WebkitBackdropFilter: "blur(6px)",
+                  borderRadius: "20px",
+                }}
+                onClick={togglePrivacy}
+                variant="outline"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : isPublic ? (
+                  <Unlock className="h-4 w-4 mr-2" />
+                ) : (
+                  <Lock className="h-4 w-4 mr-2" />
+                )}
+                {isLoading 
+                  ? "Cambiando..." 
+                  : isFromSupabase 
+                    ? (isPublic ? "Hacer Privado" : "Hacer Público")
+                    : (isPublic ? "Hacer Privado" : "Pasar a Producción Privado")
+                }
+              </Button>
+            )}
           </div>
 
           {/* Título y descripción (editable) */}
@@ -371,7 +617,15 @@ export default function ProjectPage({
               </h1>
             )}
 
-            <p className="text-sm text-gray-400">Índice local: {id}</p>
+            <p className="text-sm text-gray-400">
+              {isFromSupabase ? `Proyecto: ${id}` : `Índice local: ${id}`}
+              {isFromSupabase && supabaseProject?.producto && (
+                <span className="ml-2 text-green-400">• {supabaseProject.producto}</span>
+              )}
+              {isFromCache && (
+                <span className="ml-2 text-blue-400">• Cargado desde cache</span>
+              )}
+            </p>
 
             <div className="flex gap-2">
               {isEditing ? (

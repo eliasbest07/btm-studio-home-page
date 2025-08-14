@@ -97,9 +97,15 @@ const hourCardStyle: React.CSSProperties = {
 };
 
 const headerStickyStyle: React.CSSProperties = {
-  background: "rgba(25,25,25,0.55)",
-  backdropFilter: "blur(6px)",
-  WebkitBackdropFilter: "blur(6px)",
+  background: "rgba(25,25,25,0.95)",
+  backdropFilter: "blur(10px)",
+  WebkitBackdropFilter: "blur(10px)",
+};
+
+const unscheduledStickyStyle: React.CSSProperties = {
+  background: "rgba(50,50,50,0.95)",
+  backdropFilter: "blur(8px)",
+  WebkitBackdropFilter: "blur(8px)",
 };
 
 /* Helpers */
@@ -225,16 +231,48 @@ export function WeeklyCalendar({
     };
   });
 
+  // Calculate sticky header height for desktop
+  const stickyHeaderHeight = unscheduledEvents.length > 0 ? 160 : 80; // Approximate heights
+
   return (
     <div className={clsx("w-full", className)}>
-      {/* Desktop View */}
-      <div className="hidden lg:block rounded-lg bg-transparent">
-        {/* Header row (sticky) */}
+       <div className="hidden lg:block rounded-lg bg-transparent relative">
+        
+        {/* Unscheduled events tray - Sticky at top */}
+        {unscheduledEvents.length > 0 && (
+          <div 
+            className="sticky top-0 z-30 p-3 border-b border-gray-200"
+            style={{
+              ...unscheduledStickyStyle,
+            }}
+          >
+            <div className="text-sm font-medium text-white mb-2">Tareas sin programar:</div>
+            <div className="flex flex-wrap gap-2">
+              {unscheduledEvents.map((ev) => (
+                <div
+                  key={ev.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, ev, false)}
+                  className={clsx(
+                    "px-3 py-2 rounded-md text-sm cursor-move shadow-sm hover:shadow-md transition-shadow",
+                    getColorClasses(ev.color)
+                  )}
+                >
+                  <div className="font-medium">{ev.title}</div>
+                  {ev.subtitle && <div className="text-xs opacity-75">{ev.subtitle}</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Header row (sticky) - Below unscheduled tasks */}
         <div
-          className="sticky top-0 z-20 grid border-b border-white/10"
+          className="sticky z-20  grid border-b border-white/10"
           style={{
             ...headerStickyStyle,
             gridTemplateColumns: `120px repeat(${days}, minmax(0,1fr))`,
+            top: unscheduledEvents.length > 0 ? '105px' : '0px', // Adjust based on unscheduled tasks presence
           }}
         >
           {/* top-left spacer */}
@@ -255,29 +293,6 @@ export function WeeklyCalendar({
             </div>
           ))}
         </div>
-
-        {/* Unscheduled events tray */}
-        {unscheduledEvents.length > 0 && (
-          <div className="bg-gray-50 p-3 border-b border-gray-200">
-            <div className="text-sm font-medium text-gray-700 mb-2">Tareas sin programar:</div>
-            <div className="flex flex-wrap gap-2">
-              {unscheduledEvents.map((ev) => (
-                <div
-                  key={ev.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, ev, false)}
-                  className={clsx(
-                    "px-3 py-2 rounded-md text-sm cursor-move shadow-sm hover:shadow-md transition-shadow",
-                    getColorClasses(ev.color)
-                  )}
-                >
-                  <div className="font-medium">{ev.title}</div>
-                  {ev.subtitle && <div className="text-xs opacity-75">{ev.subtitle}</div>}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Grid */}
         <div
@@ -359,13 +374,13 @@ export function WeeklyCalendar({
 
       {/* Mobile View */}
       <div className="lg:hidden">
-        <div className="bg-gray-600 text-white p-3 rounded-t-lg text-center text-sm font-medium">
+        <div className="sticky top-0 z-30 bg-gray-600 text-white p-3 rounded-t-lg text-center text-sm font-medium">
           Semana: {getWeekRange(weekStart, days)}
         </div>
         
-        {/* Unscheduled tasks */}
+        {/* Unscheduled tasks - Sticky for mobile */}
         {unscheduledEvents.length > 0 && (
-          <div className="bg-white p-3 border-x border-gray-300">
+          <div className="sticky bg-white top-[44px] z-20  p-3 border-x border-gray-300">
             <div className="text-xs font-medium text-gray-700 mb-2">Tareas sin programar:</div>
             <div className="flex space-x-2 overflow-x-auto pb-2">
               {unscheduledEvents.map((t) => (
@@ -386,41 +401,10 @@ export function WeeklyCalendar({
           </div>
         )}
 
-        <div className="bg-white border border-gray-300 rounded-b-lg overflow-hidden relative">
-          {/* Time indicator for mobile */}
-          {showTimeIndicator && (
-            <>
-              {/* Calculate which day section to show the indicator */}
-              {mobileDays.map((d, idx) => {
-                if (d.isToday) {
-                  const dayHeight = 100; // Approximate height of each day row
-                  const hourRange = endHour - startHour + 1;
-                  const currentPosition = ((currentHour - startHour) + (currentMinutes / 60)) / hourRange;
-                  const topPosition = idx * dayHeight + 80 * currentPosition; // 80px is min-height of content area
-                  
-                  return (
-                    <div
-                      key={`time-indicator-${idx}`}
-                      className="absolute left-0 right-0 z-10 pointer-events-none flex items-center"
-                      style={{
-                        top: `${topPosition}px`,
-                      }}
-                    >
-                      <div className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-r-full font-medium">
-                        {currentTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                      <div className="flex-1 h-0.5 bg-red-500" />
-                    </div>
-                  );
-                }
-                return null;
-              })}
-            </>
-          )}
-
+        <div className="border border-gray-300 rounded-b-lg overflow-hidden relative">
           {mobileDays.map((d) => (
             <div key={d.key} className="border-b border-gray-300 last:border-b-0">
-              <div className="flex">
+              <div className="flex relative">
                 <div className="w-16 bg-gray-100 border-r border-gray-300 flex flex-col items-center justify-center py-4">
                   <div className="text-xs text-gray-600 font-medium">
                     {d.shortName.toLowerCase()}
@@ -437,10 +421,28 @@ export function WeeklyCalendar({
                   </div>
                 </div>
                 <div
-                  className="flex-1 p-2 min-h-[80px] flex flex-wrap content-start gap-1"
+                  className="flex-1 p-2 min-h-[80px] flex flex-wrap content-start gap-1 relative"
                   onDragOver={handleDragOver}
                   onDrop={(e) => handleDrop(e, d.key)}
                 >
+                  {/* Vertical time indicator for current day in mobile */}
+                  {d.isToday && showTimeIndicator && (
+                    <div 
+                      className="absolute top-0 bottom-0 z-10 pointer-events-none"
+                      style={{
+                        left: `${((currentHour - startHour) + (currentMinutes / 60)) / (endHour - startHour + 1) * 100}%`,
+                        transform: 'translateX(-1px)'
+                      }}
+                    >
+                      <div className="flex flex-col items-center h-full">
+                        <div className="bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-b-full font-medium whitespace-nowrap">
+                          {currentTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                        <div className="flex-1 w-0.5 bg-red-500 shadow-sm" />
+                      </div>
+                    </div>
+                  )}
+                  
                   {getEventsForDay(d.key).map((t) => (
                     <div
                       key={t.id}
@@ -464,11 +466,7 @@ export function WeeklyCalendar({
         </div>
       </div>
 
-      <div className="mt-4 text-xs lg:text-sm text-gray-600 text-center space-y-1">
-        <div>• Arrastra las tareas hacia el calendario para programarlas</div>
-        <div>• Arrastra tareas programadas para cambiar su horario</div>
-        <div>• Doble click en una tarea programada para desprogramarla</div>
-      </div>
+      
     </div>
   );
 }
@@ -511,8 +509,7 @@ export default function CalendarExample() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <h1 className="text-2xl font-bold mb-6 text-gray-800">Calendario Semanal con Drag & Drop</h1>
+    <div className="min-h-screen p-4">
       <WeeklyCalendar
         events={events}
         onEventMove={handleEventMove}
