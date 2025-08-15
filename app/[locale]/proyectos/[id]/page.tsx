@@ -2,7 +2,24 @@
 import * as React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Pencil, Lock, Unlock, Loader2, Save, X, Plus, Trash2 } from "lucide-react";
+import { Pencil, Lock, Unlock, Loader2, Save, X, Plus, Trash2, PlayIcon } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
 import ProductCheckModal from "@/app/components/showInputProducto";
@@ -54,6 +71,17 @@ export default function ProjectPage({
   const [isFromCache, setIsFromCache] = React.useState(false);
   const [currentUser, setCurrentUser] = React.useState<any>(null);
   const [isUserLoading, setIsUserLoading] = React.useState(true);
+  
+  // Estado para controlar qué tarea tiene los botones de acción expandidos
+  const [expandedTaskIndex, setExpandedTaskIndex] = React.useState<number | null>(null);
+  
+  // Estados para el modal de delegación
+  const [delegateModalOpen, setDelegateModalOpen] = React.useState(false);
+  const [selectedTaskForDelegate, setSelectedTaskForDelegate] = React.useState<string>("");
+  const [delegateForm, setDelegateForm] = React.useState({
+    technologies: "",
+    level: ""
+  });
   
   const router = useRouter();
   const visibilityKey = `project-${id}-visibility`;
@@ -346,8 +374,27 @@ export default function ProjectPage({
       // Si es proyecto de Supabase, usar el endpoint de toggle
       await toggleSupabaseProjectPrivacy();
     } else {
-      // Si es proyecto de localStorage, abrir modal para crear en Supabase
-      setProductModalOpen(true);
+      // Si es proyecto de localStorage, verificar usuario antes de abrir modal
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        
+        if (!session) {
+          // Guardar la URL actual para redirigir después del login
+          const currentUrl = window.location.pathname;
+          const loginUrl = `/login?returnTo=${encodeURIComponent(currentUrl)}`;
+          router.push(loginUrl);
+          return;
+        }
+        
+        // Si hay usuario logueado, abrir modal para crear en Supabase
+        setProductModalOpen(true);
+      } catch (error) {
+        console.error("Error checking user session:", error);
+        // En caso de error, redirigir al login por seguridad
+        const currentUrl = window.location.pathname;
+        const loginUrl = `/login?returnTo=${encodeURIComponent(currentUrl)}`;
+        router.push(loginUrl);
+      }
     }
   }
 
@@ -405,6 +452,34 @@ export default function ProjectPage({
   const handleProductSave = async (producto: string) => {
     setProductModalOpen(false);
     await goPrivate(producto);
+  };
+
+  // Funciones para el modal de delegación
+  const openDelegateModal = (task: string) => {
+    setSelectedTaskForDelegate(task);
+    setDelegateModalOpen(true);
+  };
+
+  const closeDelegateModal = () => {
+    setDelegateModalOpen(false);
+    setSelectedTaskForDelegate("");
+    setDelegateForm({
+      technologies: "",
+      level: ""
+    });
+  };
+
+  const handleDelegateSubmit = async () => {
+    // TODO: Implementar la lógica de delegación
+    console.log("Delegando tarea:", {
+      task: selectedTaskForDelegate,
+      technologies: delegateForm.technologies,
+      level: delegateForm.level
+    });
+    
+    // Aquí iría la llamada a la API para delegar la tarea
+    alert(`Tarea "${selectedTaskForDelegate}" delegada con éxito`);
+    closeDelegateModal();
   };
 
   // ---------------- Editing functions (from code2) ----------------
@@ -547,6 +622,9 @@ export default function ProjectPage({
       <div className="container mx-auto max-w-4xl">
         <header className="mb-8">
           {/* Contenedor flex para alinear botones */}
+
+
+
           <div className="flex justify-between items-start mb-6">
             {/* Botón Volver */}
             <Button
@@ -564,40 +642,54 @@ export default function ProjectPage({
             >
               <Link href="/">⬅ Volver al Inicio</Link>
             </Button>
-
-            {/* Botón de visibilidad: mostrar solo si cumple condiciones */}
-            {shouldShowPrivacyButton && (
-              <Button
-                className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(198,198,199,1)] hover:brightness-110 transition-all duration-200"
-                style={{
-                  background: "rgba(158, 158, 149, 0.2)",
-                  border: "1px solid rgba(255, 255, 255, 0.08)",
-                  boxShadow:
-                    "2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)",
-                  backdropFilter: "blur(6px)",
-                  WebkitBackdropFilter: "blur(6px)",
-                  borderRadius: "20px",
-                }}
-                onClick={togglePrivacy}
-                variant="outline"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : isPublic ? (
-                  <Unlock className="h-4 w-4 mr-2" />
-                ) : (
-                  <Lock className="h-4 w-4 mr-2" />
-                )}
-                {isLoading 
-                  ? "Cambiando..." 
-                  : isFromSupabase 
-                    ? (isPublic ? "Hacer Privado" : "Hacer Público")
-                    : (isPublic ? "Hacer Privado" : "Pasar a Producción Privado")
-                }
-              </Button>
-            )}
           </div>
+
+          {/* Botón de visibilidad: mostrar solo si cumple condiciones */}
+   {shouldShowPrivacyButton && (
+  <div className="flex flex-col md:flex-row items-center justify-between bg-blue-900/30 border border-blue-600/30  backdrop-blur-sm rounded-xl p-4 border border-white/10 mb-6 gap-4">
+    <div className="md:mb-0">
+      <p className="text-sm  text-blue-200 text-center md:text-left">
+        {!isPublic
+          ? "Para delegar tareas del proyecto debes convertirlo en privado"
+          : "Puedes volver el proyecto público para que todos observen el desarrollo"}
+      </p>
+    </div>
+    <div className="flex justify-center md:justify-end">
+      <Button
+        className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(198,198,199,1)] hover:brightness-110 transition-all duration-200"
+        style={{
+          background: "rgba(158, 158, 149, 0.2)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          boxShadow:
+            "2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)",
+          backdropFilter: "blur(6px)",
+          WebkitBackdropFilter: "blur(6px)",
+          borderRadius: "20px",
+        }}
+        onClick={togglePrivacy}
+        variant="outline"
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+        ) : isPublic ? (
+          <Unlock className="h-4 w-4 mr-2" />
+        ) : (
+          <Lock className="h-4 w-4 mr-2" />
+        )}
+        {isLoading
+          ? "Cambiando..."
+          : isFromSupabase
+          ? isPublic
+            ? "Hacer Privado"
+            : "Hacer Público"
+          : isPublic
+          ? "Hacer Privado"
+          : "Pasar a Producción Privado"}
+      </Button>
+    </div>
+  </div>
+)}
 
           {/* Título y descripción (editable) */}
           <div className="space-y-2">
@@ -856,11 +948,64 @@ export default function ProjectPage({
             </div>
           </section>
 
+ <div className="flex gap-2 mt-5">
+              {isEditing ? (
+                <>
+                  <Button
+                    onClick={saveChanges}
+                    className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-green-600/70 bg-green-600/50 border border-green-500/30"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    Guardar
+                  </Button>
+                  <Button
+                    onClick={cancelEditing}
+                    variant="outline"
+                    className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-red-600/70 bg-red-600/50 border border-red-500/30"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Cancelar
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  onClick={startEditing}
+                  variant="outline"
+                  className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(158,158,149,0.7)] hover:brightness-110 transition-all duration-200"
+                  style={{
+                    background: "rgba(158, 158, 149, 0.2)",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    boxShadow:
+                      "2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)",
+                    backdropFilter: "blur(6px)",
+                    WebkitBackdropFilter: "blur(6px)",
+                    borderRadius: "20px",
+                  }}
+                >
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Editar
+                </Button>
+              )}
+            </div>
           {/* Tareas: editable siempre (como en code2) */}
           <section className="p-6 rounded-xl border border-white/10 bg-black/30 space-y-4 shadow-lg mt-6">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-semibold">Lista de Tareas</h2>
+            <div className="flex flex-col md:flex-row items-center justify-between border-b border-white/10 pb-3 gap-4">
+  {/* Título */}
+  <h2 className="text-2xl font-semibold text-center md:text-left">
+    Lista de Tareas
+  </h2>
+
+  {/* Mensaje */}
+  <div className="flex flex-col md:flex-row items-center justify-between bg-blue-900/30 border border-blue-600/30 backdrop-blur-sm rounded-xl p-4 border border-white/10 gap-2">
+    <div className="flex items-center">
+      <p className="text-sm text-blue-200 text-center md:text-left">
+        Para delegar una tarea, o pasarla a tu calendario haz clic en el botón
+      </p>
+      <div className="ml-2">
+        <PlayIcon className="h-4 w-4" />
+      </div>
+    </div>
+
               </div>
             </div>
 
@@ -871,68 +1016,113 @@ export default function ProjectPage({
                 </div>
               ) : (
                 (editedPlan?.tasks ?? plan?.tasks ?? []).map((task, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/10 group hover:bg-white/10 transition-colors"
-                  >
+                  <div key={i} className="space-y-2">
+                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/10 group hover:bg-white/10 transition-colors">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`h-7 w-7 transition-colors ${
+                          expandedTaskIndex === i 
+                            ? 'text-green-400 bg-green-400/10' 
+                            : 'text-gray-400 hover:text-green-400'
+                        }`}
+                        aria-label="Iniciar tarea"
+                        onClick={() => setExpandedTaskIndex(expandedTaskIndex === i ? null : i)}
+                      >
+                        <PlayIcon className="h-4 w-4" />
+                      </Button>
                     <div className="flex items-center gap-3 flex-grow">
-                      <input
-                        type="text"
-                        value={task}
-                        onChange={(e) => {
-                          if (!editedPlan) {
-                            const newEditedPlan = plan ? JSON.parse(JSON.stringify(plan)) : null;
-                            if (newEditedPlan) {
-                              const updatedTasks = [...newEditedPlan.tasks];
-                              updatedTasks[i] = e.target.value;
-                              setEditedPlan({ ...newEditedPlan, tasks: updatedTasks });
+                      {(isEditing || editedPlan) ? (
+                        <input
+                          type="text"
+                          value={task}
+                          onChange={(e) => {
+                            if (!editedPlan) {
+                              const newEditedPlan = plan ? JSON.parse(JSON.stringify(plan)) : null;
+                              if (newEditedPlan) {
+                                const updatedTasks = [...newEditedPlan.tasks];
+                                updatedTasks[i] = e.target.value;
+                                setEditedPlan({ ...newEditedPlan, tasks: updatedTasks });
+                              }
+                              return;
                             }
-                            return;
-                          }
-                          const updatedTasks = [...editedPlan.tasks];
-                          updatedTasks[i] = e.target.value;
-                          setEditedPlan({ ...editedPlan, tasks: updatedTasks });
-                        }}
-                        className="flex-grow bg-transparent border-none outline-none text-gray-200 placeholder:text-gray-400 hover:bg-black/20 focus:bg-black/30 rounded px-2 py-1 transition-colors"
-                        placeholder="Editar tarea..."
-                      />
+                            const updatedTasks = [...editedPlan.tasks];
+                            updatedTasks[i] = e.target.value;
+                            setEditedPlan({ ...editedPlan, tasks: updatedTasks });
+                          }}
+                          className="flex-grow bg-transparent border-none outline-none text-gray-200 placeholder:text-gray-400 hover:bg-black/20 focus:bg-black/30 rounded px-2 py-1 transition-colors"
+                          placeholder="Editar tarea..."
+                        />
+                      ) : (
+                        <span className="flex-grow text-gray-200 px-2 py-1">
+                          {task}
+                        </span>
+                      )}
                     </div>
 
-                    <div className="flex items-center space-x-1.5 flex-shrink-0">
-                      <button
-                        onClick={() => {
-                          // attempt to focus the matching input - kept non-critical
-                          const taskInputs = Array.from(document.querySelectorAll('input[type="text"]'));
-                          const candidate = taskInputs.find((el) => (el as HTMLInputElement).value === task);
-                          if (candidate) (candidate as HTMLInputElement).focus();
-                        }}
-                        className="h-8 w-8 flex items-center justify-center rounded-md bg-blue-600/20 text-blue-300 opacity-30 group-hover:opacity-100 transition-all duration-200 hover:bg-blue-600/30 hover:text-blue-200"
-                        aria-label="Editar tarea"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
+                    {(isEditing || editedPlan) && (
+                      <div className="flex items-center space-x-1.5 flex-shrink-0">
+                        <button
+                          onClick={() => {
+                            // attempt to focus the matching input - kept non-critical
+                            const taskInputs = Array.from(document.querySelectorAll('input[type="text"]'));
+                            const candidate = taskInputs.find((el) => (el as HTMLInputElement).value === task);
+                            if (candidate) (candidate as HTMLInputElement).focus();
+                          }}
+                          className="h-8 w-8 flex items-center justify-center rounded-md bg-blue-600/20 text-blue-300 opacity-30 group-hover:opacity-100 transition-all duration-200 hover:bg-blue-600/30 hover:text-blue-200"
+                          aria-label="Editar tarea"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
 
-                      <button
-                        onClick={() => {
-                          if (!editedPlan) {
-                            const newEditedPlan = plan ? JSON.parse(JSON.stringify(plan)) : null;
-                            if (newEditedPlan) {
-                              const updatedTasks = [...newEditedPlan.tasks];
-                              updatedTasks.splice(i, 1);
-                              setEditedPlan({ ...newEditedPlan, tasks: updatedTasks });
+                        <button
+                          onClick={() => {
+                            if (!editedPlan) {
+                              const newEditedPlan = plan ? JSON.parse(JSON.stringify(plan)) : null;
+                              if (newEditedPlan) {
+                                const updatedTasks = [...newEditedPlan.tasks];
+                                updatedTasks.splice(i, 1);
+                                setEditedPlan({ ...newEditedPlan, tasks: updatedTasks });
+                              }
+                              return;
                             }
-                            return;
-                          }
-                          const updatedTasks = [...editedPlan.tasks];
-                          updatedTasks.splice(i, 1);
-                          setEditedPlan({ ...editedPlan, tasks: updatedTasks });
-                        }}
-                        className="h-8 w-8 flex items-center justify-center rounded-md bg-red-600/20 text-red-300 opacity-30 group-hover:opacity-100 transition-all duration-200 hover:bg-red-600/30 hover:text-red-200"
-                        aria-label="Eliminar tarea"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                            const updatedTasks = [...editedPlan.tasks];
+                            updatedTasks.splice(i, 1);
+                            setEditedPlan({ ...editedPlan, tasks: updatedTasks });
+                          }}
+                          className="h-8 w-8 flex items-center justify-center rounded-md bg-red-600/20 text-red-300 opacity-30 group-hover:opacity-100 transition-all duration-200 hover:bg-red-600/30 hover:text-red-200"
+                          aria-label="Eliminar tarea"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
                     </div>
+                    
+                    {/* Fila de botones de acción */}
+                    {expandedTaskIndex === i && (
+                      <div className="flex gap-2 pl-10 pr-3 pb-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-green-300 border-green-500/30 hover:bg-green-500/20 hover:text-white bg-green-500/10"
+                          onClick={() => {
+                            // TODO: Implementar funcionalidad de agregar a calendario
+                            console.log(`Agregar tarea "${task}" al calendario`);
+                          }}
+                        >
+                          📅 Agregar a mi calendario
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-purple-300 border-purple-500/30 hover:bg-purple-500/20 hover:text-white  bg-purple-500/10"
+                          onClick={() => openDelegateModal(task)}
+                        >
+                          👥 Delegar
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ))
               )}
@@ -1000,6 +1190,67 @@ export default function ProjectPage({
         onOpenChange={setProductModalOpen}
         onSave={handleProductSave}
       />
+
+      {/* Modal de delegación */}
+      <Dialog open={delegateModalOpen} onOpenChange={setDelegateModalOpen}>
+        <DialogContent className="sm:max-w-md bg-gray-900 border-gray-700">
+          <DialogHeader>
+            <DialogTitle className="text-white">Delegar Tarea</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div>
+              <Label className="text-sm font-medium text-gray-200">Tarea a delegar:</Label>
+              <p className="text-gray-300 bg-gray-800 p-2 rounded-md mt-1">{selectedTaskForDelegate}</p>
+            </div>
+            
+            <div>
+              <Label htmlFor="technologies" className="text-sm font-medium text-gray-200">
+                Lista de tecnologías requeridas
+              </Label>
+              <Textarea
+                id="technologies"
+                placeholder="React, Node.js, MongoDB, etc."
+                value={delegateForm.technologies}
+                onChange={(e) => setDelegateForm(prev => ({ ...prev, technologies: e.target.value }))}
+                className="mt-1 bg-gray-800 border-gray-600 text-white placeholder:text-gray-400"
+                rows={3}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="level" className="text-sm font-medium text-gray-200">
+                Nivel requerido
+              </Label>
+              <Select
+                value={delegateForm.level}
+                onValueChange={(value) => setDelegateForm(prev => ({ ...prev, level: value }))}
+              >
+                <SelectTrigger className="mt-1 bg-gray-800 border-gray-600 text-white">
+                  <SelectValue placeholder="Selecciona el nivel" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-600">
+                  <SelectItem value="junior" className="text-white hover:bg-gray-700">Junior</SelectItem>
+                  <SelectItem value="semi-senior" className="text-white hover:bg-gray-700">Semi-Senior</SelectItem>
+                  <SelectItem value="senior" className="text-white hover:bg-gray-700">Senior</SelectItem>
+                  <SelectItem value="lead" className="text-white hover:bg-gray-700">Lead</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+       
+            <Button 
+              onClick={handleDelegateSubmit}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+              disabled={!delegateForm.technologies.trim() || !delegateForm.level}
+            >
+              Delegar Tarea
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

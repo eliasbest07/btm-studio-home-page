@@ -39,10 +39,7 @@ export default function Page() {
     <div className="h-[600px] overflow-y-auto rounded-lg border border-gray-200 mr-4 ml-4 mt-4 shadow-sm">
      
       <WeeklyCalendar
-        startHour={7}
-        endHour={21}
-        events={events}
-        onCellClick={(day: any, hour: any) => console.log({ day, hour })}
+  
       />
     </div>
     </main>
