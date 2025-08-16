@@ -103,6 +103,7 @@ export default function EstoyTrabajando() {
       .order('created_at', { ascending: false });
 
     if (error) {
+      console.log('Error cargando tareas:', error);
       console.error('Error cargando tareas:', error);
       return;
     }
@@ -292,24 +293,17 @@ export default function EstoyTrabajando() {
     })
   }
 
-  const getAvatarUrl = (userId: number) => {
-    // Generar avatar basado en ID del usuario
-    return `https://images.unsplash.com/photo-${1472099645785 + userId}?w=400&h=400&fit=crop&crop=face`
+  const getAvatarUrl = (usuario: Usuario | null) => {
+    if (usuario?.avatar) {
+      return usuario.avatar;
+    }
+    // Fallback to generated avatar if no avatar in database
+    const name = usuario?.nombre || `Usuario ${usuario?.id || 'Desconocido'}`;
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=334155&color=ffffff&size=64`;
   }
 
-  const getUserName = (userId: number) => {
-    // Mock de nombres de usuarios - en un caso real cargarías de la base de datos
-    const names: { [key: number]: string } = {
-      1: "Carlos Rodriguez",
-      2: "Ana García", 
-      3: "Miguel Torres",
-      4: "Sofia Martinez",
-      5: "Roberto Silva",
-      6: "Laura Gomez",
-      7: "Pedro Ramirez",
-      8: "David Chen"
-    }
-    return names[userId] || `Usuario ${userId}`
+  const getUserName = (usuario: Usuario | null) => {
+    return usuario?.nombre || `Usuario ${usuario?.id || 'Desconocido'}`;
   }
 
   if (loading) {
@@ -333,7 +327,7 @@ export default function EstoyTrabajando() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">
-            Estoy Trabajando
+            Ahora si puedes decir. Estoy Trabajando
           </h1>
         </div>
 
@@ -355,16 +349,18 @@ export default function EstoyTrabajando() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <img
-                          src={getAvatarUrl(tarea.usuario_id)}
-                          alt={getUserName(tarea.usuario_id)}
+                          src={getAvatarUrl(tarea.usuario)}
+                          alt={getUserName(tarea.usuario)}
                           className="w-16 h-16 rounded-full border-2 border-slate-600"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(getUserName(tarea.usuario_id))}&background=334155&color=ffffff&size=64`
+                            (e.target as HTMLImageElement).src = getAvatarUrl(tarea.usuario)
                           }}
                         />
                         <div>
-                          <h3 className="text-2xl font-bold text-white">{getUserName(tarea.usuario_id)}</h3>
-                          <p className="text-slate-300 text-lg">{tarea.tipo_tarea}</p>
+                          <h3 className="text-2xl font-bold text-white">{getUserName(tarea.usuario)}</h3>
+                          <h4 className="text-xl font-semibold text-white mb-2">{tarea.nombre_producto}</h4>
+                          {/* <p className="text-slate-300 text-lg">{tarea.tipo_tarea}</p> */}
+
                           <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium mt-2 ${getLevelColor(tarea.nivel)}`}>
                             Nivel {tarea.nivel}
                           </span>
@@ -394,7 +390,7 @@ export default function EstoyTrabajando() {
 
                 {/* Content */}
                 <div className="p-6">
-                  <h4 className="text-xl font-semibold text-white mb-2">{tarea.nombre_producto}</h4>
+             
                   <p className="text-slate-300 mb-4 text-lg leading-relaxed">
                     {tarea.descripcion}
                   </p>
@@ -481,16 +477,16 @@ export default function EstoyTrabajando() {
                           >
                             <div className="flex items-start gap-4">
                               <img
-                                src={getAvatarUrl(propuesta.usuario_id)}
-                                alt={getUserName(propuesta.usuario_id)}
+                                src={getAvatarUrl(propuesta.usuario)}
+                                alt={getUserName(propuesta.usuario)}
                                 className="w-12 h-12 rounded-full"
                                 onError={(e) => {
-                                  (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(getUserName(propuesta.usuario_id))}&background=334155&color=ffffff&size=48`
+                                  (e.target as HTMLImageElement).src = getAvatarUrl(propuesta.usuario)
                                 }}
                               />
                               <div className="flex-1">
                                 <div className="flex items-center justify-between mb-2">
-                                  <h5 className="font-semibold text-white">{getUserName(propuesta.usuario_id)}</h5>
+                                  <h5 className="font-semibold text-white">{getUserName(propuesta.usuario)}</h5>
                                   <div className="flex items-center gap-2">
                                     <Button 
                                       size="sm" 
