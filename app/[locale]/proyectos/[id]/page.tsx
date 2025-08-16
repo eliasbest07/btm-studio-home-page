@@ -82,6 +82,8 @@ export default function ProjectPage({
     technologies: "",
     level: ""
   });
+  const [isDelegating, setIsDelegating] = React.useState(false);
+  const [delegateMessage, setDelegateMessage] = React.useState("");
   
   const router = useRouter();
   const visibilityKey = `project-${id}-visibility`;
@@ -467,19 +469,47 @@ export default function ProjectPage({
       technologies: "",
       level: ""
     });
+    setIsDelegating(false);
+    setDelegateMessage("");
   };
 
   const handleDelegateSubmit = async () => {
-    // TODO: Implementar la lógica de delegación
-    console.log("Delegando tarea:", {
-      task: selectedTaskForDelegate,
-      technologies: delegateForm.technologies,
-      level: delegateForm.level
-    });
+    setIsDelegating(true);
+    setDelegateMessage("");
     
-    // Aquí iría la llamada a la API para delegar la tarea
-    alert(`Tarea "${selectedTaskForDelegate}" delegada con éxito`);
-    closeDelegateModal();
+    try {
+      const response = await fetch('/api/tareas-delegadas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tipo_tarea: 'tarea_de_proyecto',
+          nivel: delegateForm.level,
+          tecnologias: delegateForm.technologies,
+          descripcion: selectedTaskForDelegate,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al delegar la tarea');
+      }
+
+      setDelegateMessage("✅ Tarea delegada con éxito");
+      
+      // Cerrar modal después de un breve delay para mostrar el mensaje
+      setTimeout(() => {
+        closeDelegateModal();
+      }, 2000);
+      
+    } catch (error: any) {
+      console.error('Error delegating task:', error);
+      setDelegateMessage(`❌ ${error.message}`);
+    } finally {
+      setIsDelegating(false);
+    }
   };
 
   // ---------------- Editing functions (from code2) ----------------
@@ -649,7 +679,7 @@ export default function ProjectPage({
   <div className="flex flex-col md:flex-row items-center justify-between bg-blue-900/30 border border-blue-600/30  backdrop-blur-sm rounded-xl p-4 border border-white/10 mb-6 gap-4">
     <div className="md:mb-0">
       <p className="text-sm  text-blue-200 text-center md:text-left">
-        {!isPublic
+        {isPublic
           ? "Para delegar tareas del proyecto debes convertirlo en privado"
           : "Puedes volver el proyecto público para que todos observen el desarrollo"}
       </p>
@@ -1239,14 +1269,27 @@ export default function ProjectPage({
             </div>
           </div>
 
+          {/* Mensaje de feedback */}
+          {delegateMessage && (
+            <div className="mb-4">
+              <p className="text-sm text-center">{delegateMessage}</p>
+            </div>
+          )}
+
           <DialogFooter className="gap-2">
-       
             <Button 
               onClick={handleDelegateSubmit}
               className="bg-purple-600 hover:bg-purple-700 text-white"
-              disabled={!delegateForm.technologies.trim() || !delegateForm.level}
+              disabled={!delegateForm.technologies.trim() || !delegateForm.level || isDelegating}
             >
-              Delegar Tarea
+              {isDelegating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Delegando...
+                </>
+              ) : (
+                "Delegar Tarea"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
