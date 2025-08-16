@@ -32,6 +32,8 @@ export async function POST(req: Request) {
       nivel,
       tecnologias,
       descripcion,
+      proyecto_id,
+      tarea_id,
     } = await req.json();
 
     // Validar datos requeridos
@@ -84,6 +86,20 @@ export async function POST(req: Request) {
         { error: "Error al delegar la tarea: " + delegateError.message },
         { status: 400 }
       );
+    }
+
+    // Si tenemos tarea_id y proyecto_id, actualizar el estado de la tarea original
+    if (tarea_id && proyecto_id) {
+      const { error: updateError } = await supabaseClient
+        .from("tareas")
+        .update({ estado: "delegada" })
+        .eq("id", tarea_id)
+        .eq("proyecto_id", proyecto_id);
+
+      if (updateError) {
+        console.error("Error updating task status:", updateError);
+        // No fallar completamente, solo registrar el error
+      }
     }
 
     return NextResponse.json(

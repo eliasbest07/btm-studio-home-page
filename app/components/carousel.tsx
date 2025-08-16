@@ -65,71 +65,71 @@ const Carousel = () => {
   const visible = carouselItems.slice(currentIndex, currentIndex + itemsPerView);
 
   return (
-    <div className="w-full px-4 py-2">
-      <div className="relative overflow-hidden rounded-2xl bg-black/50 backdrop-blur-sm border border-white/10 p-0 md:p-6 mb-[10px]">
-        <h2 className="text-3xl font-bold text-white mb-4 md:mb-6 text-center">
-          {t("title-imageCarousel")}
-        </h2>
+  <div className="w-full px-4 py-4">
+    <div className="relative overflow-hidden rounded-2xl bg-black/50 backdrop-blur-sm border border-white/10 mb-[10px]">
+      <h2 className="text-3xl font-bold text-white mb-4 md:mb-6 text-center">
+        {t("title-imageCarousel")}
+      </h2>
 
-        {/* nav buttons (desktop only) */}
-  <button
-    onClick={prevSlide}
-    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 text-white rounded-full h-10 w-10 md:h-12 md:w-12 flex items-center justify-center"
-  >
-    <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
-  </button>
+      {/* nav buttons (desktop only) */}
+      <button
+        onClick={prevSlide}
+        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 text-white rounded-full h-10 w-10 md:h-12 md:w-12 flex items-center justify-center"
+      >
+        <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
+      </button>
 
-  <button
-    onClick={nextSlide}
-    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 text-white rounded-full h-10 w-10 md:h-12 md:w-12 flex items-center justify-center"
-  >
-    <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
-  </button>
+      <button
+        onClick={nextSlide}
+        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 text-white rounded-full h-10 w-10 md:h-12 md:w-12 flex items-center justify-center"
+      >
+        <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
+      </button>
 
-        {/* slides: auto height on mobile (image height), fixed on desktop */}
-        <div className="flex mb-2 gap-3 md:h-80">
-          <AnimatePresence mode="wait">
-            {visible.map((item, idx) => (
-              <motion.div
-                key={item.id}
-                className="shrink-0 grow-0 basis-1/2 md:basis-1/4 cursor-pointer"
-                onClick={() => setSelectedImage(item.image)}
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -40 }}
-                transition={{ type: "spring", stiffness: 90, damping: 18, delay: idx * 0.15 }}
-              >
-                <CarouselImage src={item.image} alt={item.title} />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
+      {/* slides ajustan su altura al de las imágenes */}
+      <div className="flex mb-2 ml-2 gap-3">
+        <AnimatePresence mode="wait">
+          {visible.map((item, idx) => (
+            <motion.div
+              key={item.id}
+              className="shrink-0 grow-0 basis-1/2 md:basis-1/4 cursor-pointer"
+              onClick={() => setSelectedImage(item.image)}
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -40 }}
+              transition={{ type: "spring", stiffness: 90, damping: 18, delay: idx * 0.15 }}
+            >
+              <CarouselImage src={item.image} alt={item.title} />
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
-
-      {/* full-screen image */}
-      <AnimatePresence>
-        {selectedImage && (
-          <motion.div
-            className="fixed inset-0 bg-black/90 flex items-start justify-center z-50 p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setSelectedImage(null)}
-          >
-            <motion.img
-              src={selectedImage}
-              alt="Zoomed"
-              className="max-w-5xl w-full max-h-[85vh] mt-16 object-contain rounded-lg shadow-lg"
-              initial={{ scale: 0.85, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.85, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 90, damping: 18 }}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
-  );
-};
+
+    {/* full-screen image */}
+    <AnimatePresence>
+      {selectedImage && (
+        <motion.div
+          className="fixed inset-0 bg-black/90 flex items-start justify-center z-50 p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setSelectedImage(null)}
+        >
+          <motion.img
+            src={selectedImage}
+            alt="Zoomed"
+            className="max-w-5xl w-full max-h-[85vh] mt-16 object-contain rounded-lg shadow-lg"
+            initial={{ scale: 0.85, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.85, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 90, damping: 18 }}
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+);
+}
 
 export default Carousel;

@@ -4,9 +4,6 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import ShowProjectsModal from "./showProjects"
-import Image from "next/image"
-import { Car, ChevronLeft, ChevronRight } from "lucide-react"
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { useTranslations } from "next-intl"
 
 
@@ -78,7 +75,7 @@ export default function Hero() {
               {t("ctaContinue")}
             </Button>
             <Button variant="outline" size="lg" className="font-semibold border-gray-200 text-gray-200 bg-transparent hover:bg-white/20 hover:text-white hover:border-white/30">
-              <Link href="/portfolio">{t("ctaPortfolio")}</Link>
+              <Link href="/estoy-trabajando">{t("ctaPortfolio")}</Link>
             </Button>
         </div>
       <ShowProjectsModal isOpen={isModalOpen} onOpenChange={setIsModalOpen} />

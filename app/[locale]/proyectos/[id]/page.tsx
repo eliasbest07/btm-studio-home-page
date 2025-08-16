@@ -37,9 +37,15 @@ type ProjectContext = {
   colors: string[] | null;
 };
 
+type Task = {
+  id?: number;
+  descripcion: string;
+  estado?: string;
+};
+
 type Plan = {
   projectId?: string;
-  tasks: string[];
+  tasks: string[] | Task[];
   projectContext: ProjectContext;
   finalImageUrl: string | null;
   timestamp: string;
@@ -77,7 +83,7 @@ export default function ProjectPage({
   
   // Estados para el modal de delegación
   const [delegateModalOpen, setDelegateModalOpen] = React.useState(false);
-  const [selectedTaskForDelegate, setSelectedTaskForDelegate] = React.useState<string>("");
+  const [selectedTaskForDelegate, setSelectedTaskForDelegate] = React.useState<Task | string>("");
   const [delegateForm, setDelegateForm] = React.useState({
     technologies: "",
     level: ""
@@ -234,7 +240,11 @@ export default function ProjectPage({
           // Convertir el proyecto de Supabase al formato Plan
           const convertedPlan: Plan = {
             projectId: supabaseProject.id?.toString(),
-            tasks: (supabaseProject.tareas || []).map((tarea: any) => tarea.descripcion),
+            tasks: (supabaseProject.tareas || []).map((tarea: any) => ({
+              id: tarea.id,
+              descripcion: tarea.descripcion,
+              estado: tarea.estado || 'pendiente'
+            })),
             projectContext: {
               description: supabaseProject.description || supabaseProject.nombre || '',
               stylePrompt: supabaseProject.style_prompt || '',
@@ -346,12 +356,23 @@ export default function ProjectPage({
           timestamp: chosen.timestamp,
           publico: newState,
           producto: producto,
-          tareas: chosen.tasks.map((taskDesc: string, index: number) => ({
-            id: `temp-${index}`,
-            descripcion: taskDesc,
-            proyecto_id: data.projectId,
-            estado: "pendiente"
-          }))
+          tareas: chosen.tasks.map((taskDesc: string | Task, index: number) => {
+            if (typeof taskDesc === "string") {
+              return {
+                id: `temp-${index}`,
+                descripcion: taskDesc,
+                proyecto_id: data.projectId,
+                estado: "pendiente"
+              };
+            } else {
+              return {
+                id: taskDesc.id ?? `temp-${index}`,
+                descripcion: taskDesc.descripcion,
+                proyecto_id: data.projectId,
+                estado: taskDesc.estado ?? "pendiente"
+              };
+            }
+          })
         };
 
         // Cachear los datos del proyecto
@@ -457,7 +478,7 @@ export default function ProjectPage({
   };
 
   // Funciones para el modal de delegación
-  const openDelegateModal = (task: string) => {
+  const openDelegateModal = (task: Task | string) => {
     setSelectedTaskForDelegate(task);
     setDelegateModalOpen(true);
   };
@@ -478,6 +499,14 @@ export default function ProjectPage({
     setDelegateMessage("");
     
     try {
+      const taskDescription = typeof selectedTaskForDelegate === 'string' 
+        ? selectedTaskForDelegate 
+        : selectedTaskForDelegate.descripcion;
+      
+      const taskId = typeof selectedTaskForDelegate === 'object' && selectedTaskForDelegate.id 
+        ? selectedTaskForDelegate.id 
+        : null;
+
       const response = await fetch('/api/tareas-delegadas', {
         method: 'POST',
         headers: {
@@ -487,7 +516,9 @@ export default function ProjectPage({
           tipo_tarea: 'tarea_de_proyecto',
           nivel: delegateForm.level,
           tecnologias: delegateForm.technologies,
-          descripcion: selectedTaskForDelegate,
+          descripcion: taskDescription,
+          proyecto_id: isFromSupabase ? supabaseProject?.id : null,
+          tarea_id: taskId,
         }),
       });
 
@@ -498,6 +529,20 @@ export default function ProjectPage({
       }
 
       setDelegateMessage("✅ Tarea delegada con éxito");
+      
+      // Si es proyecto de Supabase, actualizar el plan local para reflejar el cambio
+      if (isFromSupabase && taskId) {
+        setPlan(prevPlan => {
+          if (!prevPlan) return prevPlan;
+          const updatedTasks = prevPlan.tasks.map((task: any) => {
+            if (typeof task === 'object' && task.id === taskId) {
+              return { ...task, estado: 'delegada' };
+            }
+            return task;
+          });
+          return { ...prevPlan, tasks: updatedTasks };
+        });
+      }
       
       // Cerrar modal después de un breve delay para mostrar el mensaje
       setTimeout(() => {
@@ -587,7 +632,19 @@ export default function ProjectPage({
         const arr = [...prev.tasks];
         if (remove) arr.splice(index, 1);
         else arr[index] = value;
-        updated.tasks = arr;
+        // Ensure arr is either string[] or Task[]
+        if (arr.every((item) => typeof item === "string")) {
+          updated.tasks = arr as string[];
+        } else if (arr.every((item) => typeof item === "object")) {
+          updated.tasks = arr as Task[];
+        } else {
+          // fallback: convert all to Task objects
+          updated.tasks = arr.map((item) =>
+            typeof item === "string"
+              ? { descripcion: item }
+              : item
+          ) as Task[];
+        }
       }
       if (key === "projectContext.colors") {
         const arr = [...(prev.projectContext.colors || [])];
@@ -1045,9 +1102,17 @@ export default function ProjectPage({
                   <p className="text-gray-400">No hay tareas. ¡Añade la primera!</p>
                 </div>
               ) : (
-                (editedPlan?.tasks ?? plan?.tasks ?? []).map((task, i) => (
+                (editedPlan?.tasks ?? plan?.tasks ?? []).map((task, i) => {
+                  const taskObj = typeof task === 'string' ? { descripcion: task, estado: 'pendiente' } : task;
+                  const isDelegated = taskObj.estado === 'delegada';
+                  
+                  return (
                   <div key={i} className="space-y-2">
-                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/10 group hover:bg-white/10 transition-colors">
+                    <div className={`flex items-center justify-between p-3 rounded-md border group hover:bg-white/10 transition-colors ${
+                      isDelegated 
+                        ? 'bg-purple-500/10 border-purple-500/30' 
+                        : 'bg-white/5 border-white/10'
+                    }`}>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -1065,27 +1130,33 @@ export default function ProjectPage({
                       {(isEditing || editedPlan) ? (
                         <input
                           type="text"
-                          value={task}
+                          value={taskObj.descripcion}
                           onChange={(e) => {
                             if (!editedPlan) {
                               const newEditedPlan = plan ? JSON.parse(JSON.stringify(plan)) : null;
                               if (newEditedPlan) {
                                 const updatedTasks = [...newEditedPlan.tasks];
-                                updatedTasks[i] = e.target.value;
+                                updatedTasks[i] = typeof task === 'string' ? e.target.value : { ...taskObj, descripcion: e.target.value };
                                 setEditedPlan({ ...newEditedPlan, tasks: updatedTasks });
                               }
                               return;
                             }
                             const updatedTasks = [...editedPlan.tasks];
-                            updatedTasks[i] = e.target.value;
-                            setEditedPlan({ ...editedPlan, tasks: updatedTasks });
+                            updatedTasks[i] = typeof task === 'string' ? e.target.value : { ...taskObj, descripcion: e.target.value };
+                            // Ensure tasks is either string[] or Task[]
+                            if (updatedTasks.every(item => typeof item === 'string')) {
+                              setEditedPlan({ ...editedPlan, tasks: updatedTasks as string[] });
+                            } else {
+                              setEditedPlan({ ...editedPlan, tasks: updatedTasks.map(item => typeof item === 'string' ? { descripcion: item } : item) as Task[] });
+                            }
                           }}
                           className="flex-grow bg-transparent border-none outline-none text-gray-200 placeholder:text-gray-400 hover:bg-black/20 focus:bg-black/30 rounded px-2 py-1 transition-colors"
                           placeholder="Editar tarea..."
                         />
                       ) : (
-                        <span className="flex-grow text-gray-200 px-2 py-1">
-                          {task}
+                        <span className={`flex-grow px-2 py-1 ${isDelegated ? 'text-purple-200' : 'text-gray-200'}`}>
+                          {taskObj.descripcion}
+                          {isDelegated && <span className="ml-2 text-xs text-purple-300">(Delegada)</span>}
                         </span>
                       )}
                     </div>
@@ -1118,7 +1189,12 @@ export default function ProjectPage({
                             }
                             const updatedTasks = [...editedPlan.tasks];
                             updatedTasks.splice(i, 1);
-                            setEditedPlan({ ...editedPlan, tasks: updatedTasks });
+                            // Ensure tasks is either string[] or Task[]
+                            if (updatedTasks.every(item => typeof item === 'string')) {
+                              setEditedPlan({ ...editedPlan, tasks: updatedTasks as string[] });
+                            } else {
+                              setEditedPlan({ ...editedPlan, tasks: updatedTasks.map(item => typeof item === 'string' ? { descripcion: item } : item) as Task[] });
+                            }
                           }}
                           className="h-8 w-8 flex items-center justify-center rounded-md bg-red-600/20 text-red-300 opacity-30 group-hover:opacity-100 transition-all duration-200 hover:bg-red-600/30 hover:text-red-200"
                           aria-label="Eliminar tarea"
@@ -1138,7 +1214,7 @@ export default function ProjectPage({
                           className="text-green-300 border-green-500/30 hover:bg-green-500/20 hover:text-white bg-green-500/10"
                           onClick={() => {
                             // TODO: Implementar funcionalidad de agregar a calendario
-                            console.log(`Agregar tarea "${task}" al calendario`);
+                            console.log(`Agregar tarea "${taskObj.descripcion}" al calendario`);
                           }}
                         >
                           📅 Agregar a mi calendario
@@ -1147,14 +1223,16 @@ export default function ProjectPage({
                           variant="outline"
                           size="sm"
                           className="text-purple-300 border-purple-500/30 hover:bg-purple-500/20 hover:text-white  bg-purple-500/10"
-                          onClick={() => openDelegateModal(task)}
+                          onClick={() => openDelegateModal(taskObj)}
+                          disabled={isDelegated}
                         >
-                          👥 Delegar
+                          👥 {isDelegated ? 'Ya Delegada' : 'Delegar'}
                         </Button>
                       </div>
                     )}
                   </div>
-                ))
+                )
+                })
               )}
             </div>
 
@@ -1173,7 +1251,16 @@ export default function ProjectPage({
                         setEditedPlan({ ...newEditedPlan, tasks: [...newEditedPlan.tasks, newTask.trim()] });
                       }
                     } else {
-                      setEditedPlan({ ...editedPlan, tasks: [...editedPlan.tasks, newTask.trim()] });
+                      // Ensure tasks array is either string[] or Task[]
+                      const updatedTasks = [...editedPlan.tasks, newTask.trim()];
+                      if (updatedTasks.every(item => typeof item === 'string')) {
+                        setEditedPlan({ ...editedPlan, tasks: updatedTasks as string[] });
+                      } else {
+                        setEditedPlan({ 
+                          ...editedPlan, 
+                          tasks: updatedTasks.map(item => typeof item === 'string' ? { descripcion: item } : item) as Task[] 
+                        });
+                      }
                     }
                     setNewTask("");
                   }
@@ -1231,7 +1318,11 @@ export default function ProjectPage({
           <div className="space-y-4 py-4">
             <div>
               <Label className="text-sm font-medium text-gray-200">Tarea a delegar:</Label>
-              <p className="text-gray-300 bg-gray-800 p-2 rounded-md mt-1">{selectedTaskForDelegate}</p>
+              <p className="text-gray-300 bg-gray-800 p-2 rounded-md mt-1">
+                {typeof selectedTaskForDelegate === 'string' 
+                  ? selectedTaskForDelegate 
+                  : selectedTaskForDelegate.descripcion}
+              </p>
             </div>
             
             <div>
