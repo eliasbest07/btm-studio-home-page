@@ -349,15 +349,15 @@ export default function EstoyTrabajando() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <img
-                          src={getAvatarUrl(tarea.usuario)}
-                          alt={getUserName(tarea.usuario)}
+                          src={getAvatarUrl(tarea.usuario ?? null)}
+                          alt={getUserName(tarea.usuario ?? null)}
                           className="w-16 h-16 rounded-full border-2 border-slate-600"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = getAvatarUrl(tarea.usuario)
+                            (e.target as HTMLImageElement).src = getAvatarUrl(tarea.usuario ?? null)
                           }}
                         />
                         <div>
-                          <h3 className="text-2xl font-bold text-white">{getUserName(tarea.usuario)}</h3>
+                          <h3 className="text-2xl font-bold text-white">{getUserName(tarea.usuario ?? null)}</h3>
                           <h4 className="text-xl font-semibold text-white mb-2">{tarea.nombre_producto}</h4>
                           {/* <p className="text-slate-300 text-lg">{tarea.tipo_tarea}</p> */}
 
@@ -477,16 +477,16 @@ export default function EstoyTrabajando() {
                           >
                             <div className="flex items-start gap-4">
                               <img
-                                src={getAvatarUrl(propuesta.usuario)}
-                                alt={getUserName(propuesta.usuario)}
+                                src={getAvatarUrl(propuesta.usuario ?? null)}
+                                alt={getUserName(propuesta.usuario ?? null)}
                                 className="w-12 h-12 rounded-full"
                                 onError={(e) => {
-                                  (e.target as HTMLImageElement).src = getAvatarUrl(propuesta.usuario)
+                                  (e.target as HTMLImageElement).src = getAvatarUrl(propuesta.usuario ?? null)
                                 }}
                               />
                               <div className="flex-1">
                                 <div className="flex items-center justify-between mb-2">
-                                  <h5 className="font-semibold text-white">{getUserName(propuesta.usuario)}</h5>
+                                  <h5 className="font-semibold text-white">{getUserName(propuesta.usuario ?? null)}</h5>
                                   <div className="flex items-center gap-2">
                                     <Button 
                                       size="sm" 

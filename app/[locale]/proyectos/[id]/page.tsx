@@ -1272,10 +1272,26 @@ export default function ProjectPage({
                   if (!editedPlan) {
                     const newEditedPlan = plan ? JSON.parse(JSON.stringify(plan)) : null;
                     if (newEditedPlan) {
-                      setEditedPlan({ ...newEditedPlan, tasks: [...newEditedPlan.tasks, newTask.trim()] });
+                      const updatedTasks = [...newEditedPlan.tasks, newTask.trim()];
+                      if (updatedTasks.every(item => typeof item === 'string')) {
+                        setEditedPlan({ ...newEditedPlan, tasks: updatedTasks as string[] });
+                      } else {
+                        setEditedPlan({ 
+                          ...newEditedPlan, 
+                          tasks: updatedTasks.map(item => typeof item === 'string' ? { descripcion: item } : item) as Task[] 
+                        });
+                      }
                     }
                   } else {
-                    setEditedPlan({ ...editedPlan, tasks: [...editedPlan.tasks, newTask.trim()] });
+                    const updatedTasks = [...editedPlan.tasks, newTask.trim()];
+                    if (updatedTasks.every(item => typeof item === 'string')) {
+                      setEditedPlan({ ...editedPlan, tasks: updatedTasks as string[] });
+                    } else {
+                      setEditedPlan({ 
+                        ...editedPlan, 
+                        tasks: updatedTasks.map(item => typeof item === 'string' ? { descripcion: item } : item) as Task[] 
+                      });
+                    }
                   }
                   setNewTask("");
                 }}
