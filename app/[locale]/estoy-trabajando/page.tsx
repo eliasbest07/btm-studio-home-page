@@ -73,6 +73,42 @@ export default function EstoyTrabajando() {
   const [showNewProposal, setShowNewProposal] = useState<string | null>(null)
   const [newProposalText, setNewProposalText] = useState("")
   const itemsPerPage = 6
+  const [requestingNivelId, setRequestingNivelId] = useState<string | null>(null)
+
+
+  const handleSolicitarNivel = async (tareaId: string) => {
+    try {
+      setRequestingNivelId(tareaId)
+  
+      const res = await fetch("./api/check-level", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // asegura que se envíen cookies de sesión
+        body: JSON.stringify({ tareaId }),
+      })
+  
+      const json = await res.json().catch(() => ({}))
+  
+      if (!res.ok) {
+        console.error("Error al crear solicitud:", json)
+        alert("❌ Error al solicitar nivel: " + (json?.error ?? "Error desconocido"))
+        return
+      }
+  
+      // éxito
+      alert("✅ Solicitud creada con éxito")
+      // opcional: refrescar lista o marcar UI; por ejemplo:
+      // await loadTareasAndPropuestas()
+    } catch (err) {
+      console.error("Error inesperado en solicitar nivel:", err)
+      alert("❌ Ocurrió un error inesperado. Revisa la consola.")
+    } finally {
+      setRequestingNivelId(null)
+    }
+  }
+  
 
   // Cargar tareas y propuestas desde Supabase
   useEffect(() => {
@@ -345,10 +381,22 @@ export default function EstoyTrabajando() {
               >
                 {/* Botón Solicitar Nivel - Esquina superior derecha */}
                 <div className="absolute top-0 right-0 z-10">
-                  <Button className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-none rounded-bl-lg rounded-tr-xl font-medium">
-                    SOLICITAR NIVEL
-                  </Button>
-                </div>
+  <Button
+    className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-none rounded-bl-lg rounded-tr-xl font-medium"
+    onClick={() => handleSolicitarNivel(tarea.id)}
+    disabled={requestingNivelId === tarea.id}
+  >
+    {requestingNivelId === tarea.id ? (
+      <>
+        <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
+        Solicitando...
+      </>
+    ) : (
+      "SOLICITAR NIVEL"
+    )}
+  </Button>
+</div>
+
 
                 {/* Header con información del usuario */}
                 <div className="bg-gradient-to-r from-slate-800/90 to-slate-700/90 backdrop-blur-sm p-4 sm:p-6">
