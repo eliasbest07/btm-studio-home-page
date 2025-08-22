@@ -1,0 +1,200 @@
+{
+  
+  "Index": {
+    "title-imageCarousel": "Nuestro equipo trabajando",
+    "greeting": "Nuestros Servicios",
+    "services": [
+      {
+        "title": "Desarrollo Web",
+        "description": "Desarrollo web de alta calidad adaptado a tus necesidades."
+      },
+      {
+        "title": "Desarrollo de Apps",
+        "description": "Desarrollo de aplicaciones móviles de alta calidad adaptadas a tus necesidades."
+      },
+      {
+        "title": "Diseño UI/UX",
+        "description": "Diseño UI/UX de alta calidad adaptado a tus necesidades."
+      },
+      {
+        "title": "Branding",
+        "description": "Servicios de branding de alta calidad adaptados a tus necesidades."
+      },
+      {
+        "title": "Optimización SEO",
+        "description": "Optimización SEO de alta calidad adaptada a tus necesidades."
+      },
+      {
+        "title": "Marketing Digital",
+        "description": "Estrategias de marketing digital de alta calidad adaptadas a tus necesidades."
+      }
+    ],
+    "carousel": {
+      "1": {
+        "title": "Innovación Digital",
+        "description": "Creamos soluciones digitales que transforman negocios y experiencias de usuario."
+      },
+      "2": {
+        "title": "Diseño Estratégico",
+        "description": "Cada pixel tiene un propósito, cada interacción está diseñada con intención."
+      },
+      "3": {
+        "title": "Desarrollo Tecnológico",
+        "description": "Construimos con las tecnologías más avanzadas para crear productos escalables y robustos."
+      },
+      "4": {
+        "title": "Resultados Medibles",
+        "description": "Nuestras soluciones generan impacto real y resultados cuantificables para tu negocio."
+      }
+    }
+  },
+
+  "working": {
+    "title": "Estoy trabajando",
+    "description": "Estas son las últimas tareas ofertadas por empleadores.",
+    "employer": "Empleador",
+    "tasks": "tareas",
+    "focus": "Enfoque",
+    "send": "Enviar propuesta"
+  }
+  ,
+  "hero": {
+    "slide1Title": "Innovación Digital",
+    "slide1Desc": "Creamos soluciones digitales que transforman negocios y experiencias de usuario.",
+    "slide2Title": "Diseño Estratégico",
+    "slide2Desc": "Cada pixel tiene un propósito, cada interacción está diseñada con intención.",
+    "slide3Title": "Desarrollo Tecnológico",
+    "slide3Desc": "Construimos con las tecnologías más avanzadas para crear productos escalables y robustos.",
+    "slide4Title": "Resultados Medibles",
+    "slide4Desc": "Nuestras soluciones generan impacto real y resultados cuantificables para tu negocio.",
+    "ctaContinue": "Continuar Proyecto",
+    "ctaPortfolio": "Ver Tareas de Trabajo",
+    "headline": "Experiencias Digitales que Inspiran",
+    "subtext": "Creamos soluciones web y móviles a medida que impulsan tu negocio y cautivan a tu audiencia."
+  }
+
+  ,
+
+  "successCases": {
+    "title": "Nuestros Casos de Éxito",
+    "started": "Iniciado en",
+    "investment": "Inversión",
+    "monthlyReturn": "Retorno mensual estimado",
+    "annualReturn": "Retorno anual estimado",
+    "estimatedRoi": "ROI estimado",
+    "estimatedEvolution": "Evolución estimada",
+    "initialInvestment": "vs Inversión inicial",
+    "april":"Abr",
+    "repuestos-merida": {
+      "name": "Repuestos Mérida App",
+      "description": "Aplicación móvil para la búsqueda y cotización de repuestos automotrices.",
+      "details": "Desarrollo de una intuitiva aplicación móvil que conecta a clientes con un amplio catálogo de repuestos, agilizando el proceso de compra y generando un notable incremento en ventas desde su lanzamiento.",
+      "linkText": "Ver en Play Store"
+    },
+    "repolla": {
+      "name": "Repolla",
+      "description": "Plataforma de gestión y ventas para Repolla, líder en su sector.",
+      "details": "Desde 2009, Repolla ha visto un crecimiento sostenido gracias a la optimización de su plataforma digital, resultando en un retorno anual de $16,000 sobre una inversión inicial de $4,000.",
+      "linkText": "Ver en Play Store"
+    },
+    "project-beta": {
+      "name": "Total-Time.app",
+      "description": "Aplicación web para trackiar el desempeño de los empleados y coordinar tareas.",
+      "details": "La app móvil mejoró la eficiencia de las entregas en un 40% y aumentó la satisfacción del cliente en un 25% en los primeros 6 meses.",
+      "linkText": "Ver en Web"
+    }
+  }
+
+,"header": {
+    "createProject": "Crear Proyecto"
+  }
+  ,
+
+  "footer": {
+    "rights": "Todos los derechos reservados.",
+    "language": "English"
+  },
+
+  "projects":{
+  "title": "Proyectos Guardados",
+  "noProjects": "No hay proyectos guardados localmente.",
+  "untitledProject": "Proyecto sin nombre",
+  "tasks": "tareas",
+  "access": "Acceder"
+
+}
+,
+"imageCarousel":
+{
+"selected":"Seleccionado"
+}
+,
+  "createProjectModal": {
+    "title": "Crea un nuevo proyecto",
+    "subtitle": "Cuéntanos lo que necesitas para empezar.",
+    "continueButton": "Continuar",
+    "projectType": {
+      "label": "Tipo de proyecto"
+    },
+    "projectTypes": {
+      "taskList": "Lista de tareas",
+      "webApp": "Web app",
+      "landingPage": "Landing page",
+      "illustration": "Ilustración",
+      "mobileApp": "Aplicación móvil",
+      "automation": "Automatizacion"
+    },
+    "utility": {
+      "label": "Utilidad del proyecto",
+      "optional": "opcional",
+      "placeholder": "¿Para qué se usará este proyecto? ¿Qué necesitas resolver?"
+    },
+    "description": {
+      "label": "Descripción detallada",
+      "placeholder": "Especifica todos los detalles importantes para este proyecto...",
+      "selectedProject": "Tipo de proyecto seleccionado:"
+    },
+    "palette": {
+      "label": "Selecciona una paleta",
+      "none": "Sin paleta",
+      "custom": "Personalizado",
+      "addColor": "+ Add color",
+      "names": {
+        "Minimalista": "Minimalista",
+        "Oscuro Neón": "Oscuro Neón",
+        "Tropical Vibrante": "Tropical Vibrante",
+        "Lujoso": "Lujoso",
+        "Natural Suave": "Natural Suave"
+      }
+    },
+    "style": {
+      "label": "Estilo de inspiración",
+      "selected": "Estilo seleccionado",
+      "prompt": "Prompt de estilo",
+      "noneSelected": "Ningún estilo seleccionado",
+      "noneImageSrc":"/ningun_estilo.png",
+      "names": {
+    "minimalistNeutral": "Estilo Minimalista y Neutro",
+    "darkModernTech": "Estilo Oscuro, Moderno y Tecnológico",
+    "vibrantPlayful": "Estilo Vibrante y Juguetón",
+    "elegantLuxury": "Estilo Elegante y Lujoso",
+    "ecoNatural": "Estilo Ecológico y Natural",
+    "retroFuturistic": "Estilo Retro-Futurista"
+  },
+  "prompts": {
+    "minimalistNeutral": "Diseño web minimalista con paleta de colores neutros (beige, gris claro, blanco roto), líneas limpias, mucho espacio en blanco, tipografía sofisticada y sombras sutiles.",
+    "darkModernTech": "Interfaz de sitio web tecnológico moderno en modo oscuro, con acento en colores vibrantes (azul eléctrico o verde neón), tipografía elegante, patrones geométricos, elementos brillantes, profesional e innovador.",
+    "vibrantPlayful": "Diseño web vibrante y juguetón, con paleta de colores brillantes (amarillo, rosa, turquesa), formas orgánicas, ilustraciones personalizadas, tipografía amigable, energético y atractivo.",
+    "elegantLuxury": "Diseño web de marca de lujo elegante, con colores profundos y ricos (burdeos, dorado, negro), tipografía serif, fotografías de producto de alta calidad, diseño sofisticado y sensación premium.",
+    "ecoNatural": "Sitio web de producto natural y ecológico, con tonos tierra (verdes, marrones, cremas), fondos texturizados, tipografías orgánicas o manuscritas, imágenes inspiradas en la naturaleza, limpio y confiable.",
+    "retroFuturistic": "Diseño web retro-futurista, estética synthwave de los 80, neones rosa y púrpura, líneas de cuadrícula, elementos pixelados, efectos de texto cromado, nostálgico pero moderno."
+  }
+      
+    }
+  },
+  "showProjectsModal": {
+    "noProjects": "No hay proyectos disponibles",
+    "access": "Acceder"
+  }
+
+}

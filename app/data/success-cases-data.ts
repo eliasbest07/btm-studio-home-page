@@ -1,4 +1,5 @@
-// Primero, actualizamos la interfaz para incluir todos los campos necesarios
+import { useTranslations } from "next-intl"
+
 export interface SuccessCase {
   id: string
   name: string
@@ -18,7 +19,7 @@ export interface SuccessCase {
 
 // Datos simulados para las gráficas de línea
 const generateMockProgressData = (baseValue: number, investment: number): Array<{ name: string; value: number }> => {
-  const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun"]
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
   let currentValue = investment * 0.8 // Empezar un poco por debajo de la inversión
   const data = months.map((month, index) => {
     // Simular crecimiento con picos y valles
@@ -39,53 +40,55 @@ const generateMockProgressData = (baseValue: number, investment: number): Array<
   ]
 }
 
-export const successCasesData: SuccessCase[] = [
-  {
-    id: "repuestos-merida",
-    name: "Repuestos Mérida App",
-    description: "Aplicación móvil para la búsqueda y cotización de repuestos automotrices.",
-    imageUrl: "/images/success-cases/repuestos-merida.webp",
-    investment: 500,
-    returnValue: 550, // Actualizado según solicitud
-    returnIsMonthly: true,
-    roiPercentage: 10, // ROI: ((550 - 500) / 500) * 100 = 10%
-    details:
-      "Desarrollo de una intuitiva aplicación móvil que conecta a clientes con un amplio catálogo de repuestos, agilizando el proceso de compra y generando un notable incremento en ventas desde su lanzamiento.",
-    linkUrl: "https://play.google.com/store/apps/details?id=com.btmstudio.rep_merida&hl=en_US",
-    linkText: "Ver en Play Store",
-    startYear: 2023,
-    progressData: generateMockProgressData(550, 500), // returnValue, investment
-  },
-  {
-    id: "repolla", // Reemplazando project-alpha
-    name: "Repolla",
-    description: "Plataforma de gestión y ventas para Repolla, líder en su sector.",
-    imageUrl: "/images/success-cases/repolla_520.png", // Placeholder, idealmente una imagen de Repolla
-    investment: 4000,
-    returnValue: 16000, // Retorno anual
-    returnIsMonthly: false,
-    roiPercentage: 300, // ROI: ((16000 - 4000) / 4000) * 100 = 300%
-    details:
-      "Desde 2009, Repolla ha visto un crecimiento sostenido gracias a la optimización de su plataforma digital, resultando en un retorno anual de $16,000 sobre una inversión inicial de $4,000.",
-    linkUrl: "https://play.google.com/store/apps/datasafety?id=com.natillera.repolla", // Actualizar si hay un link real
-    linkText: "Ver en Play Store",
-    startYear: 2009,
-    progressData: generateMockProgressData(16000, 4000),
-  },
-  {
-    id: "project-beta",
-    name: "Total-Time.app",
-    description: "Aplicación web para trackiar el desempeño de los empleados y coordinar tareas.",
-    imageUrl: "/images/success-cases/total-time_logo.png",
-    investment: 50,
-    returnValue: 5000,
-    returnIsMonthly: false,
-    roiPercentage: 300,
-    linkUrl: "https://total-time.app", // Actualizar si hay un link real
-    linkText: "Ver en Web",
-    details:
-      "La app móvil mejoró la eficiencia de las entregas en un 40% y aumentó la satisfacción del cliente en un 25% en los primeros 6 meses.",
-    startYear: 2023,
-    progressData: generateMockProgressData(300000, 75000),
-  },
-]
+
+export function getSuccessCasesData(): SuccessCase[] {
+  const t = useTranslations("successCases")
+
+  return [
+    {
+      id: "repuestos-merida",
+      name: t("repuestos-merida.name"),
+      description: t("repuestos-merida.description"),
+      details: t("repuestos-merida.details"),
+      linkText: t("repuestos-merida.linkText"),
+      imageUrl: "/images/success-cases/repuestos-merida.webp",
+      investment: 500,
+      returnValue: 550,
+      returnIsMonthly: true,
+      roiPercentage: 10,
+      linkUrl: "https://play.google.com/store/apps/details?id=com.btmstudio.rep_merida&hl=en_US",
+      startYear: 2023,
+      progressData: generateMockProgressData(550, 500),
+    },
+    {
+      id: "repolla",
+      name: t("repolla.name"),
+      description: t("repolla.description"),
+      details: t("repolla.details"),
+      linkText: t("repolla.linkText"),
+      imageUrl: "/images/success-cases/repolla_520.png",
+      investment: 4000,
+      returnValue: 16000,
+      returnIsMonthly: false,
+      roiPercentage: 300,
+      linkUrl: "https://play.google.com/store/apps/datasafety?id=com.natillera.repolla",
+      startYear: 2009,
+      progressData: generateMockProgressData(16000, 4000),
+    },
+    {
+      id: "project-beta",
+      name: t("project-beta.name"),
+      description: t("project-beta.description"),
+      details: t("project-beta.details"),
+      linkText: t("project-beta.linkText"),
+      imageUrl: "/images/success-cases/total-time_logo.png",
+      investment: 50,
+      returnValue: 5000,
+      returnIsMonthly: false,
+      roiPercentage: 300,
+      linkUrl: "https://total-time.app",
+      startYear: 2023,
+      progressData: generateMockProgressData(300000, 75000),
+    },
+  ]
+}

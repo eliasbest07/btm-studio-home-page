@@ -1,0 +1,200 @@
+{
+  "Index": {
+    "title-imageCarousel": "Our team working",
+    "greeting": "Our Services",
+    "services": [
+      {
+        "title": "Web Development",
+        "description": "High-quality web development tailored to your needs."
+      },
+      {
+        "title": "App Development",
+        "description": "High-quality mobile app development tailored to your needs."
+      },
+      {
+        "title": "UI/UX Design",
+        "description": "High-quality UI/UX design tailored to your needs."
+      },
+      {
+        "title": "Branding",
+        "description": "High-quality branding services tailored to your needs."
+      },
+      {
+        "title": "SEO Optimization",
+        "description": "High-quality SEO optimization tailored to your needs."
+      },
+      {
+        "title": "Digital Marketing",
+        "description": "High-quality digital marketing strategies tailored to your needs."
+      }
+    ],
+    "carousel": {
+      "1": {
+        "title": "Digital Innovation",
+        "description": "We create digital solutions that transform businesses and user experiences."
+      },
+      "2": {
+        "title": "Strategic Design",
+        "description": "Every pixel has a purpose, every interaction is intentionally designed."
+      },
+      "3": {
+        "title": "Technological Development",
+        "description": "We build with the most advanced technologies to create scalable, robust products."
+      },
+      "4": {
+        "title": "Measurable Results",
+        "description": "Our solutions generate real impact and measurable results for your business."
+      }
+    }
+  },
+  
+  "working": {
+    "title": "I'm working",
+    "description": "These are the latest tasks offered by employers.",
+    "employer": "Employer",
+    "tasks": "tasks",
+    "focus": "Focus",
+    "send": "Send proposal"
+  }
+  ,
+  "hero": {
+    "slide1Title": "Digital Innovation",
+    "slide1Desc": "We create digital solutions that transform businesses and user experiences.",
+    "slide2Title": "Strategic Design",
+    "slide2Desc": "Every pixel has a purpose, every interaction is intentionally designed.",
+    "slide3Title": "Tech Development",
+    "slide3Desc": "We build with the latest technologies to create scalable, robust products.",
+    "slide4Title": "Measurable Results",
+    "slide4Desc": "Our solutions generate real impact and measurable outcomes for your business.",
+    "ctaContinue": "Continue Project",
+    "ctaPortfolio": "View Jobs Tasks",
+    "headline": "Digital Experiences that Inspire",
+    "subtext": "We create custom web and mobile solutions that drive your business and captivate your audience."
+  }
+  ,
+  "successCases": {
+    "title": "Our Success Stories",
+     "started": "Started in",
+    "investment": "Investment",
+    "monthlyReturn": "Estimated Monthly Return",
+    "annualReturn": "Estimated Annual Return",
+    "estimatedRoi": "Estimated ROI",
+    "estimatedEvolution": "Estimated Evolution",
+    "initialInvestment": " vs Initial Investment",
+    "april":"abr",
+    "repuestos-merida": {
+      "name": "Repuestos Mérida App",
+      "description": "Mobile app for searching and quoting automotive parts.",
+      "details": "Development of an intuitive mobile app that connects customers to a wide range of spare parts, streamlining the purchasing process and significantly increasing sales since launch.",
+      "linkText": "View on Play Store"
+    },
+    "repolla": {
+      "name": "Repolla",
+      "description": "Management and sales platform for Repolla, a leader in its sector.",
+      "details": "Since 2009, Repolla has experienced steady growth thanks to digital platform optimization, resulting in an annual return of $16,000 on an initial investment of $4,000.",
+      "linkText": "View on Play Store"
+    },
+    "project-beta": {
+      "name": "Total-Time.app",
+      "description": "Web app for tracking employee performance and coordinating tasks.",
+      "details": "The mobile app improved delivery efficiency by 40% and customer satisfaction by 25% within the first 6 months.",
+      "linkText": "View Website"
+    }
+  }
+  
+  ,
+
+  "header": {
+    "createProject": "Create Project"
+  }
+,
+  "footer": {
+    "rights": "All rights reserved.",
+    "language": "Español"
+  }
+
+, "projects":{
+  "title": "Saved Projects",
+  "noProjects": "No projects saved locally.",
+  "untitledProject": "Untitled Project",
+  "tasks": "tasks",
+  "access": "Access"
+
+  }
+  ,
+  
+"imageCarousel":
+{
+"selected":"Selected"
+}
+,
+
+  "createProjectModal": {
+    "projectTypes": {
+      "taskList": "To-do list",
+      "webApp": "Web app",
+      "landingPage": "Landing page",
+      "illustration": "Drawing",
+      "mobileApp": "Mobile app",
+      "automation": "Automation"
+    },
+    "title": "Tell us about your Project",
+    "subtitle": "Describe your idea and select an inspiration style to get started.",
+    "projectType": {
+      "label": "Project Type"
+    },
+    "utility": {
+      "label": "Describe the utility or purpose of your project",
+      "optional": "optional",
+      "placeholder": "E.g.: This project will allow users to manage their personal finances from a mobile app..."
+    },
+    "description": {
+      "label": "Describe your project",
+      "placeholder": "E.g.: I need an online store to sell handmade crafts, with a modern and user-friendly design...",
+      "selectedProject": "Selected project:"
+    },
+    "palette": {
+      "label": "Select a color palette",
+      "none": "No palette",
+      "custom": "Custom",
+      "addColor": "+ Add color",
+      "names": {
+        "Minimalista": "Minimalist",
+        "Oscuro Neón": "Dark Neon",
+        "Tropical Vibrante": "Vibrant Tropical",
+        "Lujoso": "Luxury",
+        "Natural Suave": "Soft Natural"
+      }
+    },
+
+    "style": {
+      "label": "Choose an inspiration style",
+      "selected": "Selected Style",
+      "prompt": "Prompt",
+      "noneImageSrc":"/no_style.png",
+      "noneSelected": "No inspiration style selected."
+      ,"names": {
+    "minimalistNeutral": "Minimalist and Neutral Style",
+    "darkModernTech": "Dark, Modern, and Tech Style",
+    "vibrantPlayful": "Vibrant and Playful Style",
+    "elegantLuxury": "Elegant and Luxury Style",
+    "ecoNatural": "Eco and Natural Style",
+    "retroFuturistic": "Retro-Futuristic Style"
+  },
+  "prompts": {
+    "minimalistNeutral": "Minimalist web design with neutral color palette (beige, light gray, off-white), clean lines, ample white space, sophisticated typography, and subtle shadows.",
+    "darkModernTech": "Modern tech website interface in dark mode, vibrant accent color (electric blue or neon green), elegant typography, geometric patterns, glossy elements, professional and innovative.",
+    "vibrantPlayful": "Vibrant and playful web design, bright color palette (yellow, pink, turquoise), organic shapes, custom illustrations, friendly typography, energetic and engaging.",
+    "elegantLuxury": "Elegant luxury brand web design, deep and rich colors (burgundy, gold, black), serif typography, high-quality product photography, sophisticated layout, premium feel.",
+    "ecoNatural": "Natural and eco-friendly product website, earth tones (greens, browns, creams), textured backgrounds, organic or handwritten fonts, nature-inspired images, clean and trustworthy.",
+    "retroFuturistic": "Retro-futuristic web design, 80s synthwave aesthetic, neon pinks and purples, grid lines, pixelated elements, chrome text effects, nostalgic yet modern."
+  }
+    },
+    "errors": {
+      "descriptionMissing": "Please describe your project."
+    },
+    "continueButton": "Continue"
+  }
+
+
+}

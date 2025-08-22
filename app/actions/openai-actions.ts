@@ -7,82 +7,81 @@ import { generateText } from "ai"
 
 export async function generateTasksAction(
   baseTemplate: string,
-  utilityDescription: string, 
+  utilityDescription = "",          // optional
   projectDescription: string,
-  stylePrompt: string,
-
+  stylePrompt = "",                 // optional
+  colorPalette = ""                 // optional
 ): Promise<{ tasks?: string[]; error?: string; suggestionId?: string }> {
   if (!process.env.OPENAI_API_KEY) {
     return { error: "OpenAI API key no está configurada." }
   }
 
-  const fullPrompt = `
-  Eres un planificador sénior de proyectos de software.
-  
-  Devuelve **solo** un array JSON con **5-8** tareas breves, relevantes y accionables, en orden cronológico, que aporten resultados alcanzables en el corto plazo.
-  
-  Entradas
-  - Plantilla base: “\${baseTemplate}”
-  - Utilidad / caso de uso (opcional): “\${utilityDescription}”
-  - Descripción del proyecto (obligatoria): “\${projectDescription}”
-  - Paleta de colores (opcional): “\${colorPalette}”
-  - Inspiración de diseño (opcional): “\${stylePrompt}”
-  
-  Guías
-  1. Empieza con las tareas fundamentales para “\${baseTemplate}”.
-  2. Si se aporta utilidad/caso de uso, alinea las tareas con ello.
-  3. Menciona la paleta de colores solo en tareas de diseño/branding.
-  4. Si hay inspiración de diseño, coloca sus tareas preparatorias al inicio.
-  5. Asegúrate de que cada tarea sea relevante y produzca un resultado tangible en poco tiempo.
-  6. La salida **debe** ser exclusivamente un array JSON, por ejemplo:  
-     ["Crear repositorio", "Configurar CI/CD", "Diseñar wireframes", "Aplicar paleta de colores", "Implementar autenticación"].`
+  /* ---------- build the dynamic prompt ---------- */
+  const entries = [
+    [`Plantilla base`, baseTemplate],
+    [`Utilidad / caso de uso`, utilityDescription],
+    [`Descripción del proyecto`, projectDescription],
+    [`Paleta de colores`, colorPalette],
+    [`Inspiración de diseño`, stylePrompt],
+  ]
+    .filter(([, v]) => v?.trim())                 // keep only non-empty
+    .map(([k, v]) => `- ${k}: “${v}”`)
+    .join("\n")
 
+  const guides: string[] = [
+    `1. Empieza con las tareas fundamentales para “${baseTemplate}”.`,
+  ]
+  if (utilityDescription) guides.push(`2. Alinea las tareas con la utilidad/caso de uso proporcionado.`)
+  if (colorPalette)       guides.push(`3. Menciona la paleta de colores solo en tareas de diseño/branding.`)
+  if (stylePrompt)        guides.push(`4. Si hay inspiración de diseño, coloca sus tareas preparatorias al inicio.`)
+  guides.push(
+    `5. Asegúrate de que cada tarea sea relevante y produzca un resultado tangible en poco tiempo.`,
+    `6. La salida **debe** ser exclusivamente un array JSON, por ejemplo: ["Crear repositorio", …]`
+  )
+
+  const fullPrompt = `
+Eres un planificador sénior de proyectos de software.
+
+Devuelve **solo** un array JSON con **5-8** tareas breves, relevantes y accionables, en orden cronológico, que aporten resultados alcanzables en el corto plazo.
+
+Entradas
+${entries}
+
+Guías
+${guides.join("\n")}
+`.trim()
+
+  /* ---------- call OpenAI ---------- */
   try {
-    const { text, finishReason, usage } = await generateText({
+    const { text, finishReason } = await generateText({
       model: openai("gpt-3.5-turbo"),
       prompt: fullPrompt,
       maxTokens: 300,
     })
 
-    if (finishReason === "stop") {
-      try {
-        const jsonMatch = text.match(/\[[\s\S]*?\]/);  
-        if (jsonMatch && jsonMatch[1]) {
-          const parsedTasks = JSON.parse(jsonMatch[1])
-          console.log(text)
-          if (Array.isArray(parsedTasks) && parsedTasks.every((task) => typeof task === "string")) {
-            return { tasks: parsedTasks }
-          }
-        }
-        const fallbackTasks = text
-          .split("\n")
-          .map((line) => line.replace(/^- /g, "").trim())
-          .filter((line) => line.length > 0)
-        if (fallbackTasks.length > 0) {
-          return { tasks: fallbackTasks }
-        }
-        return { error: "La respuesta de OpenAI no pudo ser parseada como una lista de tareas." }
-      } catch (parseError) {
-        console.error("Error parsing OpenAI response:", parseError)
+    if (finishReason !== "stop") {
+      return { error: `Generación interrumpida: ${finishReason}` }
+    }
 
-        const fallbackTasks = text
-          .split("\n")
-          .map((line) => line.replace(/^- /g, "").trim())
-          .filter((line) => line.length > 0)
-        if (fallbackTasks.length > 0) {
-          return { tasks: fallbackTasks }
-        }
-        return { error: "Error al parsear la respuesta de OpenAI." }
+    // try strict JSON first
+    const jsonMatch = text.match(/\[[\s\S]*?\]/)
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0])
+      if (Array.isArray(parsed) && parsed.every(t => typeof t === "string")) {
+        return { tasks: parsed }
       }
-    } else {
-      return { error: `Generación de tareas interrumpida: ${finishReason}` }
     }
-  } catch (error) {
-    console.error("Error llamando a la API de OpenAI:", error)
-    if (error instanceof Error) {
-      return { error: `Error de OpenAI: ${error.message}` }
-    }
-    return { error: "Ocurrió un error desconocido con la API de OpenAI." }
+
+    // fallback: bullet lines
+    const fallback = text
+      .split("\n")
+      .map(l => l.replace(/^- /, "").trim())
+      .filter(Boolean)
+
+    return fallback.length ? { tasks: fallback } : { error: "Respuesta no parseable." }
+  } catch (err: any) {
+    console.error(err)
+    return { error: `Error de OpenAI: ${err.message ?? "desconocido"}` }
   }
 }
 
