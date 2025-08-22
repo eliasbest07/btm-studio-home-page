@@ -78,34 +78,33 @@ export default function EstoyTrabajando() {
 
   const handleSolicitarNivel = async (tareaId: string) => {
     try {
-      setRequestingNivelId(tareaId)
-  
+      setLoading(true);
+
       const res = await fetch("./api/check-level", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include", // asegura que se envíen cookies de sesión
         body: JSON.stringify({ tareaId }),
-      })
-  
-      const json = await res.json().catch(() => ({}))
-  
-      if (!res.ok) {
-        console.error("Error al crear solicitud:", json)
-        alert("❌ Error al solicitar nivel: " + (json?.error ?? "Error desconocido"))
-        return
+      });
+      
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || "Error en la solicitud");
+
+      if (data.redirectUrl) {
+            window.location.href = data.redirectUrl;
+        } else {
+        alert("✅ Solicitud creada (sin URL de redirección)");
       }
-  
-      // éxito
-      alert("✅ Solicitud creada con éxito")
-      // opcional: refrescar lista o marcar UI; por ejemplo:
-      // await loadTareasAndPropuestas()
-    } catch (err) {
-      console.error("Error inesperado en solicitar nivel:", err)
-      alert("❌ Ocurrió un error inesperado. Revisa la consola.")
+
+      console.log("✅ Solicitud creada:", data);
+      alert("Solicitud enviada con éxito!");
+    } catch (error) {
+      console.error("❌ Error al solicitar nivel:", error);
+      alert("Hubo un error al enviar la solicitud.");
     } finally {
-      setRequestingNivelId(null)
+      setLoading(false);
     }
   }
   
