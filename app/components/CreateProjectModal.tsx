@@ -33,6 +33,8 @@ export default function CreateProjectModal({
   const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
 
   const [projectDescription, setProjectDescription] = useState("");
+  const [showStyleOptions, setShowStyleOptions] = useState(false);
+  const [showPaletteOptions, setShowPaletteOptions] = useState(false);
   const [selectedStyle, setSelectedStyle] = useState<CarouselImageItem | null>(
     null
   );
@@ -363,142 +365,233 @@ export default function CreateProjectModal({
             </div>
 
             {/* Palette Selection */}
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-200 mb-2">
-                {t("palette.label")}
-              </label>
-              <div className="flex flex-wrap gap-4">
-                {/* None */}
+<div className="mt-6">
+  <div
+    className="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:border-gray-500 transition-all"
+    onClick={() => setShowPaletteOptions(!showPaletteOptions)}
+  >
+    <label className="text-sm font-medium text-gray-200 cursor-pointer">
+      {t("palette.label")}
+    </label>
+    <div className="flex items-center space-x-2">
+      {selectedPalette !== "ninguna" && (
+        <div className="flex space-x-1">
+          {selectedPalette === "personalizada" 
+            ? customColors.map((color, idx) => (
                 <div
-                  className={`cursor-pointer rounded-xl px-4 py-2 border-2 transition-all ${
-                    selectedPalette === "ninguna"
-                      ? "border-yellow-400"
-                      : "border-transparent hover:border-gray-400"
-                  }`}
-                  onClick={() => setSelectedPalette("ninguna")}
-                >
-                  <p className="text-sm text-gray-300">{t("palette.none")}</p>
-                </div>
-
-                {/* Predefined */}
-                {colorPalettes.map((palette) => (
-                  <div
-                    key={palette.name}
-                    className={`cursor-pointer rounded-xl p-1 border-2 transition-all ${
-                      selectedPalette === palette.name
-                        ? "border-yellow-400"
-                        : "border-transparent hover:border-gray-400"
-                    }`}
-                    onClick={() => setSelectedPalette(palette.name)}
-                  >
-                    <div className="flex space-x-1 rounded-lg overflow-hidden">
-                      {palette.colors.map((color, idx) => (
-                        <div
-                          key={idx}
-                          className="w-6 h-6"
-                          style={{ backgroundColor: color }}
-                        />
-                      ))}
-                    </div>
-                    <p className="text-xs text-center mt-1 text-gray-300">
-                      {t(`palette.names.${palette.name}`)}
-                    </p>
-                  </div>
-                ))}
-
-                {/* Custom */}
+                  key={idx}
+                  className="w-4 h-4 rounded-full border border-gray-500"
+                  style={{ backgroundColor: color }}
+                />
+              ))
+            : colorPalettes.find(p => p.name === selectedPalette)?.colors.map((color, idx) => (
                 <div
-                  className={`cursor-pointer rounded-xl p-2 border-2 transition-all ${
-                    selectedPalette === "personalizada"
-                      ? "border-yellow-400"
-                      : "border-transparent hover:border-gray-400"
-                  }`}
-                  onClick={() => setSelectedPalette("personalizada")}
-                >
-                  <div className="flex space-x-1">
-                    {customColors.map((color, idx) => (
-                      <div
-                        key={idx}
-                        className="w-6 h-6"
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-xs text-center mt-1 text-gray-300">
-                    {t("palette.custom")}
-                  </p>
-                </div>
-              </div>
+                  key={idx}
+                  className="w-4 h-4 rounded-full border border-gray-500"
+                  style={{ backgroundColor: color }}
+                />
+              ))
+          }
+        </div>
+      )}
+      <svg
+        className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+          showPaletteOptions ? "rotate-180" : ""
+        }`}
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 9l-7 7-7-7"
+        />
+      </svg>
+    </div>
+  </div>
 
-              {selectedPalette === "personalizada" && (
-                <div className="mt-3 flex gap-3 flex-wrap">
-                  {customColors.map((color, idx) => (
-                    <input
-                      key={idx}
-                      type="color"
-                      value={color}
-                      onChange={(e) => {
-                        const newColors = [...customColors];
-                        newColors[idx] = e.target.value;
-                        setCustomColors(newColors);
-                      }}
-                      className="w-10 h-10 rounded border border-gray-400"
-                    />
-                  ))}
-                  {customColors.length < 4 && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setCustomColors([...customColors, "#888888"])
-                      }
-                      className="text-xs text-gray-200 underline hover:text-yellow-400"
-                    >
-                      {t("palette.addColor")}
-                    </button>
-                  )}
-                </div>
-              )}
+  {showPaletteOptions && (
+    <div className="mt-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+      <div className="flex flex-wrap gap-4">
+        {/* None */}
+        <div
+          className={`cursor-pointer rounded-xl px-4 py-2 border-2 transition-all ${
+            selectedPalette === "ninguna"
+              ? "border-yellow-400"
+              : "border-transparent hover:border-gray-400"
+          }`}
+          onClick={() => setSelectedPalette("ninguna")}
+        >
+          <p className="text-sm text-gray-300">{t("palette.none")}</p>
+        </div>
+
+        {/* Predefined */}
+        {colorPalettes.map((palette) => (
+          <div
+            key={palette.name}
+            className={`cursor-pointer rounded-xl p-1 border-2 transition-all ${
+              selectedPalette === palette.name
+                ? "border-yellow-400"
+                : "border-transparent hover:border-gray-400"
+            }`}
+            onClick={() => setSelectedPalette(palette.name)}
+          >
+            <div className="flex space-x-1 rounded-lg overflow-hidden">
+              {palette.colors.map((color, idx) => (
+                <div
+                  key={idx}
+                  className="w-6 h-6"
+                  style={{ backgroundColor: color }}
+                />
+              ))}
             </div>
+            <p className="text-xs text-center mt-1 text-gray-300">
+              {t(`palette.names.${palette.name}`)}
+            </p>
+          </div>
+        ))}
+
+        {/* Custom */}
+        <div
+          className={`cursor-pointer rounded-xl p-2 border-2 transition-all ${
+            selectedPalette === "personalizada"
+              ? "border-yellow-400"
+              : "border-transparent hover:border-gray-400"
+          }`}
+          onClick={() => setSelectedPalette("personalizada")}
+        >
+          <div className="flex space-x-1">
+            {customColors.map((color, idx) => (
+              <div
+                key={idx}
+                className="w-6 h-6"
+                style={{ backgroundColor: color }}
+              />
+            ))}
+          </div>
+          <p className="text-xs text-center mt-1 text-gray-300">
+            {t("palette.custom")}
+          </p>
+        </div>
+      </div>
+
+      {selectedPalette === "personalizada" && (
+        <div className="mt-3 flex gap-3 flex-wrap">
+          {customColors.map((color, idx) => (
+            <input
+              key={idx}
+              type="color"
+              value={color}
+              onChange={(e) => {
+                const newColors = [...customColors];
+                newColors[idx] = e.target.value;
+                setCustomColors(newColors);
+              }}
+              className="w-10 h-10 rounded border border-gray-400"
+            />
+          ))}
+          {customColors.length < 4 && (
+            <button
+              type="button"
+              onClick={() =>
+                setCustomColors([...customColors, "#888888"])
+              }
+              className="text-xs text-gray-200 underline hover:text-yellow-400"
+            >
+              {t("palette.addColor")}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )}
+</div>
 
             {/* Style */}
-            <div>
-              <label className="block text-sm font-medium text-gray-200 mb-2">
-                {t("style.label")}
-              </label>
-              <ImageCarousel
-                items={[
-                  {
-                    src: t("style.noneImageSrc"),
-                    alt: "Ningún estilo",
-                    prompt: "",
-                  },
-                  ...styleInspirations,
-                ]}
-                options={{ slidesToScroll: 1 }}
-                onImageSelect={handleImageSelection}
-                itemsToShow={4}
-              />
-              {selectedStyle ? (
-                <div className="mt-3 p-3 bg-white/5 rounded-md border border-white/10">
-                  <p className="text-xs text-gray-300">
-                    <span className="font-semibold text-gray-100">
-                      {t("style.selected")}:
-                    </span>{" "}
-                    {selectedStyle.alt}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    <span className="font-semibold text-gray-200">
-                      {t("style.prompt")}:
-                    </span>{" "}
-                    {selectedStyle.prompt}
-                  </p>
-                </div>
-              ) : (
-                <p className="text-xs text-gray-400 mt-2">
-                  {t("style.noneSelected")}
-                </p>
-              )}
-            </div>
+<div>
+  <div
+    className="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:border-gray-500 transition-all"
+    onClick={() => setShowStyleOptions(!showStyleOptions)}
+  >
+    <label className="text-sm font-medium text-gray-200 cursor-pointer">
+      {t("style.label")}
+    </label>
+    <div className="flex items-center space-x-2">
+      {selectedStyle && (
+        <div className="flex items-center space-x-2">
+          <img
+            src={selectedStyle.src}
+            alt={selectedStyle.alt}
+            className="w-8 h-8 rounded object-cover border border-gray-500"
+          />
+          <span className="text-xs text-gray-300 max-w-24 truncate">
+            {selectedStyle.alt}
+          </span>
+        </div>
+      )}
+      {!selectedStyle && (
+        <span className="text-xs text-gray-400">
+          {t("style.noneSelected")}
+        </span>
+      )}
+      <svg
+        className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+          showStyleOptions ? "rotate-180" : ""
+        }`}
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 9l-7 7-7-7"
+        />
+      </svg>
+    </div>
+  </div>
+
+  {showStyleOptions && (
+    <div className="mt-4 p-4 rounded-lg">
+      <ImageCarousel
+        items={[
+          {
+            src: t("style.noneImageSrc"),
+            alt: "Ningún estilo",
+            prompt: "",
+          },
+          ...styleInspirations,
+        ]}
+        options={{ slidesToScroll: 1 }}
+        onImageSelect={handleImageSelection}
+        itemsToShow={4}
+      />
+      {selectedStyle ? (
+        <div className="mt-3 p-3 bg-white/5 rounded-md border border-white/10">
+          <p className="text-xs text-gray-300">
+            <span className="font-semibold text-gray-100">
+              {t("style.selected")}:
+            </span>{" "}
+            {selectedStyle.alt}
+          </p>
+          <p className="text-xs text-gray-400 mt-1">
+            <span className="font-semibold text-gray-200">
+              {t("style.prompt")}:
+            </span>{" "}
+            {selectedStyle.prompt}
+          </p>
+        </div>
+      ) : (
+        <p className="text-xs text-gray-400 mt-2">
+          {t("style.noneSelected")}
+        </p>
+      )}
+    </div>
+  )}
+</div>
 
             {/* Error */}
             {errorMessage && (
