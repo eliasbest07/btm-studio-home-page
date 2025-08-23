@@ -97,12 +97,14 @@ export default function EstoyTrabajando() {
         } else {
         alert("✅ Solicitud creada (sin URL de redirección)");
       }
+  
+      // éxito
+      alert("✅ Solicitud creada con éxito")
 
-      console.log("✅ Solicitud creada:", data);
-      alert("Solicitud enviada con éxito!");
-    } catch (error) {
-      console.error("❌ Error al solicitar nivel:", error);
-      alert("Hubo un error al enviar la solicitud.");
+      // al ser exitoso necesito que valla a la pagina 
+    } catch (err) {
+      console.error("Error inesperado en solicitar nivel:", err)
+      alert("❌ Ocurrió un error inesperado. Revisa la consola.")
     } finally {
       setLoading(false);
     }

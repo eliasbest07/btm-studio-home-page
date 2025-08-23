@@ -57,16 +57,16 @@ export async function POST(req: Request) {
     const { data: created, error: insertErr } = await supabaseClient
       .from("solicitud_nivel")
       .insert({
-        user_id: userId,     // <-- bigint (o lo que tengas en tu esquema)
-        tarea_id: tareaId,             // uuid
-        estado: "por_iniciar",         // asegura que coincide con tu enum
-        comienzo: new Date().toISOString(), // timestamptz
+        user_id: userId,
+        tarea_id: tareaId,
+        estado: "pendiente",
+        comienzo: new Date(),
       })
       .select()
       .single();
 
     if (insertErr) {
-      console.error("Error insertando solicitud_nivel:", insertErr);
+    //  console.error("Error insertando solicitud_nivel:", insertErr);
       return NextResponse.json({ error: insertErr.message }, { status: 500 });
     }
 
