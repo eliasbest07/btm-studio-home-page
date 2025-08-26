@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { createClient } from "@supabase/supabase-js"
 import { useTranslations } from "next-intl"
+import { readUserData } from "@/app/utils/userSession"
+import { useRouter, usePathname } from "next/navigation"
 import {
   ChevronLeft,
   ChevronRight,
@@ -65,6 +67,8 @@ interface Tarea {
 
 export default function EstoyTrabajando() {
   const t = useTranslations() // hook de next-intl para traducciones
+  const router = useRouter()
+  const pathname = usePathname()
   const [loading, setLoading] = useState(true)
   const [tareas, setTareas] = useState<Tarea[]>([])
   const [loadingProposalId, setLoadingProposalId] = useState<string | null>(null)
@@ -74,7 +78,79 @@ export default function EstoyTrabajando() {
   const [newProposalText, setNewProposalText] = useState("")
   const itemsPerPage = 6
   const [requestingNivelId, setRequestingNivelId] = useState<string | null>(null)
+  const [creatingProposalId, setCreatingProposalId] = useState<string | null>(null)
 
+  const handleNewProposal = (tareaId: string) => {
+    const userData = readUserData()
+    const isLoggedIn = localStorage.getItem("loggedIn") === "true"
+    
+    if (!userData || !isLoggedIn) {
+      // Guardar la URL actual para redirigir después del login
+      const currentUrl = encodeURIComponent(pathname)
+      router.push(`/login?returnTo=${currentUrl}`)
+      return
+    }
+
+    // Si está logueado, mostrar el formulario de propuesta
+    setShowNewProposal(showNewProposal === tareaId ? null : tareaId)
+  }
+
+  const handleGoToTotalTime = async (tareaId: string) => {
+    try {
+      setCreatingProposalId(tareaId)
+      
+      // Obtener datos del usuario para el usuario_id
+      const userData = readUserData()
+      if (!userData) {
+        alert("Error: No se pudo obtener la información del usuario")
+        return
+      }
+
+      // Obtener el usuario_id desde Supabase basado en el correo
+      const { data: usuarioData, error: usuarioError } = await supabase
+        .from('usuario')
+        .select('id')
+        .eq('correo', userData.correo)
+        .single()
+
+      if (usuarioError || !usuarioData) {
+        alert("Error: No se pudo obtener el ID del usuario")
+        console.error('Error obteniendo usuario:', usuarioError)
+        return
+      }
+
+      // Llamar a la API para crear la propuesta
+      const response = await fetch('/api/propuestas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tarea_id: tareaId,
+          usuario_id: usuarioData.id
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Error al crear la propuesta')
+      }
+
+      // Si todo sale bien, abrir Total-Time.app con el ID de la propuesta en nueva pestaña
+      const propuestaUrl = `https://total-time.app/propuesta/${result.propuesta_id}`
+      window.open(propuestaUrl, "_blank")
+      
+      // Cerrar el modal de propuesta
+      setShowNewProposal(null)
+
+    } catch (error) {
+      console.error('Error creando propuesta:', error)
+      alert('Error: ' + (error as Error).message)
+    } finally {
+      setCreatingProposalId(null)
+    }
+  }
 
   const handleSolicitarNivel = async (tareaId: string) => {
     try {
@@ -456,7 +532,7 @@ export default function EstoyTrabajando() {
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 mb-4 sm:mb-6">
                         <h3 className="text-lg sm:text-xl font-bold text-white">Propuestas ({tarea.propuestas?.length || 0})</h3>
                         <Button
-                          onClick={() => setShowNewProposal(showNewProposal === tarea.id ? null : tarea.id)}
+                          onClick={() => handleNewProposal(tarea.id)}
                           className="bg-green-600 hover:bg-green-700 text-white text-sm sm:text-base px-3 sm:px-4 py-2"
                         >
                           <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
@@ -467,14 +543,20 @@ export default function EstoyTrabajando() {
                       {/* New Proposal Form */}
                       {showNewProposal === tarea.id && (
                         <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-slate-700 mb-4 sm:mb-6">
-                          <h4 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Enviar Nueva Propuesta</h4>
-                          <textarea
-                            value={newProposalText}
-                            onChange={(e) => setNewProposalText(e.target.value)}
-                            placeholder="Escribe tu propuesta aquí... Incluye tu experiencia, enfoque y por qué eres el candidato ideal para este proyecto."
-                            className="w-full h-24 sm:h-32 bg-slate-700 border border-slate-600 rounded-lg p-3 sm:p-4 text-sm sm:text-base text-white placeholder-slate-400 resize-none focus:outline-none focus:border-blue-500"
-                          />
-                          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 mt-3 sm:mt-4">
+                          <h4 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Crear Nueva Propuesta</h4>
+                          <div className="bg-slate-700/50 border border-slate-600 rounded-lg p-4 sm:p-6 mb-4">
+                            <div className="text-center">
+                              <div className="mb-4">
+                                <Send className="w-12 h-12 mx-auto text-blue-400 mb-3" />
+                              </div>
+                              <h5 className="text-lg font-semibold text-white mb-2">Usa la herramienta de Total-Time</h5>
+                              <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+                                Para crear propuestas profesionales y gestionar tus proyectos de manera eficiente, 
+                                debes usar la herramienta especializada en Total-Time.app
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
                             <Button
                               onClick={() => setShowNewProposal(null)}
                               variant="outline"
@@ -483,19 +565,19 @@ export default function EstoyTrabajando() {
                               Cancelar
                             </Button>
                             <Button
-                              onClick={() => handleSubmitProposal(tarea.id)}
-                              disabled={loadingProposalId === tarea.id}
-                              className="bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base px-3 sm:px-4 py-2"
+                              onClick={() => handleGoToTotalTime(tarea.id)}
+                              disabled={creatingProposalId === tarea.id}
+                              className="bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base px-3 sm:px-4 py-2 disabled:opacity-50"
                             >
-                              {loadingProposalId === tarea.id ? (
+                              {creatingProposalId === tarea.id ? (
                                 <>
                                   <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
-                                  Enviando...
+                                  Creando...
                                 </>
                               ) : (
                                 <>
                                   <Send className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                                  Enviar Propuesta
+                                  Ir a Total-time
                                 </>
                               )}
                             </Button>
