@@ -5,6 +5,7 @@ import { Inter } from 'next/font/google';
 import Image from 'next/image';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import GlobalLoadingSpinner from '../components/GlobalLoadingSpinner';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -43,6 +44,8 @@ export default async function LocaleLayout({
             <main className="flex-grow">{children}</main>
             <Footer />
           </div>
+          
+          <GlobalLoadingSpinner />
         </body>
       </html>
     </NextIntlClientProvider>

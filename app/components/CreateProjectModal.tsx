@@ -39,6 +39,7 @@ export default function CreateProjectModal({
     null
   );
   const [isGeneratingTasks, setIsGeneratingTasks] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [projectType, setProjectType] = useState<string>(
     t("projectTypes.taskList")
@@ -75,8 +76,8 @@ export default function CreateProjectModal({
             utility: "Sin utilidad definida",
             palette: "Sin paleta definida",
             colors: selectedPalette === "personalizada"
-  ? customColors
-  : colorPalettes.find(p => p.name === selectedPalette)?.colors || []
+              ? customColors
+              : colorPalettes.find(p => p.name === selectedPalette)?.colors || []
 
           },
           suggestionId: null,
@@ -84,7 +85,17 @@ export default function CreateProjectModal({
 
         // Guardar en sessionStorage y navegar
         sessionStorage.setItem("projectPlanData", JSON.stringify(planData));
+        sessionStorage.setItem("projectLoading", "true");
+
+        // Disparar evento personalizado para actualizar el spinner inmediatamente
+        window.dispatchEvent(new Event("projectLoadingChange"));
+
+        // Cerrar modal
         onOpenChange(false);
+
+        // Delay mínimo para mostrar el spinner
+        await new Promise(resolve => setTimeout(resolve, 800));
+
         console.log(pathname);
         if (pathname === "/en/plan" || pathname === "/es/plan") {
           window.location.reload(); // fuerza recarga si ya estás en /plan
@@ -93,7 +104,7 @@ export default function CreateProjectModal({
         }
       } catch (error) {
         console.error("Error al agregar tarea:", error);
-        // Manejar error si es necesario
+        sessionStorage.removeItem("projectLoading");
       }
     }
   };
@@ -104,6 +115,7 @@ export default function CreateProjectModal({
     t("projectTypes.landingPage"),
     t("projectTypes.mobileApp"),
     t("projectTypes.automation"),
+    t("projectTypes.marketing"),
   ];
   const styleInspirations: CarouselImageItem[] = [
     {
@@ -209,20 +221,30 @@ export default function CreateProjectModal({
         projectContext: {
           description: projectDescription,
           stylePrompt: selectedStyle?.prompt || "",
-           type: projectType,
+          type: projectType,
           utility: projectUtility,
           palette: selectedPalette,
           colors: selectedPalette === "personalizada"
-  ? customColors
-  : colorPalettes.find(p => p.name === selectedPalette)?.colors || []
+            ? customColors
+            : colorPalettes.find(p => p.name === selectedPalette)?.colors || []
 
         },
         suggestionId: result.suggestionId || null,
       };
 
       sessionStorage.setItem("projectPlanData", JSON.stringify(planData));
-      
+      sessionStorage.setItem("projectLoading", "true");
+
+      // Disparar evento personalizado para actualizar el spinner inmediatamente
+      window.dispatchEvent(new Event("projectLoadingChange"));
+
+      // Cerrar modal
+      setIsGeneratingTasks(false);
       onOpenChange(false);
+
+      // Delay mínimo para mostrar el spinner
+      await new Promise(resolve => setTimeout(resolve, 800));
+
       if (pathname === "/en/plan" || pathname === "/es/plan") {
         window.location.reload(); // fuerza recarga si ya estás en /plan
       } else {
@@ -241,23 +263,32 @@ export default function CreateProjectModal({
           utility: projectUtility,
           palette: selectedPalette,
           colors: selectedPalette === "personalizada"
-  ? customColors
-  : colorPalettes.find(p => p.name === selectedPalette)?.colors || []
+            ? customColors
+            : colorPalettes.find(p => p.name === selectedPalette)?.colors || []
 
         },
         suggestionId: null,
       };
 
       sessionStorage.setItem("projectPlanData", JSON.stringify(planData));
+      sessionStorage.setItem("projectLoading", "true");
+
+      // Disparar evento personalizado para actualizar el spinner inmediatamente
+      window.dispatchEvent(new Event("projectLoadingChange"));
+
+      // Cerrar modal
+      setIsGeneratingTasks(false);
       onOpenChange(false);
+
+      // Delay mínimo para mostrar el spinner
+      await new Promise(resolve => setTimeout(resolve, 800));
+
       console.log(pathname);
       if (pathname === "/en/plan" || pathname === "/es/plan") {
         window.location.reload(); // fuerza recarga si ya estás en /plan
       } else {
         router.push("/plan"); // redirige normalmente
       }
-    } finally {
-      setIsGeneratingTasks(false);
     }
   };
   const handleCloseThisModal = (open: boolean) => {
@@ -265,377 +296,394 @@ export default function CreateProjectModal({
       setProjectDescription("");
       setSelectedStyle(null);
       setErrorMessage(null);
+      setIsLoading(false);
     }
     onOpenChange(open);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleCloseThisModal}>
-      <DialogContent
-        className="sm:max-w-2xl md:max-w-3xl text-gray-100 border-glass-border flex flex-col"
-        style={{
-          background: "rgba(30, 30, 28, 0.9)",
-          backdropFilter: "blur(10px)",
-          WebkitBackdropFilter: "blur(10px)",
-          maxHeight: "90vh",
-        }}
-      >
-        <DialogHeader className="flex-shrink-0 px-6 pt-6">
-          <DialogTitle className="text-2xl font-bold text-center text-gray-50">
-            {t("title")}
-          </DialogTitle>
-          <DialogDescription className="text-center text-gray-300 pb-2">
-            {t("subtitle")}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      {/* Spinner local del modal */}
+      {isGeneratingTasks && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4 p-8 rounded-xl bg-slate-900/90 border border-slate-700">
+            <Loader2 className="w-12 h-12 animate-spin text-blue-500" />
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-white mb-2">
+                Generando proyecto...
+              </h3>
+              <p className="text-sm text-slate-300">
+                Creando las tareas de tu proyecto con IA
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
-        <div className="flex-grow overflow-y-auto px-6 custom-scrollbar">
-          <div className="grid gap-6 py-4">
-            {/* Project Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-200 mb-2">
-                {t("projectType.label")}
-              </label>
-              <div className="flex flex-wrap gap-3">
-                {projectTypes.map((type) => (
-                  <div
-                    key={type}
-                    onClick={() => setProjectType(type)}
-                    className={`cursor-pointer px-4 py-2 rounded-full border text-sm ${
-                      projectType === type
+      <Dialog open={isOpen} onOpenChange={handleCloseThisModal}>
+        <DialogContent
+          className="sm:max-w-2xl md:max-w-3xl text-gray-100 border-glass-border flex flex-col"
+          style={{
+            background: "rgba(30, 30, 28, 0.9)",
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)",
+            maxHeight: "90vh",
+          }}
+        >
+          <DialogHeader className="flex-shrink-0 px-6 pt-6">
+            <DialogTitle className="text-2xl font-bold text-center text-gray-50">
+              {t("title")}
+            </DialogTitle>
+            <DialogDescription className="text-center text-gray-300 pb-2">
+              {t("subtitle")}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-grow overflow-y-auto px-6 custom-scrollbar">
+            <div className="grid gap-6 py-4">
+              {/* Project Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  {t("projectType.label")}
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {projectTypes.map((type) => (
+                    <div
+                      key={type}
+                      onClick={() => setProjectType(type)}
+                      className={`cursor-pointer px-4 py-2 rounded-full border text-sm ${projectType === type
                         ? "bg-white text-gray-900 border-white"
                         : "bg-white/5 text-gray-200 border-white/20 hover:bg-white/10"
-                    } transition-colors duration-150`}
-                  >
-                    {type}
-                  </div>
-                ))}
+                        } transition-colors duration-150`}
+                    >
+                      {type}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Project Utility */}
-            <div>
-              <label
-                htmlFor="projectUtility"
-                className="block text-sm font-medium text-gray-200 mb-1.5"
-              >
-                {t("utility.label")}{" "}
-                <span className="text-gray-400 italic text-xs">
-                  ({t("utility.optional")})
-                </span>
-              </label>
-              <Textarea
-                id="projectUtility"
-                placeholder={t("utility.placeholder")}
-                value={projectUtility}
-                onChange={(e) => setProjectUtility(e.target.value)}
-                rows={3}
-                className="resize-none bg-white/5 focus:ring-yellow-400 text-gray-100 placeholder:text-gray-400"
-              />
-            </div>
-
-            {/* Description */}
-            <div className="rounded-xl bg-white/10 border border-yellow-400/30 p-4 shadow-md transition-shadow hover:shadow-yellow-500/10">
-              <label
-                htmlFor="projectDescription"
-                className="block text-sm font-medium text-yellow-300 mb-1.5"
-              >
-                {t("description.label")}
-              </label>
-              <Textarea
-                ref={descriptionRef}
-                id="projectDescription"
-                placeholder={t("description.placeholder")}
-                value={projectDescription}
-                onChange={(e) => {
-                  setProjectDescription(e.target.value);
-                  setErrorMessage(null);
-                }}
-                rows={7}
-                className="resize-none bg-white/5 focus:ring-yellow-400 border border-yellow-500/20 text-gray-100 placeholder:text-yellow-200 transition-all duration-200"
-              />
-              {projectType && (
-                <p className="text-xs text-yellow-200 mt-1 ml-1">
-                  {t("description.selectedProject")}{" "}
-                  <span className="text-yellow-100 font-semibold">
-                    {projectType}
+              {/* Project Utility */}
+              <div>
+                <label
+                  htmlFor="projectUtility"
+                  className="block text-sm font-medium text-gray-200 mb-1.5"
+                >
+                  {t("utility.label")}{" "}
+                  <span className="text-gray-400 italic text-xs">
+                    ({t("utility.optional")})
                   </span>
+                </label>
+                <Textarea
+                  id="projectUtility"
+                  placeholder={t("utility.placeholder")}
+                  value={projectUtility}
+                  onChange={(e) => setProjectUtility(e.target.value)}
+                  rows={3}
+                  className="resize-none bg-white/5 focus:ring-yellow-400 text-gray-100 placeholder:text-gray-400"
+                />
+              </div>
+
+              {/* Description */}
+              <div className="rounded-xl bg-white/10 border border-yellow-400/30 p-4 shadow-md transition-shadow hover:shadow-yellow-500/10">
+                <label
+                  htmlFor="projectDescription"
+                  className="block text-sm font-medium text-yellow-300 mb-1.5"
+                >
+                  {t("description.label")}
+                </label>
+                <Textarea
+                  ref={descriptionRef}
+                  id="projectDescription"
+                  placeholder={t("description.placeholder")}
+                  value={projectDescription}
+                  onChange={(e) => {
+                    setProjectDescription(e.target.value);
+                    setErrorMessage(null);
+                  }}
+                  rows={7}
+                  className="resize-none bg-white/5 focus:ring-yellow-400 border border-yellow-500/20 text-gray-100 placeholder:text-yellow-200 transition-all duration-200"
+                />
+                {projectType && (
+                  <p className="text-xs text-yellow-200 mt-1 ml-1">
+                    {t("description.selectedProject")}{" "}
+                    <span className="text-yellow-100 font-semibold">
+                      {projectType}
+                    </span>
+                  </p>
+                )}
+              </div>
+
+              {/* Palette Selection */}
+              <div className="mt-6">
+                <div
+                  className="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:border-gray-500 transition-all"
+                  onClick={() => setShowPaletteOptions(!showPaletteOptions)}
+                >
+                  <label className="text-sm font-medium text-gray-200 cursor-pointer">
+                    {t("palette.label")}
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    {selectedPalette !== "ninguna" && (
+                      <div className="flex space-x-1">
+                        {selectedPalette === "personalizada"
+                          ? customColors.map((color, idx) => (
+                            <div
+                              key={idx}
+                              className="w-4 h-4 rounded-full border border-gray-500"
+                              style={{ backgroundColor: color }}
+                            />
+                          ))
+                          : colorPalettes.find(p => p.name === selectedPalette)?.colors.map((color, idx) => (
+                            <div
+                              key={idx}
+                              className="w-4 h-4 rounded-full border border-gray-500"
+                              style={{ backgroundColor: color }}
+                            />
+                          ))
+                        }
+                      </div>
+                    )}
+                    <svg
+                      className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${showPaletteOptions ? "rotate-180" : ""
+                        }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+
+                {showPaletteOptions && (
+                  <div className="mt-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                    <div className="flex flex-wrap gap-4">
+                      {/* None */}
+                      <div
+                        className={`cursor-pointer rounded-xl px-4 py-2 border-2 transition-all ${selectedPalette === "ninguna"
+                          ? "border-yellow-400"
+                          : "border-transparent hover:border-gray-400"
+                          }`}
+                        onClick={() => setSelectedPalette("ninguna")}
+                      >
+                        <p className="text-sm text-gray-300">{t("palette.none")}</p>
+                      </div>
+
+                      {/* Predefined */}
+                      {colorPalettes.map((palette) => (
+                        <div
+                          key={palette.name}
+                          className={`cursor-pointer rounded-xl p-1 border-2 transition-all ${selectedPalette === palette.name
+                            ? "border-yellow-400"
+                            : "border-transparent hover:border-gray-400"
+                            }`}
+                          onClick={() => setSelectedPalette(palette.name)}
+                        >
+                          <div className="flex space-x-1 rounded-lg overflow-hidden">
+                            {palette.colors.map((color, idx) => (
+                              <div
+                                key={idx}
+                                className="w-6 h-6"
+                                style={{ backgroundColor: color }}
+                              />
+                            ))}
+                          </div>
+                          <p className="text-xs text-center mt-1 text-gray-300">
+                            {t(`palette.names.${palette.name}`)}
+                          </p>
+                        </div>
+                      ))}
+
+                      {/* Custom */}
+                      <div
+                        className={`cursor-pointer rounded-xl p-2 border-2 transition-all ${selectedPalette === "personalizada"
+                          ? "border-yellow-400"
+                          : "border-transparent hover:border-gray-400"
+                          }`}
+                        onClick={() => setSelectedPalette("personalizada")}
+                      >
+                        <div className="flex space-x-1">
+                          {customColors.map((color, idx) => (
+                            <div
+                              key={idx}
+                              className="w-6 h-6"
+                              style={{ backgroundColor: color }}
+                            />
+                          ))}
+                        </div>
+                        <p className="text-xs text-center mt-1 text-gray-300">
+                          {t("palette.custom")}
+                        </p>
+                      </div>
+                    </div>
+
+                    {selectedPalette === "personalizada" && (
+                      <div className="mt-3 flex gap-3 flex-wrap">
+                        {customColors.map((color, idx) => (
+                          <input
+                            key={idx}
+                            type="color"
+                            value={color}
+                            onChange={(e) => {
+                              const newColors = [...customColors];
+                              newColors[idx] = e.target.value;
+                              setCustomColors(newColors);
+                            }}
+                            className="w-10 h-10 rounded border border-gray-400"
+                          />
+                        ))}
+                        {customColors.length < 4 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setCustomColors([...customColors, "#888888"])
+                            }
+                            className="text-xs text-gray-200 underline hover:text-yellow-400"
+                          >
+                            {t("palette.addColor")}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Style */}
+              <div>
+                <div
+                  className="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:border-gray-500 transition-all"
+                  onClick={() => setShowStyleOptions(!showStyleOptions)}
+                >
+                  <label className="text-sm font-medium text-gray-200 cursor-pointer">
+                    {t("style.label")}
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    {selectedStyle && (
+                      <div className="flex items-center space-x-2">
+                        <img
+                          src={selectedStyle.src}
+                          alt={selectedStyle.alt}
+                          className="w-8 h-8 rounded object-cover border border-gray-500"
+                        />
+                        <span className="text-xs text-gray-300 max-w-24 truncate">
+                          {selectedStyle.alt}
+                        </span>
+                      </div>
+                    )}
+                    {!selectedStyle && (
+                      <span className="text-xs text-gray-400">
+                        {t("style.noneSelected")}
+                      </span>
+                    )}
+                    <svg
+                      className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${showStyleOptions ? "rotate-180" : ""
+                        }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+
+                {showStyleOptions && (
+                  <div className="mt-4 p-4 rounded-lg">
+                    <ImageCarousel
+                      items={[
+                        {
+                          src: t("style.noneImageSrc"),
+                          alt: "Ningún estilo",
+                          prompt: "",
+                        },
+                        ...styleInspirations,
+                      ]}
+                      options={{ slidesToScroll: 1 }}
+                      onImageSelect={handleImageSelection}
+                      itemsToShow={4}
+                    />
+                    {selectedStyle ? (
+                      <div className="mt-3 p-3 bg-white/5 rounded-md border border-white/10">
+                        <p className="text-xs text-gray-300">
+                          <span className="font-semibold text-gray-100">
+                            {t("style.selected")}:
+                          </span>{" "}
+                          {selectedStyle.alt}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          <span className="font-semibold text-gray-200">
+                            {t("style.prompt")}:
+                          </span>{" "}
+                          {selectedStyle.prompt}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-400 mt-2">
+                        {t("style.noneSelected")}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Error */}
+              {errorMessage && (
+                <p className="text-sm text-red-400 text-center mt-2">
+                  {errorMessage}
                 </p>
               )}
             </div>
-
-            {/* Palette Selection */}
-<div className="mt-6">
-  <div
-    className="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:border-gray-500 transition-all"
-    onClick={() => setShowPaletteOptions(!showPaletteOptions)}
-  >
-    <label className="text-sm font-medium text-gray-200 cursor-pointer">
-      {t("palette.label")}
-    </label>
-    <div className="flex items-center space-x-2">
-      {selectedPalette !== "ninguna" && (
-        <div className="flex space-x-1">
-          {selectedPalette === "personalizada" 
-            ? customColors.map((color, idx) => (
-                <div
-                  key={idx}
-                  className="w-4 h-4 rounded-full border border-gray-500"
-                  style={{ backgroundColor: color }}
-                />
-              ))
-            : colorPalettes.find(p => p.name === selectedPalette)?.colors.map((color, idx) => (
-                <div
-                  key={idx}
-                  className="w-4 h-4 rounded-full border border-gray-500"
-                  style={{ backgroundColor: color }}
-                />
-              ))
-          }
-        </div>
-      )}
-      <svg
-        className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
-          showPaletteOptions ? "rotate-180" : ""
-        }`}
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M19 9l-7 7-7-7"
-        />
-      </svg>
-    </div>
-  </div>
-
-  {showPaletteOptions && (
-    <div className="mt-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
-      <div className="flex flex-wrap gap-4">
-        {/* None */}
-        <div
-          className={`cursor-pointer rounded-xl px-4 py-2 border-2 transition-all ${
-            selectedPalette === "ninguna"
-              ? "border-yellow-400"
-              : "border-transparent hover:border-gray-400"
-          }`}
-          onClick={() => setSelectedPalette("ninguna")}
-        >
-          <p className="text-sm text-gray-300">{t("palette.none")}</p>
-        </div>
-
-        {/* Predefined */}
-        {colorPalettes.map((palette) => (
-          <div
-            key={palette.name}
-            className={`cursor-pointer rounded-xl p-1 border-2 transition-all ${
-              selectedPalette === palette.name
-                ? "border-yellow-400"
-                : "border-transparent hover:border-gray-400"
-            }`}
-            onClick={() => setSelectedPalette(palette.name)}
-          >
-            <div className="flex space-x-1 rounded-lg overflow-hidden">
-              {palette.colors.map((color, idx) => (
-                <div
-                  key={idx}
-                  className="w-6 h-6"
-                  style={{ backgroundColor: color }}
-                />
-              ))}
-            </div>
-            <p className="text-xs text-center mt-1 text-gray-300">
-              {t(`palette.names.${palette.name}`)}
-            </p>
           </div>
-        ))}
 
-        {/* Custom */}
-        <div
-          className={`cursor-pointer rounded-xl p-2 border-2 transition-all ${
-            selectedPalette === "personalizada"
-              ? "border-yellow-400"
-              : "border-transparent hover:border-gray-400"
-          }`}
-          onClick={() => setSelectedPalette("personalizada")}
-        >
-          <div className="flex space-x-1">
-            {customColors.map((color, idx) => (
-              <div
-                key={idx}
-                className="w-6 h-6"
-                style={{ backgroundColor: color }}
+          <DialogFooter className="sm:justify-end gap-2 flex-shrink-0 px-6 pb-6 pt-4 border-t border-white/10">
+            {/* Input para añadir tareas */}
+            <div className="flex gap-2 mb-4 items-center w-full">
+              <input
+                type="text"
+                value={newTask}
+                onChange={(e) => setNewTask(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleAddTask()}
+                placeholder="Añadir tarea"
+                className="flex-1 min-w-0 h-10 px-4 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-            ))}
-          </div>
-          <p className="text-xs text-center mt-1 text-gray-300">
-            {t("palette.custom")}
-          </p>
-        </div>
-      </div>
-
-      {selectedPalette === "personalizada" && (
-        <div className="mt-3 flex gap-3 flex-wrap">
-          {customColors.map((color, idx) => (
-            <input
-              key={idx}
-              type="color"
-              value={color}
-              onChange={(e) => {
-                const newColors = [...customColors];
-                newColors[idx] = e.target.value;
-                setCustomColors(newColors);
-              }}
-              className="w-10 h-10 rounded border border-gray-400"
-            />
-          ))}
-          {customColors.length < 4 && (
-            <button
-              type="button"
-              onClick={() =>
-                setCustomColors([...customColors, "#888888"])
-              }
-              className="text-xs text-gray-200 underline hover:text-yellow-400"
-            >
-              {t("palette.addColor")}
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  )}
-</div>
-
-            {/* Style */}
-<div>
-  <div
-    className="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:border-gray-500 transition-all"
-    onClick={() => setShowStyleOptions(!showStyleOptions)}
-  >
-    <label className="text-sm font-medium text-gray-200 cursor-pointer">
-      {t("style.label")}
-    </label>
-    <div className="flex items-center space-x-2">
-      {selectedStyle && (
-        <div className="flex items-center space-x-2">
-          <img
-            src={selectedStyle.src}
-            alt={selectedStyle.alt}
-            className="w-8 h-8 rounded object-cover border border-gray-500"
-          />
-          <span className="text-xs text-gray-300 max-w-24 truncate">
-            {selectedStyle.alt}
-          </span>
-        </div>
-      )}
-      {!selectedStyle && (
-        <span className="text-xs text-gray-400">
-          {t("style.noneSelected")}
-        </span>
-      )}
-      <svg
-        className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
-          showStyleOptions ? "rotate-180" : ""
-        }`}
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M19 9l-7 7-7-7"
-        />
-      </svg>
-    </div>
-  </div>
-
-  {showStyleOptions && (
-    <div className="mt-4 p-4 rounded-lg">
-      <ImageCarousel
-        items={[
-          {
-            src: t("style.noneImageSrc"),
-            alt: "Ningún estilo",
-            prompt: "",
-          },
-          ...styleInspirations,
-        ]}
-        options={{ slidesToScroll: 1 }}
-        onImageSelect={handleImageSelection}
-        itemsToShow={4}
-      />
-      {selectedStyle ? (
-        <div className="mt-3 p-3 bg-white/5 rounded-md border border-white/10">
-          <p className="text-xs text-gray-300">
-            <span className="font-semibold text-gray-100">
-              {t("style.selected")}:
-            </span>{" "}
-            {selectedStyle.alt}
-          </p>
-          <p className="text-xs text-gray-400 mt-1">
-            <span className="font-semibold text-gray-200">
-              {t("style.prompt")}:
-            </span>{" "}
-            {selectedStyle.prompt}
-          </p>
-        </div>
-      ) : (
-        <p className="text-xs text-gray-400 mt-2">
-          {t("style.noneSelected")}
-        </p>
-      )}
-    </div>
-  )}
-</div>
-
-            {/* Error */}
-            {errorMessage && (
-              <p className="text-sm text-red-400 text-center mt-2">
-                {errorMessage}
-              </p>
-            )}
-          </div>
-        </div>
-
-        <DialogFooter className="sm:justify-end gap-2 flex-shrink-0 px-6 pb-6 pt-4 border-t border-white/10">
-          {/* Input para añadir tareas */}
-          <div className="flex gap-2 mb-4 items-center w-full">
-            <input
-              type="text"
-              value={newTask}
-              onChange={(e) => setNewTask(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleAddTask()}
-              placeholder="Añadir tarea"
-              className="flex-1 min-w-0 h-10 px-4 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <Button
-              onClick={handleAddTask}
-              disabled={!newTask.trim()}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium h-10 px-4 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
-            >
-              <Plus className="h-4 w-4" />
-              Añadir Tarea
-            </Button>
-            <Button
-              type="button"
-              onClick={handleContinue}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-900 h-10 px-4 rounded-lg flex-shrink-0"
-              disabled={isGeneratingTasks || projectDescription.trim() === ""}
-            >
-              {isGeneratingTasks ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                t("continueButton")
-              )}
-            </Button>
-          </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+              <Button
+                onClick={handleAddTask}
+                disabled={!newTask.trim()}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium h-10 px-4 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
+              >
+                <Plus className="h-4 w-4" />
+                Añadir Tarea
+              </Button>
+              <Button
+                type="button"
+                onClick={handleContinue}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-900 h-10 px-4 rounded-lg flex-shrink-0"
+                disabled={isGeneratingTasks || projectDescription.trim() === ""}
+              >
+                {isGeneratingTasks ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Generando...
+                  </>
+                ) : (
+                  t("continueButton")
+                )}
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

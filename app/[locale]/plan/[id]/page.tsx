@@ -129,6 +129,14 @@ export default function PlanPage() {
   useEffect(() => {
     const loadProjectData = async () => {
       try {
+        // Limpiar el loading global cuando la página esté lista
+        const clearLoadingWhenReady = () => {
+          // Delay mínimo para mostrar el spinner, luego limpiar cuando esté listo
+          setTimeout(() => {
+            sessionStorage.removeItem("projectLoading")
+            window.dispatchEvent(new Event("projectLoadingChange"))
+          }, 1000) // Reducido a 1 segundo
+        }
         // Obtener el parámetro dinámico 'id' de la URL
         const urlIdentifier = params.id as string
         
@@ -167,10 +175,12 @@ export default function PlanPage() {
             }
             
             setIsLoading(false)
+            clearLoadingWhenReady()
             return
           } else {
             setError(`No se encontró el proyecto con ID: ${urlIdentifier} o el proyecto es privado`)
             setIsLoading(false)
+            clearLoadingWhenReady()
             return
           }
         }
@@ -222,6 +232,8 @@ export default function PlanPage() {
         setError("Error al cargar los datos del plan. Intenta de nuevo.")
       } finally {
         setIsLoading(false)
+        // Limpiar el loading global cuando la carga esté completa
+        clearLoadingWhenReady()
       }
     }
 

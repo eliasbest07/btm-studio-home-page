@@ -26,7 +26,7 @@ import ProductCheckModal from "@/app/components/showInputProducto";
 
 const supabaseClient = createClientComponentClient();
 
-const projectTypes : string[] = ['Lista de tareas', 'Sitio web', 'Landing Page', 'Aplicación para móviles', 'Automatizacion'];
+const projectTypes: string[] = ['Lista de tareas', 'Sitio web', 'Landing Page', 'Aplicación para móviles', 'Automatizacion'];
 
 type ProjectContext = {
   description: string;
@@ -67,20 +67,24 @@ export default function ProjectPage({
   const [isEditing, setIsEditing] = React.useState(false);
   const [editedPlan, setEditedPlan] = React.useState<Plan | null>(null);
   const [newTask, setNewTask] = React.useState("");
+  const [isSaving, setIsSaving] = React.useState(false);
 
   // Product modal / privacy flow from code1
   const [productModalOpen, setProductModalOpen] = React.useState(false);
-  
+
   // Supabase integration states
   const [isFromSupabase, setIsFromSupabase] = React.useState(false);
   const [supabaseProject, setSupabaseProject] = React.useState<any>(null);
   const [isFromCache, setIsFromCache] = React.useState(false);
   const [currentUser, setCurrentUser] = React.useState<any>(null);
   const [isUserLoading, setIsUserLoading] = React.useState(true);
-  
+
   // Estado para controlar qué tarea tiene los botones de acción expandidos
   const [expandedTaskIndex, setExpandedTaskIndex] = React.useState<number | null>(null);
-  
+
+  // Referencia al contenedor de scroll de las tareas
+  const tasksScrollRef = React.useRef<HTMLDivElement>(null);
+
   // Estados para el modal de delegación
   const [delegateModalOpen, setDelegateModalOpen] = React.useState(false);
   const [selectedTaskForDelegate, setSelectedTaskForDelegate] = React.useState<Task | string>("");
@@ -90,7 +94,7 @@ export default function ProjectPage({
   });
   const [isDelegating, setIsDelegating] = React.useState(false);
   const [delegateMessage, setDelegateMessage] = React.useState("");
-  
+
   const router = useRouter();
   const visibilityKey = `project-${id}-visibility`;
 
@@ -138,7 +142,7 @@ export default function ProjectPage({
       // 1. Primero verificar cache en sessionStorage
       const cacheKey = `supabase-project-${identifier}`;
       const cachedData = sessionStorage.getItem(cacheKey);
-      
+
       if (cachedData) {
         console.log('Usando datos cacheados para:', identifier);
         const parsedData = JSON.parse(cachedData);
@@ -152,7 +156,7 @@ export default function ProjectPage({
       // 2. Si no hay cache, hacer petición a Supabase
       const numericId = parseInt(identifier, 10);
       const isNumericId = !isNaN(numericId) && numericId.toString() === identifier;
-      
+
       let query = supabaseClient
         .from('proyectos')
         .select(`
@@ -226,11 +230,11 @@ export default function ProjectPage({
 
         // 2. Si no se encuentra en localStorage, buscar en Supabase
         const supabaseProject = await fetchProjectFromSupabase(id);
-        
+
         if (supabaseProject) {
           // Verificar si el usuario puede ver este proyecto
           const canView = await canUserViewProject(supabaseProject);
-          
+
           if (!canView) {
             setPlan(null);
             setLoading(false);
@@ -288,7 +292,7 @@ export default function ProjectPage({
       if (!session) {
 
         setIsLoading(false);
-        
+
         // Guardar la URL actual para redirigir después del login
         const currentUrl = window.location.pathname;
         const loginUrl = `/login?returnTo=${encodeURIComponent(currentUrl)}`;
@@ -338,7 +342,7 @@ export default function ProjectPage({
 
       setIsPublic(newState);
       safeLocalSet(visibilityKey, newState ? "public" : "private");
-      
+
       // Si se creó exitosamente y tiene producto, redirigir y cachear datos
       if (data.projectId && producto) {
         // Crear objeto completo del proyecto para cache
@@ -378,7 +382,7 @@ export default function ProjectPage({
         // Cachear los datos del proyecto
         const cacheKey = `supabase-project-${producto}`;
         sessionStorage.setItem(cacheKey, JSON.stringify(fullProjectData));
-        
+
         // Redirigir a la nueva URL con el producto
         router.push(`/proyectos/${producto}`);
         return;
@@ -400,7 +404,7 @@ export default function ProjectPage({
       // Si es proyecto de localStorage, verificar usuario antes de abrir modal
       try {
         const { data: { session } } = await supabaseClient.auth.getSession();
-        
+
         if (!session) {
           // Guardar la URL actual para redirigir después del login
           const currentUrl = window.location.pathname;
@@ -408,7 +412,7 @@ export default function ProjectPage({
           router.push(loginUrl);
           return;
         }
-        
+
         // Si hay usuario logueado, abrir modal para crear en Supabase
         setProductModalOpen(true);
       } catch (error) {
@@ -424,14 +428,14 @@ export default function ProjectPage({
   // Nueva función para cambiar privacidad de proyectos existentes en Supabase
   const toggleSupabaseProjectPrivacy = async () => {
     setIsLoading(true);
-    
+
     try {
       const { data: { session } } = await supabaseClient.auth.getSession();
-      
+
       if (!session) {
         alert("Debes iniciar sesión para cambiar la visibilidad del proyecto.");
         setIsLoading(false);
-        
+
         // Guardar la URL actual para redirigir después del login
         const currentUrl = window.location.pathname;
         const loginUrl = `/login?returnTo=${encodeURIComponent(currentUrl)}`;
@@ -462,7 +466,7 @@ export default function ProjectPage({
       // Actualizar el estado local
       setIsPublic(data.newStatus);
       setSupabaseProject((prev: any) => ({ ...prev, publico: data.newStatus }));
-      
+
     } catch (error) {
       console.error("Error toggling privacy:", error);
       alert("Error al cambiar la visibilidad del proyecto.");
@@ -497,14 +501,14 @@ export default function ProjectPage({
   const handleDelegateSubmit = async () => {
     setIsDelegating(true);
     setDelegateMessage("");
-    
+
     try {
-      const taskDescription = typeof selectedTaskForDelegate === 'string' 
-        ? selectedTaskForDelegate 
+      const taskDescription = typeof selectedTaskForDelegate === 'string'
+        ? selectedTaskForDelegate
         : selectedTaskForDelegate.descripcion;
-      
-      const taskId = typeof selectedTaskForDelegate === 'object' && selectedTaskForDelegate.id 
-        ? selectedTaskForDelegate.id 
+
+      const taskId = typeof selectedTaskForDelegate === 'object' && selectedTaskForDelegate.id
+        ? selectedTaskForDelegate.id
         : null;
 
       const response = await fetch('/api/tareas-delegadas', {
@@ -529,7 +533,7 @@ export default function ProjectPage({
       }
 
       setDelegateMessage("✅ Tarea delegada con éxito");
-      
+
       // Si es proyecto de Supabase, actualizar el plan local para reflejar el cambio
       if (isFromSupabase && taskId) {
         setPlan(prevPlan => {
@@ -543,12 +547,12 @@ export default function ProjectPage({
           return { ...prevPlan, tasks: updatedTasks };
         });
       }
-      
+
       // Cerrar modal después de un breve delay para mostrar el mensaje
       setTimeout(() => {
         closeDelegateModal();
       }, 2000);
-      
+
     } catch (error: any) {
       console.error('Error delegating task:', error);
       setDelegateMessage(`❌ ${error.message}`);
@@ -568,35 +572,143 @@ export default function ProjectPage({
     setIsEditing(false);
   };
 
-  const saveChanges = () => {
+  // Función para guardar solo las tareas automáticamente
+  const saveTasksOnly = async (updatedPlan: Plan) => {
+    if (isFromSupabase && supabaseProject) {
+      // Guardar en Supabase
+      try {
+        const response = await fetch("../api/update-project", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            projectId: supabaseProject.id,
+            projectContext: updatedPlan.projectContext,
+            tasks: updatedPlan.tasks,
+            finalImageUrl: updatedPlan.finalImageUrl,
+            timestamp: updatedPlan.timestamp,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error("Error actualizando tareas:", data.error);
+          return;
+        }
+
+        setPlan(updatedPlan);
+      } catch (error) {
+        console.error("Error guardando tareas en Supabase:", error);
+      }
+    } else {
+      // Guardar en localStorage (comportamiento original)
+      try {
+        const raw = safeLocalGet("allProjectPlans");
+        const plans: Plan[] = raw ? JSON.parse(raw) : [];
+
+        const n = Number(id);
+        let index = Number.isFinite(n) ? n - 1 : plans.findIndex((p) => p.projectId === id);
+
+        if (!(index >= 0 && index < plans.length)) {
+          index = plans.findIndex((p) => p.projectId === id);
+        }
+
+        if (index >= 0 && index < plans.length) {
+          plans[index] = { ...updatedPlan, timestamp: new Date().toISOString() };
+          safeLocalSet("allProjectPlans", JSON.stringify(plans));
+          setPlan(updatedPlan);
+        }
+      } catch (error) {
+        console.error("Error guardando tareas:", error);
+      }
+    }
+  };
+
+  // Función para hacer scroll hasta el final de las tareas
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      if (tasksScrollRef.current) {
+        tasksScrollRef.current.scrollTop = tasksScrollRef.current.scrollHeight;
+      }
+    }, 100); // Pequeño delay para asegurar que el DOM se haya actualizado
+  };
+
+  const saveChanges = async () => {
     if (!editedPlan) return;
 
+    setIsSaving(true);
+
     try {
-      const raw = safeLocalGet("allProjectPlans");
-      const plans: Plan[] = raw ? JSON.parse(raw) : [];
+      if (isFromSupabase && supabaseProject) {
+        // Guardar en Supabase
+        const response = await fetch("../api/update-project", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            projectId: supabaseProject.id,
+            projectContext: editedPlan.projectContext,
+            tasks: editedPlan.tasks,
+            finalImageUrl: editedPlan.finalImageUrl,
+            timestamp: editedPlan.timestamp,
+          }),
+        });
 
-      const n = Number(id);
-      let index = Number.isFinite(n) ? n - 1 : plans.findIndex((p) => p.projectId === id);
+        const data = await response.json();
 
-      // If index invalid, try to find index by projectId
-      if (!(index >= 0 && index < plans.length)) {
-        index = plans.findIndex((p) => p.projectId === id);
-      }
+        if (!response.ok) {
+          alert(data.error || "Error al actualizar el proyecto.");
+          return;
+        }
 
-      if (index >= 0 && index < plans.length) {
-        plans[index] = { ...editedPlan, timestamp: new Date().toISOString() };
-        safeLocalSet("allProjectPlans", JSON.stringify(plans));
+        // Actualizar el estado local
+        setPlan(editedPlan);
+        setSupabaseProject((prev: any) => ({
+          ...prev,
+          nombre: editedPlan.projectContext.description,
+          description: editedPlan.projectContext.description,
+          style_prompt: editedPlan.projectContext.stylePrompt,
+          type: editedPlan.projectContext.type,
+          utility: editedPlan.projectContext.utility,
+          palette: editedPlan.projectContext.palette,
+          colors: editedPlan.projectContext.colors,
+          imagen_url: editedPlan.finalImageUrl,
+          timestamp: editedPlan.timestamp,
+        }));
+
+        alert("Proyecto actualizado con éxito");
       } else {
-        // If not found in array, push it (fallback)
-        plans.push({ ...editedPlan, timestamp: new Date().toISOString() });
-        safeLocalSet("allProjectPlans", JSON.stringify(plans));
+        // Guardar en localStorage (comportamiento original)
+        const raw = safeLocalGet("allProjectPlans");
+        const plans: Plan[] = raw ? JSON.parse(raw) : [];
+
+        const n = Number(id);
+        let index = Number.isFinite(n) ? n - 1 : plans.findIndex((p) => p.projectId === id);
+
+        // If index invalid, try to find index by projectId
+        if (!(index >= 0 && index < plans.length)) {
+          index = plans.findIndex((p) => p.projectId === id);
+        }
+
+        if (index >= 0 && index < plans.length) {
+          plans[index] = { ...editedPlan, timestamp: new Date().toISOString() };
+          safeLocalSet("allProjectPlans", JSON.stringify(plans));
+        } else {
+          // If not found in array, push it (fallback)
+          plans.push({ ...editedPlan, timestamp: new Date().toISOString() });
+          safeLocalSet("allProjectPlans", JSON.stringify(plans));
+        }
+
+        // Solo actualizar el plan principal, mantener editedPlan para que las tareas sigan siendo editables
+        setPlan(editedPlan);
       }
 
-      setPlan(editedPlan);
-      cancelEditing();
+      // NO llamar cancelEditing() para mantener las tareas editables
+      setIsEditing(false); // Solo cambiar el estado de edición del contexto del proyecto
     } catch (error) {
       console.error("Error guardando cambios:", error);
       alert("Error al guardar los cambios");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -732,51 +844,51 @@ export default function ProjectPage({
           </div>
 
           {/* Botón de visibilidad: mostrar solo si cumple condiciones */}
-   {shouldShowPrivacyButton && (
-  <div className="flex flex-col md:flex-row items-center justify-between bg-blue-900/30 border border-blue-600/30  backdrop-blur-sm rounded-xl p-4 border border-white/10 mb-6 gap-4">
-    <div className="md:mb-0">
-      <p className="text-sm  text-blue-200 text-center md:text-left">
-        {isPublic
-          ? "Para delegar tareas del proyecto debes convertirlo en privado"
-          : "Puedes volver el proyecto público para que todos observen el desarrollo"}
-      </p>
-    </div>
-    <div className="flex justify-center md:justify-end">
-      <Button
-        className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(198,198,199,1)] hover:brightness-110 transition-all duration-200"
-        style={{
-          background: "rgba(158, 158, 149, 0.2)",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
-          boxShadow:
-            "2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)",
-          backdropFilter: "blur(6px)",
-          WebkitBackdropFilter: "blur(6px)",
-          borderRadius: "20px",
-        }}
-        onClick={togglePrivacy}
-        variant="outline"
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-        ) : isPublic ? (
-          <Unlock className="h-4 w-4 mr-2" />
-        ) : (
-          <Lock className="h-4 w-4 mr-2" />
-        )}
-        {isLoading
-          ? "Cambiando..."
-          : isFromSupabase
-          ? isPublic
-            ? "Hacer Privado"
-            : "Hacer Público"
-          : isPublic
-          ? "Hacer Privado"
-          : "Pasar a Producción Privado"}
-      </Button>
-    </div>
-  </div>
-)}
+          {shouldShowPrivacyButton && (
+            <div className="flex flex-col md:flex-row items-center justify-between bg-blue-900/30 border border-blue-600/30  backdrop-blur-sm rounded-xl p-4 border border-white/10 mb-6 gap-4">
+              <div className="md:mb-0">
+                <p className="text-sm  text-blue-200 text-center md:text-left">
+                  {isPublic
+                    ? "Para delegar tareas del proyecto debes convertirlo en privado"
+                    : "Puedes volver el proyecto público para que todos observen el desarrollo"}
+                </p>
+              </div>
+              <div className="flex justify-center md:justify-end">
+                <Button
+                  className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(198,198,199,1)] hover:brightness-110 transition-all duration-200"
+                  style={{
+                    background: "rgba(158, 158, 149, 0.2)",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    boxShadow:
+                      "2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)",
+                    backdropFilter: "blur(6px)",
+                    WebkitBackdropFilter: "blur(6px)",
+                    borderRadius: "20px",
+                  }}
+                  onClick={togglePrivacy}
+                  variant="outline"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : isPublic ? (
+                    <Unlock className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Lock className="h-4 w-4 mr-2" />
+                  )}
+                  {isLoading
+                    ? "Cambiando..."
+                    : isFromSupabase
+                      ? isPublic
+                        ? "Hacer Privado"
+                        : "Hacer Público"
+                      : isPublic
+                        ? "Hacer Privado"
+                        : "Pasar a Producción Privado"}
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Título y descripción (editable) */}
           <div className="space-y-2">
@@ -811,13 +923,19 @@ export default function ProjectPage({
                 <>
                   <Button
                     onClick={saveChanges}
+                    disabled={isSaving}
                     className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-green-600/70 bg-green-600/50 border border-green-500/30"
                   >
-                    <Save className="h-4 w-4 mr-2" />
-                    Guardar
+                    {isSaving ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4 mr-2" />
+                    )}
+                    {isSaving ? "Guardando..." : "Guardar"}
                   </Button>
                   <Button
                     onClick={cancelEditing}
+                    disabled={isSaving}
                     variant="outline"
                     className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-red-600/70 bg-red-600/50 border border-red-500/30"
                   >
@@ -871,32 +989,31 @@ export default function ProjectPage({
             </div>
 
             {/* Tipo */}
-<div>
-  <label className="block text-sm font-medium text-gray-200 mb-2">
-    Tipo:
-  </label>
-  {isEditing ? (
-    <div className="flex flex-wrap gap-3">
-      {projectTypes.map((type) => (
-        <div
-          key={type}
-          onClick={() => updateEditedPlan("projectContext.type", type)}
-          className={`cursor-pointer px-4 py-2 rounded-full border text-sm ${
-            currentPlan?.projectContext.type === type
-              ? "bg-white text-gray-900 border-white"
-              : "bg-white/5 text-gray-200 border-white/20 hover:bg-white/10"
-          } transition-colors duration-150`}
-        >
-          {type}
-        </div>
-      ))}
-    </div>
-  ) : (
-    <span className="inline-block bg-blue-600/20 text-blue-300 border border-blue-500/30 px-3 py-1 rounded-full text-sm">
-      {plan.projectContext.type}
-    </span>
-  )}
-</div>
+            <div>
+              <label className="block text-sm font-medium text-gray-200 mb-2">
+                Tipo:
+              </label>
+              {isEditing ? (
+                <div className="flex flex-wrap gap-3">
+                  {projectTypes.map((type) => (
+                    <div
+                      key={type}
+                      onClick={() => updateEditedPlan("projectContext.type", type)}
+                      className={`cursor-pointer px-4 py-2 rounded-full border text-sm ${currentPlan?.projectContext.type === type
+                        ? "bg-white text-gray-900 border-white"
+                        : "bg-white/5 text-gray-200 border-white/20 hover:bg-white/10"
+                        } transition-colors duration-150`}
+                    >
+                      {type}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <span className="inline-block bg-blue-600/20 text-blue-300 border border-blue-500/30 px-3 py-1 rounded-full text-sm">
+                  {plan.projectContext.type}
+                </span>
+              )}
+            </div>
 
             {/* Utilidad */}
             <div>
@@ -942,27 +1059,27 @@ export default function ProjectPage({
                       setEditedPlan((prev) =>
                         prev
                           ? {
-                              ...prev,
-                              projectContext: {
-                                ...prev.projectContext,
-                                colors: [
-                                  ...(prev.projectContext.colors || []),
-                                  "#3B82F6",
-                                ],
-                              },
-                            }
+                            ...prev,
+                            projectContext: {
+                              ...prev.projectContext,
+                              colors: [
+                                ...(prev.projectContext.colors || []),
+                                "#3B82F6",
+                              ],
+                            },
+                          }
                           : prev
                       )
                     }
-                     style={{
-                background: "rgba(158, 158, 149, 0.2)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
-                boxShadow:
-                  "2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)",
-                backdropFilter: "blur(6px)",
-                WebkitBackdropFilter: "blur(6px)",
-                borderRadius: "20px",
-              }}
+                    style={{
+                      background: "rgba(158, 158, 149, 0.2)",
+                      border: "1px solid rgba(255, 255, 255, 0.08)",
+                      boxShadow:
+                        "2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)",
+                      backdropFilter: "blur(6px)",
+                      WebkitBackdropFilter: "blur(6px)",
+                      borderRadius: "20px",
+                    }}
 
                     size="sm"
                     variant="outline"
@@ -1034,69 +1151,29 @@ export default function ProjectPage({
               )}
             </div>
           </section>
-
- <div className="flex gap-2 mt-5">
-              {isEditing ? (
-                <>
-                  <Button
-                    onClick={saveChanges}
-                    className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-green-600/70 bg-green-600/50 border border-green-500/30"
-                  >
-                    <Save className="h-4 w-4 mr-2" />
-                    Guardar
-                  </Button>
-                  <Button
-                    onClick={cancelEditing}
-                    variant="outline"
-                    className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-red-600/70 bg-red-600/50 border border-red-500/30"
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    Cancelar
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  onClick={startEditing}
-                  variant="outline"
-                  className="text-white px-4 py-2 font-semibold rounded-xl hover:bg-[rgba(158,158,149,0.7)] hover:brightness-110 transition-all duration-200"
-                  style={{
-                    background: "rgba(158, 158, 149, 0.2)",
-                    border: "1px solid rgba(255, 255, 255, 0.08)",
-                    boxShadow:
-                      "2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)",
-                    backdropFilter: "blur(6px)",
-                    WebkitBackdropFilter: "blur(6px)",
-                    borderRadius: "20px",
-                  }}
-                >
-                  <Pencil className="h-4 w-4 mr-2" />
-                  Editar
-                </Button>
-              )}
-            </div>
           {/* Tareas: editable siempre (como en code2) */}
           <section className="p-6 rounded-xl border border-white/10 bg-black/30 space-y-4 shadow-lg mt-6">
             <div className="flex flex-col md:flex-row items-center justify-between border-b border-white/10 pb-3 gap-4">
-  {/* Título */}
-  <h2 className="text-2xl font-semibold text-center md:text-left">
-    Lista de Tareas
-  </h2>
+              {/* Título */}
+              <h2 className="text-2xl font-semibold text-center md:text-left">
+                Lista de Tareas
+              </h2>
 
-  {/* Mensaje */}
-  <div className="flex flex-col md:flex-row items-center justify-between bg-blue-900/30 border border-blue-600/30 backdrop-blur-sm rounded-xl p-4 border border-white/10 gap-2">
-    <div className="flex items-center">
-      <p className="text-sm text-blue-200 text-center md:text-left">
-        Para delegar una tarea, o pasarla a tu calendario haz clic en el botón
-      </p>
-      <div className="ml-2">
-        <PlayIcon className="h-4 w-4" />
-      </div>
-    </div>
+              {/* Mensaje */}
+              <div className="flex flex-col md:flex-row items-center justify-between bg-blue-900/30 border border-blue-600/30 backdrop-blur-sm rounded-xl p-4 border border-white/10 gap-2">
+                <div className="flex items-center">
+                  <p className="text-sm text-blue-200 text-center md:text-left">
+                    Para delegar una tarea, o pasarla a tu calendario haz clic en el botón
+                  </p>
+                  <div className="ml-2">
+                    <PlayIcon className="h-4 w-4" />
+                  </div>
+                </div>
 
               </div>
             </div>
 
-            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+            <div ref={tasksScrollRef} className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
               {(editedPlan?.tasks ?? plan?.tasks ?? []).length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-gray-400">No hay tareas. ¡Añade la primera!</p>
@@ -1105,133 +1182,141 @@ export default function ProjectPage({
                 (editedPlan?.tasks ?? plan?.tasks ?? []).map((task, i) => {
                   const taskObj = typeof task === 'string' ? { descripcion: task, estado: 'pendiente' } : task;
                   const isDelegated = taskObj.estado === 'delegada';
-                  
+
                   return (
-                  <div key={i} className="space-y-2">
-                    <div className={`flex items-center justify-between p-3 rounded-md border group hover:bg-white/10 transition-colors ${
-                      isDelegated 
-                        ? 'bg-purple-500/10 border-purple-500/30' 
+                    <div key={i} className="space-y-2">
+                      <div className={`flex items-center justify-between p-3 rounded-md border group hover:bg-white/10 transition-colors ${isDelegated
+                        ? 'bg-purple-500/10 border-purple-500/30'
                         : 'bg-white/5 border-white/10'
-                    }`}>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className={`h-7 w-7 transition-colors ${
-                          expandedTaskIndex === i 
-                            ? 'text-green-400 bg-green-400/10' 
+                        }`}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={`h-7 w-7 transition-colors ${expandedTaskIndex === i
+                            ? 'text-green-400 bg-green-400/10'
                             : 'text-gray-400 hover:text-green-400'
-                        }`}
-                        aria-label="Iniciar tarea"
-                        onClick={() => setExpandedTaskIndex(expandedTaskIndex === i ? null : i)}
-                      >
-                        <PlayIcon className="h-4 w-4" />
-                      </Button>
-                    <div className="flex items-center gap-3 flex-grow">
-                      {(isEditing || editedPlan) ? (
-                        <input
-                          type="text"
-                          value={taskObj.descripcion}
-                          onChange={(e) => {
-                            if (!editedPlan) {
-                              const newEditedPlan = plan ? JSON.parse(JSON.stringify(plan)) : null;
-                              if (newEditedPlan) {
-                                const updatedTasks = [...newEditedPlan.tasks];
-                                updatedTasks[i] = typeof task === 'string' ? e.target.value : { ...taskObj, descripcion: e.target.value };
-                                setEditedPlan({ ...newEditedPlan, tasks: updatedTasks });
+                            }`}
+                          aria-label="Iniciar tarea"
+                          onClick={() => setExpandedTaskIndex(expandedTaskIndex === i ? null : i)}
+                        >
+                          <PlayIcon className="h-4 w-4" />
+                        </Button>
+                        <div className="flex items-center gap-3 flex-grow">
+                          <input
+                            type="text"
+                            value={taskObj.descripcion}
+                            onChange={(e) => {
+                              let updatedPlan: Plan;
+
+                              if (!editedPlan) {
+                                const newEditedPlan = plan ? JSON.parse(JSON.stringify(plan)) : null;
+                                if (newEditedPlan) {
+                                  const updatedTasks = [...newEditedPlan.tasks];
+                                  updatedTasks[i] = typeof task === 'string' ? e.target.value : { ...taskObj, descripcion: e.target.value };
+                                  updatedPlan = { ...newEditedPlan, tasks: updatedTasks };
+                                  setEditedPlan(updatedPlan);
+                                  saveTasksOnly(updatedPlan);
+                                }
+                                return;
                               }
-                              return;
-                            }
-                            const updatedTasks = [...editedPlan.tasks];
-                            updatedTasks[i] = typeof task === 'string' ? e.target.value : { ...taskObj, descripcion: e.target.value };
-                            // Ensure tasks is either string[] or Task[]
-                            if (updatedTasks.every(item => typeof item === 'string')) {
-                              setEditedPlan({ ...editedPlan, tasks: updatedTasks as string[] });
-                            } else {
-                              setEditedPlan({ ...editedPlan, tasks: updatedTasks.map(item => typeof item === 'string' ? { descripcion: item } : item) as Task[] });
-                            }
-                          }}
-                          className="flex-grow bg-transparent border-none outline-none text-gray-200 placeholder:text-gray-400 hover:bg-black/20 focus:bg-black/30 rounded px-2 py-1 transition-colors"
-                          placeholder="Editar tarea..."
-                        />
-                      ) : (
-                        <span className={`flex-grow px-2 py-1 ${isDelegated ? 'text-purple-200' : 'text-gray-200'}`}>
-                          {taskObj.descripcion}
+
+                              const updatedTasks = [...editedPlan.tasks];
+                              updatedTasks[i] = typeof task === 'string' ? e.target.value : { ...taskObj, descripcion: e.target.value };
+
+                              // Ensure tasks is either string[] or Task[]
+                              if (updatedTasks.every(item => typeof item === 'string')) {
+                                updatedPlan = { ...editedPlan, tasks: updatedTasks as string[] };
+                              } else {
+                                updatedPlan = { ...editedPlan, tasks: updatedTasks.map(item => typeof item === 'string' ? { descripcion: item } : item) as Task[] };
+                              }
+
+                              setEditedPlan(updatedPlan);
+                              saveTasksOnly(updatedPlan);
+                            }}
+                            className="flex-grow bg-transparent border-none outline-none text-gray-200 placeholder:text-gray-400 hover:bg-black/20 focus:bg-black/30 rounded px-2 py-1 transition-colors"
+                            placeholder="Editar tarea..."
+                          />
                           {isDelegated && <span className="ml-2 text-xs text-purple-300">(Delegada)</span>}
-                        </span>
+                        </div>
+
+                        <div className="flex items-center space-x-1.5 flex-shrink-0">
+                          <button
+                            onClick={() => {
+                              // attempt to focus the matching input - kept non-critical
+                              const taskInputs = Array.from(document.querySelectorAll('input[type="text"]'));
+                              const candidate = taskInputs.find((el) => (el as HTMLInputElement).value === task);
+                              if (candidate) (candidate as HTMLInputElement).focus();
+                            }}
+                            className="h-8 w-8 flex items-center justify-center rounded-md bg-blue-600/20 text-blue-300 opacity-30 group-hover:opacity-100 transition-all duration-200 hover:bg-blue-600/30 hover:text-blue-200"
+                            aria-label="Editar tarea"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              let updatedPlan: Plan;
+
+                              if (!editedPlan) {
+                                const newEditedPlan = plan ? JSON.parse(JSON.stringify(plan)) : null;
+                                if (newEditedPlan) {
+                                  const updatedTasks = [...newEditedPlan.tasks];
+                                  updatedTasks.splice(i, 1);
+                                  updatedPlan = { ...newEditedPlan, tasks: updatedTasks };
+                                  setEditedPlan(updatedPlan);
+                                  saveTasksOnly(updatedPlan);
+                                }
+                                return;
+                              }
+
+                              const updatedTasks = [...editedPlan.tasks];
+                              updatedTasks.splice(i, 1);
+
+                              // Ensure tasks is either string[] or Task[]
+                              if (updatedTasks.every(item => typeof item === 'string')) {
+                                updatedPlan = { ...editedPlan, tasks: updatedTasks as string[] };
+                              } else {
+                                updatedPlan = { ...editedPlan, tasks: updatedTasks.map(item => typeof item === 'string' ? { descripcion: item } : item) as Task[] };
+                              }
+
+                              setEditedPlan(updatedPlan);
+                              saveTasksOnly(updatedPlan);
+                            }}
+                            className="h-8 w-8 flex items-center justify-center rounded-md bg-red-600/20 text-red-300 opacity-30 group-hover:opacity-100 transition-all duration-200 hover:bg-red-600/30 hover:text-red-200"
+                            aria-label="Eliminar tarea"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Fila de botones de acción */}
+                      {expandedTaskIndex === i && (
+                        <div className="flex gap-2 pl-10 pr-3 pb-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-green-300 border-green-500/30 hover:bg-green-500/20 hover:text-white bg-green-500/10"
+                            onClick={() => {
+                              // TODO: Implementar funcionalidad de agregar a calendario
+                              console.log(`Agregar tarea "${taskObj.descripcion}" al calendario`);
+                            }}
+                          >
+                            📅 Agregar a mi calendario
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-purple-300 border-purple-500/30 hover:bg-purple-500/20 hover:text-white  bg-purple-500/10"
+                            onClick={() => openDelegateModal(taskObj)}
+                            disabled={isDelegated}
+                          >
+                            👥 {isDelegated ? 'Ya Delegada' : 'Delegar'}
+                          </Button>
+                        </div>
                       )}
                     </div>
-
-                    {(isEditing || editedPlan) && (
-                      <div className="flex items-center space-x-1.5 flex-shrink-0">
-                        <button
-                          onClick={() => {
-                            // attempt to focus the matching input - kept non-critical
-                            const taskInputs = Array.from(document.querySelectorAll('input[type="text"]'));
-                            const candidate = taskInputs.find((el) => (el as HTMLInputElement).value === task);
-                            if (candidate) (candidate as HTMLInputElement).focus();
-                          }}
-                          className="h-8 w-8 flex items-center justify-center rounded-md bg-blue-600/20 text-blue-300 opacity-30 group-hover:opacity-100 transition-all duration-200 hover:bg-blue-600/30 hover:text-blue-200"
-                          aria-label="Editar tarea"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            if (!editedPlan) {
-                              const newEditedPlan = plan ? JSON.parse(JSON.stringify(plan)) : null;
-                              if (newEditedPlan) {
-                                const updatedTasks = [...newEditedPlan.tasks];
-                                updatedTasks.splice(i, 1);
-                                setEditedPlan({ ...newEditedPlan, tasks: updatedTasks });
-                              }
-                              return;
-                            }
-                            const updatedTasks = [...editedPlan.tasks];
-                            updatedTasks.splice(i, 1);
-                            // Ensure tasks is either string[] or Task[]
-                            if (updatedTasks.every(item => typeof item === 'string')) {
-                              setEditedPlan({ ...editedPlan, tasks: updatedTasks as string[] });
-                            } else {
-                              setEditedPlan({ ...editedPlan, tasks: updatedTasks.map(item => typeof item === 'string' ? { descripcion: item } : item) as Task[] });
-                            }
-                          }}
-                          className="h-8 w-8 flex items-center justify-center rounded-md bg-red-600/20 text-red-300 opacity-30 group-hover:opacity-100 transition-all duration-200 hover:bg-red-600/30 hover:text-red-200"
-                          aria-label="Eliminar tarea"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    )}
-                    </div>
-                    
-                    {/* Fila de botones de acción */}
-                    {expandedTaskIndex === i && (
-                      <div className="flex gap-2 pl-10 pr-3 pb-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-green-300 border-green-500/30 hover:bg-green-500/20 hover:text-white bg-green-500/10"
-                          onClick={() => {
-                            // TODO: Implementar funcionalidad de agregar a calendario
-                            console.log(`Agregar tarea "${taskObj.descripcion}" al calendario`);
-                          }}
-                        >
-                          📅 Agregar a mi calendario
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-purple-300 border-purple-500/30 hover:bg-purple-500/20 hover:text-white  bg-purple-500/10"
-                          onClick={() => openDelegateModal(taskObj)}
-                          disabled={isDelegated}
-                        >
-                          👥 {isDelegated ? 'Ya Delegada' : 'Delegar'}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                )
+                  )
                 })
               )}
             </div>
@@ -1245,23 +1330,33 @@ export default function ProjectPage({
                 className="flex-grow bg-white/5 border border-white/20 focus:ring-indigo-400 focus:ring-1 focus:border-indigo-400 placeholder:text-gray-400 text-gray-100 rounded-lg px-3 py-2 outline-none transition-colors"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && newTask.trim() !== "") {
+                    let updatedPlan: Plan;
+
                     if (!editedPlan) {
                       const newEditedPlan = plan ? JSON.parse(JSON.stringify(plan)) : null;
                       if (newEditedPlan) {
-                        setEditedPlan({ ...newEditedPlan, tasks: [...newEditedPlan.tasks, newTask.trim()] });
+                        updatedPlan = { ...newEditedPlan, tasks: [...newEditedPlan.tasks, newTask.trim()] };
+                        setEditedPlan(updatedPlan);
+                        saveTasksOnly(updatedPlan);
+                      } else {
+                        return;
                       }
                     } else {
                       // Ensure tasks array is either string[] or Task[]
                       const updatedTasks = [...editedPlan.tasks, newTask.trim()];
                       if (updatedTasks.every(item => typeof item === 'string')) {
-                        setEditedPlan({ ...editedPlan, tasks: updatedTasks as string[] });
+                        updatedPlan = { ...editedPlan, tasks: updatedTasks as string[] };
                       } else {
-                        setEditedPlan({ 
-                          ...editedPlan, 
-                          tasks: updatedTasks.map(item => typeof item === 'string' ? { descripcion: item } : item) as Task[] 
-                        });
+                        updatedPlan = {
+                          ...editedPlan,
+                          tasks: updatedTasks.map(item => typeof item === 'string' ? { descripcion: item } : item) as Task[]
+                        };
                       }
+                      setEditedPlan(updatedPlan);
+                      saveTasksOnly(updatedPlan);
                     }
+
+                    scrollToBottom();
                     setNewTask("");
                   }
                 }}
@@ -1269,30 +1364,41 @@ export default function ProjectPage({
               <button
                 onClick={() => {
                   if (newTask.trim() === "") return;
+
+                  let updatedPlan: Plan;
+
                   if (!editedPlan) {
                     const newEditedPlan = plan ? JSON.parse(JSON.stringify(plan)) : null;
                     if (newEditedPlan) {
                       const updatedTasks = [...newEditedPlan.tasks, newTask.trim()];
                       if (updatedTasks.every(item => typeof item === 'string')) {
-                        setEditedPlan({ ...newEditedPlan, tasks: updatedTasks as string[] });
+                        updatedPlan = { ...newEditedPlan, tasks: updatedTasks as string[] };
                       } else {
-                        setEditedPlan({ 
-                          ...newEditedPlan, 
-                          tasks: updatedTasks.map(item => typeof item === 'string' ? { descripcion: item } : item) as Task[] 
-                        });
+                        updatedPlan = {
+                          ...newEditedPlan,
+                          tasks: updatedTasks.map(item => typeof item === 'string' ? { descripcion: item } : item) as Task[]
+                        };
                       }
+                      setEditedPlan(updatedPlan);
+                      saveTasksOnly(updatedPlan);
+                    } else {
+                      return;
                     }
                   } else {
                     const updatedTasks = [...editedPlan.tasks, newTask.trim()];
                     if (updatedTasks.every(item => typeof item === 'string')) {
-                      setEditedPlan({ ...editedPlan, tasks: updatedTasks as string[] });
+                      updatedPlan = { ...editedPlan, tasks: updatedTasks as string[] };
                     } else {
-                      setEditedPlan({ 
-                        ...editedPlan, 
-                        tasks: updatedTasks.map(item => typeof item === 'string' ? { descripcion: item } : item) as Task[] 
-                      });
+                      updatedPlan = {
+                        ...editedPlan,
+                        tasks: updatedTasks.map(item => typeof item === 'string' ? { descripcion: item } : item) as Task[]
+                      };
                     }
+                    setEditedPlan(updatedPlan);
+                    saveTasksOnly(updatedPlan);
                   }
+
+                  scrollToBottom();
                   setNewTask("");
                 }}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg px-4 py-2 transition-colors flex items-center gap-2 whitespace-nowrap"
@@ -1330,17 +1436,17 @@ export default function ProjectPage({
           <DialogHeader>
             <DialogTitle className="text-white">Delegar Tarea</DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div>
               <Label className="text-sm font-medium text-gray-200">Tarea a delegar:</Label>
               <p className="text-gray-300 bg-gray-800 p-2 rounded-md mt-1">
-                {typeof selectedTaskForDelegate === 'string' 
-                  ? selectedTaskForDelegate 
+                {typeof selectedTaskForDelegate === 'string'
+                  ? selectedTaskForDelegate
                   : selectedTaskForDelegate.descripcion}
               </p>
             </div>
-            
+
             <div>
               <Label htmlFor="technologies" className="text-sm font-medium text-gray-200">
                 Lista de tecnologías requeridas
@@ -1354,7 +1460,7 @@ export default function ProjectPage({
                 rows={3}
               />
             </div>
-            
+
             <div>
               <Label htmlFor="level" className="text-sm font-medium text-gray-200">
                 Nivel requerido
@@ -1384,7 +1490,7 @@ export default function ProjectPage({
           )}
 
           <DialogFooter className="gap-2">
-            <Button 
+            <Button
               onClick={handleDelegateSubmit}
               className="bg-purple-600 hover:bg-purple-700 text-white"
               disabled={!delegateForm.technologies.trim() || !delegateForm.level || isDelegating}
