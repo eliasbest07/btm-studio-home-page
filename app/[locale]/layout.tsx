@@ -39,9 +39,9 @@ export default async function LocaleLayout({
             <div className="absolute inset-0 bg-black opacity-50"></div>
           </div>
 
-          <div className="relative z-10 flex flex-col min-h-screen">
+          <div className="relative z-10 flex flex-col h-screen">
             <Header />
-            <main className="flex-grow">{children}</main>
+            <main className="flex-1 overflow-hidden">{children}</main>
             <Footer />
           </div>
           
