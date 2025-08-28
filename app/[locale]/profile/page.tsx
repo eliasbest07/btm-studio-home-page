@@ -25,6 +25,23 @@ interface LocalProject {
   type: string;
 }
 
+interface UserProfile {
+  id: number;
+  nombre: string;
+  username: string;
+  bio: string;
+  avatar: string;
+  nivel: number;
+  role: string;
+  admin: boolean;
+  correo: string;
+  ubicacion: string;
+  fecha_nacimiento: string;
+  enlace_github: string;
+  enlace_web: string;
+  enlace_linkedin: string;
+}
+
 export default function ProfilePage() {
   const [isPublic, setIsPublic] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -32,6 +49,8 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [loadingLocal, setLoadingLocal] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [profileError, setProfileError] = useState<string>("");
   const supabase = createClientComponentClient();
 
   const glassmorphismStyle = {
@@ -49,6 +68,7 @@ export default function ProfilePage() {
       setUser(session?.user || null);
       if (session?.user) {
         fetchProjects(session.user.id);
+        fetchUserProfile();
       } else {
         setLoading(false);
       }
@@ -57,6 +77,57 @@ export default function ProfilePage() {
     getUser();
     fetchLocalProjects();
   }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch('./api/get-user');
+      const data = await response.json();
+
+      if (response.ok) {
+        setUserProfile(data.user.profile);
+        setProfileError("");
+      } else {
+        console.error('Error fetching user profile:', data.error);
+        setProfileError(data.error);
+
+        // Si el usuario no existe en la tabla, intentar crearlo
+        if (data.code === 'USER_NOT_FOUND') {
+          await createUserProfile();
+        }
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setProfileError("Error de conexión al obtener el perfil");
+    }
+  };
+
+  const createUserProfile = async () => {
+    try {
+      const response = await fetch('./api/get-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nombre: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuario',
+          username: `user_${Date.now()}`,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setUserProfile(data.user.profile);
+        setProfileError("");
+      } else {
+        console.error('Error creating user profile:', data.error);
+        setProfileError(data.error);
+      }
+    } catch (error) {
+      console.error('Error creating profile:', error);
+      setProfileError("Error al crear el perfil");
+    }
+  };
 
   const fetchProjects = async (userId: string) => {
     try {
@@ -118,7 +189,11 @@ export default function ProfilePage() {
 
   const filteredProjects = projects.filter(project => project.publico === isPublic);
 
-  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuario';
+  // Usar datos del perfil de la base de datos si están disponibles, sino usar datos de auth
+  const userName = userProfile?.nombre || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuario';
+  const userAvatar = userProfile?.avatar;
+  const userLevel = userProfile?.nivel || 0;
+  const userRole = userProfile?.role || 'empleado';
 
   return (
     <div className="min-h-screen text-white px-3 py-4 sm:p-6 space-y-4 sm:space-y-8 overflow-x-hidden">
@@ -128,15 +203,47 @@ export default function ProfilePage() {
         style={glassmorphismStyle}
       >
         <div className="relative z-10">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-            <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-400" />
-            <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent break-words">
-              Bienvenido, Jesus
-            </h1>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+            {/* Avatar del usuario */}
+            <div className="flex items-center gap-3">
+              {userAvatar ? (
+                <img
+                  src={userAvatar}
+                  alt={`${userName} avatar`}
+                  className="h-12 w-12 sm:h-16 sm:w-16 rounded-full object-cover border-2 border-yellow-400/50"
+                />
+              ) : (
+                <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                  <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                </div>
+              )}
+              <div>
+                <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent break-words">
+                  Bienvenido, {userName}
+                </h1>
+                {userProfile && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs sm:text-sm text-yellow-400 font-medium">
+                      Nivel {userLevel}
+                    </span>
+                    <span className="text-xs text-gray-400">•</span>
+                    <span className="text-xs sm:text-sm text-gray-400 capitalize">
+                      {userRole}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
           <p className="text-gray-300 text-sm sm:text-lg">
-            Gestiona y accede a todos tus proyectos desde aquí
+            {"Gestiona y accede a todos tus proyectos desde aquí"}
           </p>
+
+          {profileError && (
+            <div className="mt-3 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+              <p className="text-red-400 text-sm">{profileError}</p>
+            </div>
+          )}
         </div>
 
         {/* Decorative elements - hidden on mobile */}
@@ -384,7 +491,7 @@ export default function ProfilePage() {
             <div className="pt-2 border-t border-white/10">
               <Button
                 variant="outline"
-                className="w-full text-black border-white/20 hover:bg-white/10 text-sm"
+                className="w-full text-black border-white/20 hover:bg-white text-white/10 text-sm"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Agregar proyecto local

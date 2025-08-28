@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 
 export default function SettingsPage() {
   const [user, setUser] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const supabase = createClientComponentClient();
 
@@ -31,13 +32,31 @@ export default function SettingsPage() {
     const getUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user || null);
+      if (session?.user) {
+        await fetchUserProfile();
+      }
       setLoading(false);
     };
 
     getUser();
   }, []);
 
-  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuario';
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch('/api/get-user');
+      const data = await response.json();
+      
+      if (response.ok) {
+        setUserProfile(data.user.profile);
+      } else {
+        console.error('Error fetching user profile:', data.error);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const userName = userProfile?.nombre || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuario';
 
   const settingsCategories = [
     {

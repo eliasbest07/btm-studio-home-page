@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Home, Settings, LogOut, Menu, X, User } from "lucide-react";
 
 type Props = {
@@ -13,6 +13,7 @@ type Props = {
 export default function Sidebar({ userName = "Usuario", avatarUrl }: Props) {
   const pathname = usePathname() || "/profile";
   const [open, setOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   // CSS para ocultar scrollbars
   const hideScrollbarStyle = `
@@ -38,6 +39,23 @@ export default function Sidebar({ userName = "Usuario", avatarUrl }: Props) {
     backdropFilter: "blur(6px)",
     WebkitBackdropFilter: "blur(6px)",
   };
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch('/api/get-user');
+        const data = await response.json();
+        
+        if (response.ok) {
+          setUserProfile(data.user.profile);
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   return (
     <>
@@ -85,10 +103,10 @@ export default function Sidebar({ userName = "Usuario", avatarUrl }: Props) {
             style={glassmorphismStyle}
           >
             <div className="flex items-center gap-2 sm:gap-3">
-              {avatarUrl ? (
+              {(userProfile?.avatar || avatarUrl) ? (
                 <img
-                  src={avatarUrl}
-                  alt={`${userName} avatar`}
+                  src={userProfile?.avatar || avatarUrl}
+                  alt={`${userProfile?.nombre || userName} avatar`}
                   className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg object-cover border-2 border-white/20"
                 />
               ) : (
@@ -98,12 +116,22 @@ export default function Sidebar({ userName = "Usuario", avatarUrl }: Props) {
                     background: "linear-gradient(135deg, rgba(99, 102, 241, 0.8), rgba(168, 85, 247, 0.8))"
                   }}
                 >
-                  {userName?.split(" ").map(s => s[0]).slice(0, 2).join("").toUpperCase()}
+                  {(userProfile?.nombre || userName)?.split(" ").map(s => s[0]).slice(0, 2).join("").toUpperCase()}
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <div className="text-xs sm:text-sm font-medium text-white truncate">{userName}</div>
-                <div className="text-xs text-gray-300">@tu-perfil</div>
+                <div className="text-xs sm:text-sm font-medium text-white truncate">
+                  {userProfile?.nombre || userName}
+                </div>
+                <div className="text-xs text-gray-300 flex items-center gap-1">
+                  @{userProfile?.username || "tu-perfil"}
+                  {userProfile?.nivel !== undefined && (
+                    <>
+                      <span>•</span>
+                      <span className="text-yellow-400">Nv.{userProfile.nivel}</span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
