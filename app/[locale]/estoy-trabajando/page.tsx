@@ -48,6 +48,7 @@ interface Propuesta {
   usuario_id: number
   cuerpo: string
   fecha: string
+  estado?: string
   usuario?: Usuario | null
 }
 
@@ -79,12 +80,11 @@ export default function EstoyTrabajando() {
   const itemsPerPage = 6
   const [requestingNivelId, setRequestingNivelId] = useState<string | null>(null)
   const [creatingProposalId, setCreatingProposalId] = useState<string | null>(null)
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false)
+  const [userData, setUserData] = useState<any>(null)
 
   const handleNewProposal = (tareaId: string) => {
-    const userData = readUserData()
-    const isLoggedIn = localStorage.getItem("loggedIn") === "true"
-    
-    if (!userData || !isLoggedIn) {
+    if (!isUserLoggedIn || !userData) {
       // Guardar la URL actual para redirigir después del login
       const currentUrl = encodeURIComponent(pathname)
       router.push(`/login?returnTo=${currentUrl}`)
@@ -99,35 +99,14 @@ export default function EstoyTrabajando() {
     try {
       setCreatingProposalId(tareaId)
       
-      // Obtener datos del usuario para el usuario_id
-      const userData = readUserData()
-      if (!userData) {
-        alert("Error: No se pudo obtener la información del usuario")
-        return
-      }
-
-      // Obtener el usuario_id desde Supabase basado en el correo
-      const { data: usuarioData, error: usuarioError } = await supabase
-        .from('usuario')
-        .select('id')
-        .eq('correo', userData.correo)
-        .single()
-
-      if (usuarioError || !usuarioData) {
-        alert("Error: No se pudo obtener el ID del usuario")
-        console.error('Error obteniendo usuario:', usuarioError)
-        return
-      }
-
-      // Llamar a la API para crear la propuesta
-      const response = await fetch('/api/propuestas', {
+      // Llamar a la nueva API send-to-totaltime
+      const response = await fetch('/api/send-to-totaltime', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          tarea_id: tareaId,
-          usuario_id: usuarioData.id
+          tareaId: tareaId
         })
       })
 
@@ -137,12 +116,16 @@ export default function EstoyTrabajando() {
         throw new Error(result.error || 'Error al crear la propuesta')
       }
 
-      // Si todo sale bien, abrir Total-Time.app con el ID de la propuesta en nueva pestaña
-      const propuestaUrl = `https://total-time.app/propuesta/${result.propuesta_id}`
-      window.open(propuestaUrl, "_blank")
+      // Si todo sale bien, abrir Total-Time.app con la URL proporcionada por la API
+      if (result.totalTimeUrl) {
+        window.open(result.totalTimeUrl, "_blank")
+      }
       
       // Cerrar el modal de propuesta
       setShowNewProposal(null)
+      
+      // Recargar las propuestas para mostrar la nueva
+      await loadTareasAndPropuestas()
 
     } catch (error) {
       console.error('Error creando propuesta:', error)
@@ -187,10 +170,19 @@ export default function EstoyTrabajando() {
   }
   
 
-  // Cargar tareas y propuestas desde Supabase
+  // Verificar sesión del usuario al cargar
   useEffect(() => {
+    checkUserSession()
     loadTareasAndPropuestas()
   }, [])
+
+  const checkUserSession = () => {
+    const userData = readUserData()
+    const isLoggedIn = localStorage.getItem("loggedIn") === "true"
+    
+    setIsUserLoggedIn(isLoggedIn && userData !== null)
+    setUserData(userData)
+  }
 
   const loadTareasAndPropuestas = async () => {
     try {
@@ -209,7 +201,7 @@ export default function EstoyTrabajando() {
         nombre_producto,
         usuario:usuario ( id, nombre, avatar, id_usuario, correo ),
         propuestas:propuestas (
-          id, tarea_id, usuario_id, cuerpo, fecha,
+          id, tarea_id, usuario_id, cuerpo, fecha, estado,
           usuario:usuario ( id, nombre, avatar, id_usuario, correo )
         )
       `)
@@ -236,6 +228,7 @@ export default function EstoyTrabajando() {
             usuario_id: p.usuario_id,
             cuerpo: p.cuerpo,
             fecha: p.fecha,
+            estado: p.estado,
             usuario: pUsuario,
           };
         });
@@ -419,6 +412,22 @@ export default function EstoyTrabajando() {
     return usuario?.nombre || `Usuario ${usuario?.id || 'Desconocido'}`;
   }
 
+  const hasUserTotalTimeProposal = (tarea: Tarea): { has: boolean, propuestaId?: string } => {    
+    if (!isUserLoggedIn || !userData || !tarea.propuestas) {
+      return { has: false }
+    }
+
+    // Buscar propuesta del usuario actual con estado totaltime
+    const userTotalTimeProposal = tarea.propuestas.find(propuesta => 
+      propuesta.usuario?.correo === userData.correo && 
+      propuesta.estado === 'totaltime'
+    )
+
+    return userTotalTimeProposal 
+      ? { has: true, propuestaId: userTotalTimeProposal.id }
+      : { has: false }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen p-3 sm:p-6">
@@ -456,23 +465,25 @@ export default function EstoyTrabajando() {
                 key={tarea.id}
                 className="relative w-full bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden hover:border-slate-600 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/10"
               >
-                {/* Botón Solicitar Nivel - Esquina superior derecha */}
-                <div className="absolute top-0 right-0 z-10">
-  <Button
-    className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-none rounded-bl-lg rounded-tr-xl font-medium"
-    onClick={() => handleSolicitarNivel(tarea.id)}
-    disabled={requestingNivelId === tarea.id}
-  >
-    {requestingNivelId === tarea.id ? (
-      <>
-        <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
-        Solicitando...
-      </>
-    ) : (
-      "SOLICITAR NIVEL"
-    )}
-  </Button>
-</div>
+                {/* Botón Solicitar Nivel - Esquina superior derecha - Solo si está logueado */}
+                {isUserLoggedIn && (
+                  <div className="absolute top-0 right-0 z-10">
+                    <Button
+                      className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-none rounded-bl-lg rounded-tr-xl font-medium"
+                      onClick={() => handleSolicitarNivel(tarea.id)}
+                      disabled={requestingNivelId === tarea.id}
+                    >
+                      {requestingNivelId === tarea.id ? (
+                        <>
+                          <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
+                          Solicitando...
+                        </>
+                      ) : (
+                        "SOLICITAR NIVEL"
+                      )}
+                    </Button>
+                  </div>
+                )}
 
 
                 {/* Header con información del usuario */}
@@ -535,25 +546,47 @@ export default function EstoyTrabajando() {
                           onClick={() => handleNewProposal(tarea.id)}
                           className="bg-green-600 hover:bg-green-700 text-white text-sm sm:text-base px-3 sm:px-4 py-2"
                         >
-                          <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                          Nueva Propuesta
+                          {hasUserTotalTimeProposal(tarea).has ? (
+                            <>
+                              <Send className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                              Ir a Total-time
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                              Nueva Propuesta
+                            </>
+                          )}
                         </Button>
                       </div>
 
                       {/* New Proposal Form */}
                       {showNewProposal === tarea.id && (
                         <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-slate-700 mb-4 sm:mb-6">
-                          <h4 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Crear Nueva Propuesta</h4>
+                          <h4 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">
+                            {hasUserTotalTimeProposal(tarea).has ? 'Ir a Total-Time' : 'Crear Nueva Propuesta'}
+                          </h4>
                           <div className="bg-slate-700/50 border border-slate-600 rounded-lg p-4 sm:p-6 mb-4">
                             <div className="text-center">
                               <div className="mb-4">
                                 <Send className="w-12 h-12 mx-auto text-blue-400 mb-3" />
                               </div>
-                              <h5 className="text-lg font-semibold text-white mb-2">Usa la herramienta de Total-Time</h5>
-                              <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-                                Para crear propuestas profesionales y gestionar tus proyectos de manera eficiente, 
-                                debes usar la herramienta especializada en Total-Time.app
-                              </p>
+                              {hasUserTotalTimeProposal(tarea).has ? (
+                                <>
+                                  <h5 className="text-lg font-semibold text-white mb-2">Ya tienes una propuesta activa</h5>
+                                  <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+                                    Puedes continuar trabajando en tu propuesta existente en Total-Time.app
+                                  </p>
+                                </>
+                              ) : (
+                                <>
+                                  <h5 className="text-lg font-semibold text-white mb-2">Usa la herramienta de Total-Time</h5>
+                                  <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+                                    Para crear propuestas profesionales y gestionar tus proyectos de manera eficiente, 
+                                    debes usar la herramienta especializada en Total-Time.app
+                                  </p>
+                                </>
+                              )}
                             </div>
                           </div>
                           <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
@@ -572,12 +605,12 @@ export default function EstoyTrabajando() {
                               {creatingProposalId === tarea.id ? (
                                 <>
                                   <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
-                                  Creando...
+                                  {hasUserTotalTimeProposal(tarea).has ? 'Abriendo...' : 'Creando...'}
                                 </>
                               ) : (
                                 <>
                                   <Send className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                                  Ir a Total-time
+                                  {hasUserTotalTimeProposal(tarea).has ? 'Abrir Total-time' : 'Ir a Total-time'}
                                 </>
                               )}
                             </Button>
