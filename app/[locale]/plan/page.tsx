@@ -14,6 +14,12 @@ export default function PlanBasePage() {
     if (storedData) {
       // Si hay datos, redirigir a un ID temporal para mantener el comportamiento original
       router.push("/plan/session")
+    } else {
+      // Solo limpiar el loading si no hay datos (no hay redirección)
+      setTimeout(() => {
+        sessionStorage.removeItem("projectLoading")
+        window.dispatchEvent(new Event("projectLoadingChange"))
+      }, 800)
     }
   }, [router])
 
