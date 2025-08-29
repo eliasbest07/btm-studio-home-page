@@ -116,15 +116,15 @@ export default function Sidebar({ userName = "Usuario", avatarUrl }: Props) {
                     background: "linear-gradient(135deg, rgba(99, 102, 241, 0.8), rgba(168, 85, 247, 0.8))"
                   }}
                 >
-                  {(userProfile?.nombre || userName)?.split(" ").map(s => s[0]).slice(0, 2).join("").toUpperCase()}
+                  C
                 </div>
               )}
               <div className="flex-1 min-w-0">
                 <div className="text-xs sm:text-sm font-medium text-white truncate">
-                  {userProfile?.nombre || userName}
+                  Calendario
                 </div>
                 <div className="text-xs text-gray-300 flex items-center gap-1">
-                  @{userProfile?.username || "tu-perfil"}
+                  Ver tu itinerario
                   {userProfile?.nivel !== undefined && (
                     <>
                       <span>•</span>

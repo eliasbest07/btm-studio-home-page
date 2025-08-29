@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import CylindricalSlider from "./CylindricalSlider";
 
 export type WeeklyGlobalEvent = {
   id: string;
@@ -24,9 +25,9 @@ type Props = {
   className?: string;
 };
 
-const dayNames = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
-const dayNamesFull = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
-const monthNames = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const dayNames = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+const dayNamesFull = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
 function getLabelDate(weekStart: Date, idx: number) {
   const d = new Date(weekStart);
@@ -45,12 +46,12 @@ function getWeekRange(weekStart: Date, days: number) {
   const start = new Date(weekStart);
   const end = new Date(weekStart);
   end.setDate(end.getDate() + days - 1);
-  
+
   const startMonth = monthNames[start.getMonth()];
   const endMonth = monthNames[end.getMonth()];
   const startDate = start.getDate();
   const endDate = end.getDate();
-  
+
   if (startMonth === endMonth) {
     return `${startMonth} ${startDate} - ${endDate}`;
   }
@@ -73,24 +74,7 @@ const headerCardStyle: React.CSSProperties = {
   alignItems: "center",
 };
 
-const hourCardStyle: React.CSSProperties = {
-  background: "rgba(158, 158, 149, 0.2)",
-  border: "1px solid rgba(255, 255, 255, 0.08)",
-  boxShadow:
-    "2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)",
-  backdropFilter: "blur(6px)",
-  WebkitBackdropFilter: "blur(6px)",
-  borderRadius: "20px",
-  marginTop: "6px",
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "center",
-  alignItems: "center",
-  padding: "20px",
-  textAlign: "center",
-  color: "#000000ff",
-  transition: "transform 0.3s ease, box-shadow 0.3s ease",
-};
+
 
 const headerStickyStyle: React.CSSProperties = {
   background: "rgba(25,25,25,0.95)",
@@ -98,11 +82,7 @@ const headerStickyStyle: React.CSSProperties = {
   WebkitBackdropFilter: "blur(10px)",
 };
 
-const unscheduledStickyStyle: React.CSSProperties = {
-  background: "rgba(50,50,50,0.95)",
-  backdropFilter: "blur(8px)",
-  WebkitBackdropFilter: "blur(8px)",
-};
+
 
 /* Helpers */
 function getMonday(d: Date) {
@@ -117,7 +97,7 @@ function getMonday(d: Date) {
 function isDateInWeek(date: Date, weekStart: Date, days: number): number {
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekEnd.getDate() + days);
-  
+
   if (date >= weekStart && date < weekEnd) {
     const dayDiff = Math.floor((date.getTime() - weekStart.getTime()) / (1000 * 60 * 60 * 24));
     return dayDiff;
@@ -147,26 +127,10 @@ export function WeeklyCalendar({
     return () => clearInterval(interval);
   }, []);
 
-  const hours = Array.from({ length: endHour - startHour + 1 }, (_, i) => startHour + i);
   const cols = Array.from({ length: days }, (_, i) => i);
 
   // Check if current time should show the indicator
   const todayIndex = isDateInWeek(currentTime, weekStart, days);
-  const currentHour = currentTime.getHours();
-  const currentMinutes = currentTime.getMinutes();
-  const showTimeIndicator = todayIndex >= 0 && currentHour >= startHour && currentHour <= endHour;
-  
-  // Calculate position of time indicator
-  const timeIndicatorPosition = showTimeIndicator 
-    ? ((currentHour - startHour) + (currentMinutes / 60)) / (endHour - startHour + 1) * 100
-    : 0;
-
-  // Get unscheduled events (dayIndex === -1)
-  const unscheduledEvents = events.filter(e => e.dayIndex === -1);
-  
-  // Get scheduled events for a specific slot
-  const eventsBySlot = (dayIndex: number, hour: number) =>
-    events.filter((e) => e.dayIndex === dayIndex && e.startHour === hour);
 
   // Get all events for a specific day (mobile view)
   const getEventsForDay = (dayIndex: number) =>
@@ -210,15 +174,15 @@ export function WeeklyCalendar({
   });
 
   return (
-    <div className={`w-full h-full ${className || ''}`} style={{ 
+    <div className={`w-full h-full ${className || ''} overflow-hidden`} style={{
       background: 'transparent',
       height: '100%'
     }}>
       {/* Desktop View */}
-      <div className="hidden lg:block rounded-lg bg-transparent relative">
-        
+      <div className="hidden lg:flex flex-col h-full rounded-lg bg-transparent relative overflow-hidden">
+
         {/* Navigation Header */}
-        <div className="p-3 mb-2" style={{
+        <div className="flex-shrink-0 p-3 mb-2" style={{
           background: 'rgba(158, 158, 149, 0.2)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           boxShadow: '2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)',
@@ -230,15 +194,18 @@ export function WeeklyCalendar({
             <p className="text-sm text-white/80">{getWeekRange(weekStart, days)}</p>
           </div>
         </div>
-        
-        
+
+        {/* CylindricalSlider Container - Controlled height */}
+        <div className="flex-shrink-0 h-64 overflow-hidden mb-4">
+          <CylindricalSlider />
+        </div>
+
         {/* Header row (sticky) */}
         <div
-          className="sticky z-20 grid border-b border-white/10"
+          className="flex-shrink-0 z-20 grid border-b border-white/10"
           style={{
             ...headerStickyStyle,
             gridTemplateColumns: `repeat(${days}, minmax(0,1fr))`,
-            top: '0px',
           }}
         >
           {cols.map((d) => (
@@ -257,10 +224,9 @@ export function WeeklyCalendar({
 
         {/* Grid - Solo días sin horas */}
         <div
-          className="grid relative overflow-hidden"
+          className="flex-1 grid relative overflow-hidden"
           style={{
             gridTemplateColumns: `repeat(${days}, minmax(0, 1fr))`,
-            height: 'calc(100% - 120px)' // Restamos altura del header
           }}
         >
           {cols.map((d) => (
@@ -296,10 +262,17 @@ export function WeeklyCalendar({
 
       {/* Mobile View */}
       <div className="lg:hidden h-full flex flex-col overflow-hidden">
+        {/* Header */}
         <div className="flex-shrink-0 bg-white/10 backdrop-blur-sm text-white p-3 rounded-t-lg text-center text-sm font-medium border border-white/20">
           Semana: {getWeekRange(weekStart, days)}
         </div>
 
+        {/* CylindricalSlider Container - Mobile */}
+        <div className="flex-shrink-0 h-48 overflow-hidden mb-2">
+          <CylindricalSlider />
+        </div>
+
+        {/* Calendar Days */}
         <div className="flex-1 border border-white/20 border-t-0 rounded-b-lg overflow-hidden bg-white/5 backdrop-blur-sm">
           <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
             {mobileDays.map((d) => (
@@ -310,11 +283,10 @@ export function WeeklyCalendar({
                       {d.shortName.toLowerCase()}
                     </div>
                     <div
-                      className={`text-sm font-bold mt-1 ${
-                        d.isToday
-                          ? "bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs"
-                          : "text-white"
-                      }`}
+                      className={`text-sm font-bold mt-1 ${d.isToday
+                        ? "bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs"
+                        : "text-white"
+                        }`}
                     >
                       {d.date}
                     </div>

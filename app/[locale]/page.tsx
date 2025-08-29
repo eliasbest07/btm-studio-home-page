@@ -1,13 +1,13 @@
 "use client";
 
 import Hero from "../components/Hero";
-
 import SuccessCasesSection from "../components/SuccessCasesSection";
 import { getSuccessCasesData } from "../data/success-cases-data";
 import ServiceCard from "../components/ServiceCard";
 import { useTranslations } from "next-intl";
 import Carousel from "../components/carousel";
 import WeeklyGlobalEvent from "../components/calendario_main";
+import CylindricalSlider from "../components/CylindricalSlider";
 
 
 export default function HomePage() {
@@ -54,7 +54,7 @@ export default function HomePage() {
                 borderRadius: "20px",
                 padding: "20px",
                 transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                overflow: "visible"
+                overflow: "hidden"
               }}
             >
               <div style={{ height: "100%", width: "100%" }}>
@@ -73,6 +73,14 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Team Section */}
+      <section className="py-8 md:py-16">
+        <div className="container mx-auto px-3 sm:px-4">
+          <CylindricalSlider />
+        </div>
+      </section>
+
       {/* <ImageDisplaySection imageUrl={dynamicImageUrl} altText={imageAltText} title="Nuestra Inspiración Visual" /> */}
       <SuccessCasesSection cases={getSuccessCasesData()} />
     </>
