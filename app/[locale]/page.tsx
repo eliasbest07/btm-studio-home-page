@@ -39,25 +39,25 @@ export default function HomePage() {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-10 md:mb-16 text-white drop-shadow-md">
             {t("greeting")}
           </h2>
-          <section className="mb-12 flex justify-center">
+          <section className="mb-8 md:mb-12 flex justify-center px-2 sm:px-4">
             <div 
-              className="group hover:translate-y-[-5px] hover:scale-[1.03] hover:shadow-[4px_8px_12px_rgba(0,0,0,0.4),_inset_-1px_0px_2px_rgba(201,201,201,0.1),_inset_5px_-5px_12px_rgba(255,255,255,0.05),_inset_-5px_5px_12px_rgba(255,255,255,0.05)]"
+              className="group hover:translate-y-[-5px] hover:scale-[1.02] hover:shadow-[4px_8px_12px_rgba(0,0,0,0.4),_inset_-1px_0px_2px_rgba(201,201,201,0.1),_inset_5px_-5px_12px_rgba(255,255,255,0.05),_inset_-5px_5px_12px_rgba(255,255,255,0.05)]"
               style={{
                 width: "100%",
                 maxWidth: "1200px",
-                height: "600px",
+               
                 background: "rgba(158, 158, 149, 0.2)",
                 border: "1px solid rgba(255, 255, 255, 0.08)",
                 boxShadow: "2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1), inset 5px -5px 12px rgba(255, 255, 255, 0.05), inset -5px 5px 12px rgba(255, 255, 255, 0.05)",
                 backdropFilter: "blur(6px)",
                 WebkitBackdropFilter: "blur(6px)",
                 borderRadius: "20px",
-                padding: "20px",
+                padding: "12px",
                 transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                overflow: "hidden"
+                overflow: "visible"
               }}
             >
-              <div style={{ height: "100%", width: "100%" }}>
+              <div className="h-full w-full">
                 <WeeklyGlobalEvent/>
               </div>
             </div>
@@ -74,12 +74,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Team Section */}
-      <section className="py-8 md:py-16">
-        <div className="container mx-auto px-3 sm:px-4">
-          <CylindricalSlider />
-        </div>
-      </section>
 
       {/* <ImageDisplaySection imageUrl={dynamicImageUrl} altText={imageAltText} title="Nuestra Inspiración Visual" /> */}
       <SuccessCasesSection cases={getSuccessCasesData()} />

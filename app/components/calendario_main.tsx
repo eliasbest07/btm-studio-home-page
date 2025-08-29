@@ -174,9 +174,9 @@ export function WeeklyCalendar({
   });
 
   return (
-    <div className={`w-full h-full ${className || ''} overflow-hidden`} style={{
+    <div className={`w-full h-auto ${className || ''} overflow-hidden`} style={{
       background: 'transparent',
-      height: '100%'
+      height: 'auto'
     }}>
       {/* Desktop View */}
       <div className="hidden lg:flex flex-col h-full rounded-lg bg-transparent relative overflow-hidden">
@@ -190,13 +190,13 @@ export function WeeklyCalendar({
           borderRadius: '15px'
         }}>
           <div className="text-center">
-            <h1 className="text-lg font-bold text-white mb-1">Calendario Semanal</h1>
+            <h1 className="text-lg font-bold text-white mb-1">Actividades de la Semana</h1>
             <p className="text-sm text-white/80">{getWeekRange(weekStart, days)}</p>
           </div>
         </div>
 
-        {/* CylindricalSlider Container - Controlled height */}
-        <div className="flex-shrink-0 h-64 overflow-hidden mb-4">
+        {/* CylindricalSlider Container - Responsive height */}
+        <div className="flex-shrink-0 h-80 sm:h-96 lg:h-[500px] overflow-visible mb-4">
           <CylindricalSlider />
         </div>
 
@@ -268,7 +268,7 @@ export function WeeklyCalendar({
         </div>
 
         {/* CylindricalSlider Container - Mobile */}
-        <div className="flex-shrink-0 h-48 overflow-hidden mb-2">
+        <div className="flex-shrink-0 h-80 overflow-visible mb-3">
           <CylindricalSlider />
         </div>
 
@@ -362,7 +362,7 @@ export default function CalendarExample() {
   };
 
   return (
-    <div className="min-h-screen">
+   
       <WeeklyCalendar
         events={events}
         onEventMove={handleEventMove}
@@ -371,6 +371,6 @@ export default function CalendarExample() {
         startHour={7}
         endHour={22}
       />
-    </div>
+
   );
 }

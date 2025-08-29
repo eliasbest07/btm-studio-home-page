@@ -71,25 +71,25 @@ const CylindricalSlider = () => {
 
     const nextSlide = () => {
         if (isAnimating) return;
-        setIsAnimating(true);
+     //   setIsAnimating(true);
         setCurrentIndex((prev) => (prev + 1) % totalSlides);
         setTimeout(() => setIsAnimating(false), 500);
     };
 
     const prevSlide = () => {
         if (isAnimating) return;
-        setIsAnimating(true);
+    //    setIsAnimating(true);
         setCurrentIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
         setTimeout(() => setIsAnimating(false), 500);
     };
 
-    // Auto-slide cada 4 segundos (pausable)
-    useEffect(() => {
-        if (isPaused) return;
+    // // Auto-slide cada 4 segundos (pausable)
+    // useEffect(() => {
+    //     if (isPaused) return;
 
-        const interval = setInterval(nextSlide, 4000);
-        return () => clearInterval(interval);
-    }, [isPaused]);
+    //     const interval = setInterval(nextSlide, 4000);
+    //     return () => clearInterval(interval);
+    // }, [isPaused]);
 
     const [windowWidth, setWindowWidth] = useState(1024);
 
