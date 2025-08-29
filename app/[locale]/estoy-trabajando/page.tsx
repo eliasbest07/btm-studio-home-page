@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { createClient } from "@supabase/supabase-js"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import { readUserData } from "@/app/utils/userSession"
 import { useRouter, usePathname } from "next/navigation"
 import {
@@ -68,6 +68,7 @@ interface Tarea {
 
 export default function EstoyTrabajando() {
   const t = useTranslations() // hook de next-intl para traducciones
+  const locale = useLocale()
   const router = useRouter()
   const pathname = usePathname()
   const [loading, setLoading] = useState(true)
@@ -82,6 +83,7 @@ export default function EstoyTrabajando() {
   const [creatingProposalId, setCreatingProposalId] = useState<string | null>(null)
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false)
   const [userData, setUserData] = useState<any>(null)
+  const [fullUserData, setFullUserData] = useState<any>(null)
 
   const handleNewProposal = (tareaId: string) => {
     if (!isUserLoggedIn || !userData) {
@@ -95,12 +97,12 @@ export default function EstoyTrabajando() {
     setShowNewProposal(showNewProposal === tareaId ? null : tareaId)
   }
 
-  const handleGoToTotalTime = async (tareaId: string) => {
+  const handleCreateNewProposal = async (tareaId: string) => {
     try {
       setCreatingProposalId(tareaId)
       
-      // Llamar a la nueva API send-to-totaltime
-      const response = await fetch('/api/send-to-totaltime', {
+      // Llamar a la nueva API send-to-totaltime para crear una nueva propuesta
+      const response = await fetch(`/${locale}/api/send-to-totaltime`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -116,9 +118,10 @@ export default function EstoyTrabajando() {
         throw new Error(result.error || 'Error al crear la propuesta')
       }
 
-      // Si todo sale bien, abrir Total-Time.app con la URL proporcionada por la API
-      if (result.totalTimeUrl) {
-        window.open(result.totalTimeUrl, "_blank")
+      // Si todo sale bien, abrir Total-Time.app con el ID de la propuesta
+      if (result.propuestaId) {
+        const totalTimeUrl = `https://total-time.app/propuesta/${result.propuestaId}`
+        window.open(totalTimeUrl, "_blank")
       }
       
       // Cerrar el modal de propuesta
@@ -133,6 +136,13 @@ export default function EstoyTrabajando() {
     } finally {
       setCreatingProposalId(null)
     }
+  }
+
+  const handleGoToTotalTime = (propuestaId: string) => {
+    // Simplemente abrir Total-time con la propuesta existente
+    const totalTimeUrl = `https://total-time.app/propuesta/${propuestaId}`
+    window.open(totalTimeUrl, "_blank")
+    setShowNewProposal(null)
   }
 
   const handleSolicitarNivel = async (tareaId: string) => {
@@ -176,12 +186,30 @@ export default function EstoyTrabajando() {
     loadTareasAndPropuestas()
   }, [])
 
-  const checkUserSession = () => {
+  const checkUserSession = async () => {
     const userData = readUserData()
     const isLoggedIn = localStorage.getItem("loggedIn") === "true"
     
     setIsUserLoggedIn(isLoggedIn && userData !== null)
     setUserData(userData)
+
+    // Si el usuario está logueado, obtener datos completos de la base de datos
+    if (isLoggedIn && userData) {
+      try {
+        const response = await fetch(`/${locale}/api/get-user`)
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success && result.user) {
+            setFullUserData(result.user)
+            console.log('Rendering tarea:', fullUserData); // Depuración
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching full user data:', error)
+      }
+    } else {
+      setFullUserData(null)
+    }
   }
 
   const loadTareasAndPropuestas = async () => {
@@ -465,8 +493,9 @@ export default function EstoyTrabajando() {
                 key={tarea.id}
                 className="relative w-full bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden hover:border-slate-600 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/10"
               >
-                {/* Botón Solicitar Nivel - Esquina superior derecha - Solo si está logueado */}
-                {isUserLoggedIn && (
+              
+                {/* Botón Solicitar Nivel - Esquina superior derecha - Solo si está logueado y no tiene nivel asignado */}
+                {isUserLoggedIn && fullUserData?.profile?.nivel === null && (
                   <div className="absolute top-0 right-0 z-10">
                     <Button
                       className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-none rounded-bl-lg rounded-tr-xl font-medium"
@@ -598,7 +627,14 @@ export default function EstoyTrabajando() {
                               Cancelar
                             </Button>
                             <Button
-                              onClick={() => handleGoToTotalTime(tarea.id)}
+                              onClick={() => {
+                                const proposal = hasUserTotalTimeProposal(tarea)
+                                if (proposal.has && proposal.propuestaId) {
+                                  handleGoToTotalTime(proposal.propuestaId)
+                                } else {
+                                  handleCreateNewProposal(tarea.id)
+                                }
+                              }}
                               disabled={creatingProposalId === tarea.id}
                               className="bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base px-3 sm:px-4 py-2 disabled:opacity-50"
                             >
@@ -655,7 +691,22 @@ export default function EstoyTrabajando() {
                                     </Button>
                                   </div>
                                 </div>
-                                <p className="text-slate-300 mb-3 leading-relaxed text-sm sm:text-base">{propuesta.cuerpo}</p>
+                                {propuesta.estado === 'totaltime' ? (
+                                  <div className="mb-3">
+                                    <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-3 sm:p-4 mb-3">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                                        <span className="text-blue-400 font-medium text-sm">En progreso en Total-Time</span>
+                                      </div>
+                                      <p className="text-slate-300 text-sm leading-relaxed">
+                                        Esperando pasos en Total-Time. Recuerda que el encargado del proyecto puede editar si así lo cree conveniente tus pasos.
+                                      </p>
+                                    </div>
+                                    <p className="text-slate-300 leading-relaxed text-sm sm:text-base">{propuesta.cuerpo}</p>
+                                  </div>
+                                ) : (
+                                  <p className="text-slate-300 mb-3 leading-relaxed text-sm sm:text-base">{propuesta.cuerpo}</p>
+                                )}
                                 <div className="flex items-center gap-4 text-slate-400 text-xs sm:text-sm">
                                   <div className="flex items-center gap-1">
                                     <Calendar className="w-3 h-3" />

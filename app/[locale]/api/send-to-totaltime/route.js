@@ -97,7 +97,7 @@ export async function POST(req) {
       { 
         message: "Propuesta creada y enviada a Total-Time", 
         propuesta: propuestaData, 
-        totalTimeUrl 
+        propuestaId: propuestaData.id
       },
       { status: 201 }
     );
