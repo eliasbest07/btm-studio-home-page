@@ -1,8 +1,7 @@
 "use client";
 import WeeklyCalendar, { WeeklyEvent } from "@/components/personalizado-calendario";
 //import { CalendarDays } from "lucide-react";
-//import { WeeklyCalendar, type WeeklyEvent } from "./components/personalizado-calendario";
-
+//import { WeeklyCalendar, type WeeklyEvent } from "./components/personalizado-calendario"
 
 const events: WeeklyEvent[] = [
   { id: "1", title: "Team sync", dayIndex: 0, startHour: 9, endHour: 10, color: "bg-green-500" },
@@ -41,6 +40,9 @@ export default function Page() {
       <WeeklyCalendar
   
       />
+    </div>
+    <div>
+      
     </div>
     </main>
   );
