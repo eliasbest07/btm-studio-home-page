@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Star, MapPin, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, MapPin, User, Circle } from 'lucide-react';
 
 const CylindricalSlider = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -22,48 +22,30 @@ const CylindricalSlider = () => {
     const slides = [
         {
             id: 1,
-            name: "María José",
-            role: "Desarrolladora Senior",
+            name: "Elias Montilla",
+            role: "Desarrollador Flutter Senior",
             image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop&crop=face",
-            rating: 5,
-            location: "Madrid, España",
-            description: "Experta en React y desarrollo frontend con 5+ años de experiencia"
+            rating: 3,
+            location: "Texas, USA",
+            description: "CEO & Co-Founder at BTM-Studio"
         },
         {
             id: 2,
-            name: "Carlos Mendez",
-            role: "UX/UI Designer",
+            name: "Jesús Diaz",
+            role: "Desarrollador Frontend",
             image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face",
-            rating: 5,
-            location: "Barcelona, España",
+            rating: 2,
+            location: "Mérida, Venezuela",
             description: "Diseñador creativo especializado en experiencias digitales innovadoras"
         },
         {
             id: 3,
-            name: "Ana García",
-            role: "Product Manager",
+            name: "José Mogollón",
+            role: "Desarrollador Full Stack",
             image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop&crop=face",
-            rating: 4,
-            location: "Valencia, España",
-            description: "Gestión de productos digitales con enfoque en metodologías ágiles"
-        },
-        {
-            id: 4,
-            name: "David López",
-            role: "Backend Developer",
-            image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face",
-            rating: 5,
-            location: "Sevilla, España",
-            description: "Arquitecto de sistemas escalables y APIs robustas"
-        },
-        {
-            id: 5,
-            name: "Laura Martín",
-            role: "Data Scientist",
-            image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&h=300&fit=crop&crop=face",
-            rating: 5,
-            location: "Bilbao, España",
-            description: "Especialista en machine learning e inteligencia artificial"
+            rating: 2,
+            location: "Valencia, Venezuela",
+            description: "Programador apasionado por crear soluciones web eficientes y escalables"
         }
     ];
 
@@ -194,6 +176,7 @@ const CylindricalSlider = () => {
                                         <span className="text-xs sm:text-sm">{slide.location}</span>
                                     </div>
 
+
                                     {/* Description */}
                                     <p className="text-gray-300 text-xs sm:text-sm leading-relaxed overflow-hidden">
                                         <span className="block sm:hidden">
@@ -206,6 +189,12 @@ const CylindricalSlider = () => {
                                         </span>
                                     </p>
                                 </div>
+                                
+                                    {/* Connected Status */}
+                                    <div className="flex items-center gap-1 text-green-400 mb-2 sm:mb-3">
+                                        <Circle className="w-2 h-2 sm:w-4 sm:h-4 fill-current" />
+                                        <span className="text-xs sm:text-sm font-small">Conectado</span>
+                                    </div>
                             </div>
                         ))}
                     </div>
