@@ -326,12 +326,10 @@ export function WeeklyCalendar({
 // Example usage component
 export default function CalendarExample() {
   const [events, setEvents] = useState<WeeklyGlobalEvent[]>([
-    { id: "1", title: "Reunión equipo", subtitle: "Zoom", dayIndex: -1, startHour: 9, color: "rgba(59, 130, 246, 0.8)" },
-    { id: "2", title: "Presentación", subtitle: "Cliente A", dayIndex: -1, startHour: 10, color: "rgba(16, 185, 129, 0.8)" },
-    { id: "3", title: "Almuerzo", dayIndex: 1, startHour: 12, time: "12:00", color: "rgba(245, 158, 11, 0.8)" },
+    { id: "1", title: "Reunión equipo", subtitle: "Zoom", dayIndex: 1, startHour: 9, color: "rgba(59, 130, 246, 0.8)" },
+    { id: "2", title: "Presentación", subtitle: "Cliente A", dayIndex: 1, startHour: 10, color: "rgba(16, 185, 129, 0.8)" },
     { id: "4", title: "Código review", dayIndex: 2, startHour: 14, time: "2:00 PM", color: "rgba(147, 51, 234, 0.8)" },
     { id: "5", title: "Planning", subtitle: "Sprint 24", dayIndex: -1, startHour: 11, color: "rgba(239, 68, 68, 0.8)" },
-    { id: "6", title: "Cita médica", dayIndex: 4, startHour: 15, time: "3:00 PM", color: "rgba(236, 72, 153, 0.8)" },
   ]);
 
   const handleEventMove = (eventId: string, dayIndex: number, hour?: number) => {
