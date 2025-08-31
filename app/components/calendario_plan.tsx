@@ -552,11 +552,8 @@ export default function CalendarExample() {
 
   return (
     <div 
-      className="h-screen p-4 flex flex-col"
-      style={{
-        background: 'linear-gradient(135deg, rgba(80, 70, 60, 0.8) 0%, rgba(60, 50, 40, 0.9) 50%, rgba(50, 40, 30, 1) 100%)',
-        fontFamily: 'system-ui, -apple-system, sans-serif'
-      }}
+      className="h-auto p-4 flex flex-col"
+    
     >
       <WeeklyCalendar
         events={events}

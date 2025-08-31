@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Checkbox } from "@/components/ui/checkbox"
+
+import WeeklyGlobalEvent from "../../../components/calendario_plan";
 import {
   Edit2Icon,
   CheckIcon,
@@ -778,7 +780,23 @@ export default function PlanPage() {
             </Button>
           </div>
         </div>
+<br/>
+        <section className="flex-grow container mx-auto max-w-5xl">
+        <div
+          className="p-4 sm:p-6 rounded-lg border border-white/10 w-full"
+          style={{
+            background: "rgba(30, 30, 28, 0.8)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+          }}
+        >
+
+            <WeeklyGlobalEvent />
+          </div>
+</section>
+
       </main>
+
 
       <footer className="mt-12 container mx-auto max-w-5xl text-center">
         <div className="flex flex-col items-center">
