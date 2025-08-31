@@ -36,9 +36,10 @@ export default function HomePage() {
       <Hero />
       <section className="py-12 md:py-20">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-10 md:mb-16 text-white drop-shadow-md">
-            {t("greeting")}
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 md:mb-12">
+            Colaboradores Activos
           </h2>
+          {/* Tarjetas de servicios */}
           <section className="mb-8 md:mb-12 flex justify-center px-2 sm:px-4">
             <div 
               className="group hover:translate-y-[-5px] hover:scale-[1.02] hover:shadow-[4px_8px_12px_rgba(0,0,0,0.4),_inset_-1px_0px_2px_rgba(201,201,201,0.1),_inset_5px_-5px_12px_rgba(255,255,255,0.05),_inset_-5px_5px_12px_rgba(255,255,255,0.05)]"
@@ -62,6 +63,9 @@ export default function HomePage() {
               </div>
             </div>
           </section>
+             <h2 className="text-3xl md:text-4xl font-bold text-center mb-10 md:mb-16 text-white drop-shadow-md">
+            {t("greeting")}
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10 justify-items-center">
             {servicesData.map((service, index) => (
               <ServiceCard

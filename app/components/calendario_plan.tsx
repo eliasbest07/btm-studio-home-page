@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import CylindricalSlider from "./CylindricalSlider";
+import { Plus, Sparkles } from "lucide-react";
 
 export type WeeklyGlobalEvent = {
   id: string;
@@ -22,6 +22,8 @@ type Props = {
   onEventMove?: (eventId: string, dayIndex: number, hour?: number) => void;
   onEventRemove?: (eventId: string) => void;
   onCellClick?: (dayIndex: number, hour: number) => void;
+  onAddTask?: () => void;
+  onSuggestTask?: () => void;
   className?: string;
 };
 
@@ -74,15 +76,27 @@ const headerCardStyle: React.CSSProperties = {
   alignItems: "center",
 };
 
-
-
 const headerStickyStyle: React.CSSProperties = {
   background: "rgba(25,25,25,0.95)",
   backdropFilter: "blur(10px)",
   WebkitBackdropFilter: "blur(10px)",
 };
 
-
+const buttonStyle: React.CSSProperties = {
+  background: "rgba(41, 41, 38, 0.8)",
+  border: "1px solid rgba(255, 255, 255, 0.08)",
+  boxShadow:
+    "2px 4px 4px rgba(0,0,0,0.35), inset -1px 0px 2px rgba(201,201,201,0.1), inset 5px -5px 12px rgba(255,255,255,0.05), inset -5px 5px 12px rgba(255,255,255,0.05)",
+  backdropFilter: "blur(6px)",
+  WebkitBackdropFilter: "blur(6px)",
+  borderRadius: "12px",
+  padding: "8px 16px",
+  color: "white",
+  fontSize: "14px",
+  fontWeight: "500",
+  cursor: "pointer",
+  transition: "all 0.2s ease",
+};
 
 /* Helpers */
 function getMonday(d: Date) {
@@ -114,6 +128,8 @@ export function WeeklyCalendar({
   onEventMove,
   onEventRemove,
   onCellClick,
+  onAddTask,
+  onSuggestTask,
   className,
 }: Props) {
   const [draggedEvent, setDraggedEvent] = useState<WeeklyGlobalEvent | null>(null);
@@ -132,9 +148,13 @@ export function WeeklyCalendar({
   // Check if current time should show the indicator
   const todayIndex = isDateInWeek(currentTime, weekStart, days);
 
-  // Get all events for a specific day (mobile view)
+  // Get all events for a specific day
   const getEventsForDay = (dayIndex: number) =>
     events.filter((e) => e.dayIndex === dayIndex).sort((a, b) => a.startHour - b.startHour);
+
+  // Get unscheduled events
+  const getUnscheduledEvents = () =>
+    events.filter((e) => e.dayIndex === -1);
 
   // Drag handlers
   const handleDragStart = (e: React.DragEvent, event: WeeklyGlobalEvent) => {
@@ -180,7 +200,7 @@ export function WeeklyCalendar({
     }}>
       {/* Desktop View */}
       <div className="hidden lg:flex flex-col h-full rounded-lg bg-transparent relative overflow-hidden">
-
+        
         {/* Navigation Header */}
         <div className="flex-shrink-0 p-3 mb-2" style={{
           background: 'rgba(158, 158, 149, 0.2)',
@@ -193,11 +213,6 @@ export function WeeklyCalendar({
             <h1 className="text-lg font-bold text-white mb-1">Actividades de la Semana</h1>
             <p className="text-sm text-white/80">{getWeekRange(weekStart, days)}</p>
           </div>
-        </div>
-
-        {/* CylindricalSlider Container - Responsive height */}
-        <div className="flex-shrink-0 h-80 sm:h-96 lg:h-[500px] overflow-visible mb-4">
-          <CylindricalSlider />
         </div>
 
         {/* Header row (sticky) */}
@@ -222,7 +237,7 @@ export function WeeklyCalendar({
           ))}
         </div>
 
-        {/* Grid - Solo días sin horas */}
+        {/* Grid - Days */}
         <div
           className="flex-1 grid relative overflow-hidden"
           style={{
@@ -237,7 +252,7 @@ export function WeeklyCalendar({
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, d)}
             >
-              <div className="p-2 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+              <div className="p-2 flex-1">
                 <div className="space-y-2">
                   {getEventsForDay(d).map((ev) => (
                     <div
@@ -258,23 +273,82 @@ export function WeeklyCalendar({
             </div>
           ))}
         </div>
+
+        {/* Unscheduled Tasks Section - Desktop */}
+        <div className="flex-shrink-0 p-3 mt-2" style={{
+          background: 'rgba(30, 30, 30, 0.9)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1)',
+          backdropFilter: 'blur(6px)',
+          borderRadius: '15px'
+        }}>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-white text-sm font-medium">Tareas sin programar:</h3>
+            <div className="flex gap-3">
+              <button
+                onClick={onAddTask}
+                style={buttonStyle}
+                className="flex items-center gap-2 hover:bg-blue-600/20 transition-colors"
+              >
+                <Plus size={16} />
+                Añadir Tarea
+              </button>
+              <button
+                onClick={onSuggestTask}
+                style={buttonStyle}
+                className="flex items-center gap-2 hover:bg-purple-600/20 transition-colors"
+              >
+                <Sparkles size={16} />
+                Sugerir Tarea
+              </button>
+            </div>
+          </div>
+          
+          <div 
+            className="min-h-[60px] p-2 rounded-md"
+            style={{
+              background: 'rgba(40, 40, 40, 0.4)',
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, -1)}
+          >
+            <div className="flex flex-wrap gap-2">
+              {getUnscheduledEvents().map((ev) => (
+                <div
+                  key={ev.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, ev)}
+                  onDoubleClick={() => handleEventDoubleClick(ev.id)}
+                  className="text-sm rounded-md px-3 py-2 shadow-sm cursor-move hover:opacity-80 text-white inline-block"
+                  style={{ background: ev.color || 'rgba(59, 130, 246, 0.8)' }}
+                  title="Arrastra para programar o doble click para eliminar"
+                >
+                  <div className="font-medium">{ev.title}</div>
+                  {ev.subtitle && <div className="text-xs opacity-75">{ev.subtitle}</div>}
+                </div>
+              ))}
+              {getUnscheduledEvents().length === 0 && (
+                <div className="text-white/50 text-sm italic">
+                  No hay tareas sin programar
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Mobile View */}
       <div className="lg:hidden h-full flex flex-col overflow-hidden">
+        
         {/* Header */}
         <div className="flex-shrink-0 bg-white/10 backdrop-blur-sm text-white p-3 rounded-t-lg text-center text-sm font-medium border border-white/20">
           Semana: {getWeekRange(weekStart, days)}
         </div>
 
-        {/* CylindricalSlider Container - Mobile */}
-        <div className="flex-shrink-0 h-80 overflow-visible mb-3">
-          <CylindricalSlider />
-        </div>
-
         {/* Calendar Days */}
-        <div className="flex-1 border border-white/20 border-t-0 rounded-b-lg overflow-hidden bg-white/5 backdrop-blur-sm">
-          <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+        <div className="flex-1 border border-white/20 border-t-0 bg-white/5 backdrop-blur-sm">
+          <div className="h-full">
             {mobileDays.map((d) => (
               <div key={d.key} className="border-b border-white/10 last:border-b-0">
                 <div className="flex relative min-h-[80px] max-h-[120px]">
@@ -292,7 +366,7 @@ export function WeeklyCalendar({
                     </div>
                   </div>
                   <div
-                    className="flex-1 p-2 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
+                    className="flex-1 p-2"
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, d.key)}
                   >
@@ -318,6 +392,69 @@ export function WeeklyCalendar({
             ))}
           </div>
         </div>
+
+        {/* Unscheduled Tasks Section - Mobile */}
+        <div className="flex-shrink-0 p-3 mt-2" style={{
+          background: 'rgba(30, 30, 30, 0.9)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '2px 4px 4px rgba(0, 0, 0, 0.35), inset -1px 0px 2px rgba(201, 201, 201, 0.1)',
+          backdropFilter: 'blur(6px)',
+          borderRadius: '15px'
+        }}>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-white text-sm font-medium">Tareas sin programar:</h3>
+            <div className="flex gap-2">
+              <button
+                onClick={onAddTask}
+                style={buttonStyle}
+                className="hover:bg-blue-600/20 transition-colors text-xs"
+              >
+                <Plus size={12} />
+                Añadir
+              </button>
+              <button
+                onClick={onSuggestTask}
+                style={buttonStyle}
+                className="hover:bg-purple-600/20 transition-colors text-xs"
+              >
+                <Sparkles size={12} />
+                Sugerir
+              </button>
+            </div>
+          </div>
+          
+          <div 
+            className="min-h-[50px] p-2 rounded-md"
+            style={{
+              background: 'rgba(40, 40, 40, 0.4)',
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, -1)}
+          >
+            <div className="flex flex-wrap gap-1">
+              {getUnscheduledEvents().map((ev) => (
+                <div
+                  key={ev.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, ev)}
+                  onDoubleClick={() => handleEventDoubleClick(ev.id)}
+                  className="text-xs rounded-md px-2 py-1 shadow-sm cursor-move hover:opacity-80 text-white inline-block"
+                  style={{ background: ev.color || 'rgba(59, 130, 246, 0.8)' }}
+                  title="Arrastra para programar o doble click para eliminar"
+                >
+                  <div className="font-medium">{ev.title}</div>
+                  {ev.subtitle && <div className="text-[10px] opacity-75">{ev.subtitle}</div>}
+                </div>
+              ))}
+              {getUnscheduledEvents().length === 0 && (
+                <div className="text-white/50 text-xs italic">
+                  No hay tareas sin programar
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -326,11 +463,15 @@ export function WeeklyCalendar({
 // Example usage component
 export default function CalendarExample() {
   const [events, setEvents] = useState<WeeklyGlobalEvent[]>([
-    { id: "1", title: "Reunión equipo", subtitle: "Zoom", dayIndex: 1, startHour: 9, color: "rgba(59, 130, 246, 0.8)" },
-    { id: "2", title: "Presentación", subtitle: "Cliente A", dayIndex: 1, startHour: 10, color: "rgba(16, 185, 129, 0.8)" },
-    { id: "4", title: "Código review", dayIndex: 2, startHour: 14, time: "2:00 PM", color: "rgba(147, 51, 234, 0.8)" },
-    { id: "5", title: "Planning", subtitle: "Sprint 24", dayIndex: -1, startHour: 11, color: "rgba(239, 68, 68, 0.8)" },
+    { id: "1", title: "Almuerzo", dayIndex: 1, startHour: 12, color: "rgba(245, 158, 11, 0.9)" },
+    { id: "2", title: "Código review", dayIndex: 2, startHour: 14, color: "rgba(147, 51, 234, 0.9)" },
+    { id: "3", title: "Cita médica", dayIndex: 4, startHour: 15, color: "rgba(236, 72, 153, 0.9)" },
+    { id: "4", title: "Presentación", subtitle: "Cliente A", dayIndex: -1, startHour: 10, color: "rgba(16, 185, 129, 0.9)" },
+    { id: "5", title: "Planning", subtitle: "Sprint 24", dayIndex: -1, startHour: 11, color: "rgba(239, 68, 68, 0.9)" },
   ]);
+  
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskSubtitle, setNewTaskSubtitle] = useState("");
 
   const handleEventMove = (eventId: string, dayIndex: number, hour?: number) => {
     setEvents(prev => prev.map(e => {
@@ -347,28 +488,142 @@ export default function CalendarExample() {
   };
 
   const handleEventRemove = (eventId: string) => {
-    setEvents(prev => prev.map(e => {
-      if (e.id === eventId) {
-        return { ...e, dayIndex: -1 };
-      }
-      return e;
-    }));
+    setEvents(prev => prev.filter(e => e.id !== eventId));
   };
 
   const handleCellClick = (dayIndex: number, hour: number) => {
     console.log(`Clicked cell: Day ${dayIndex}, Hour ${hour}`);
   };
 
+  const handleAddTask = () => {
+    // Focus the input when clicking add task
+    const input = document.querySelector('input[placeholder*="nueva tarea"]') as HTMLInputElement;
+    if (input) {
+      input.focus();
+    }
+  };
+
+  const handleCreateTask = () => {
+    if (newTaskTitle.trim()) {
+      const colors = [
+        "rgba(59, 130, 246, 0.9)",
+        "rgba(16, 185, 129, 0.9)",
+        "rgba(245, 158, 11, 0.9)",
+        "rgba(147, 51, 234, 0.9)",
+        "rgba(239, 68, 68, 0.9)",
+        "rgba(236, 72, 153, 0.9)"
+      ];
+      
+      const newTask: WeeklyGlobalEvent = {
+        id: Date.now().toString(),
+        title: newTaskTitle.trim(),
+        subtitle: newTaskSubtitle.trim() || undefined,
+        dayIndex: -1, // Unscheduled by default
+        startHour: 9,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      };
+      
+      setEvents(prev => [...prev, newTask]);
+      setNewTaskTitle("");
+      setNewTaskSubtitle("");
+    }
+  };
+
+  const handleSuggestTask = () => {
+    const suggestions = [
+      { title: "Revisar emails", subtitle: "Inbox", color: "rgba(16, 185, 129, 0.9)" },
+      { title: "Ejercicio", subtitle: "30 min", color: "rgba(245, 158, 11, 0.9)" },
+      { title: "Lectura", subtitle: "Libro técnico", color: "rgba(147, 51, 234, 0.9)" },
+      { title: "Planificar mañana", subtitle: "5 min", color: "rgba(239, 68, 68, 0.9)" },
+      { title: "Llamar cliente", color: "rgba(59, 130, 246, 0.9)" },
+      { title: "Backup datos", subtitle: "Servidor", color: "rgba(236, 72, 153, 0.9)" }
+    ];
+    
+    const randomSuggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
+    const suggestedTask: WeeklyGlobalEvent = {
+      id: Date.now().toString(),
+      ...randomSuggestion,
+      dayIndex: -1,
+      startHour: 10
+    };
+    
+    setEvents(prev => [...prev, suggestedTask]);
+  };
+
   return (
-   
+    <div 
+      className="h-auto p-4 flex flex-col"
+    
+    >
       <WeeklyCalendar
         events={events}
         onEventMove={handleEventMove}
         onEventRemove={handleEventRemove}
         onCellClick={handleCellClick}
+        onAddTask={handleAddTask}
+        onSuggestTask={handleSuggestTask}
         startHour={7}
         endHour={22}
+        className="flex-1"
       />
-
+      
+      {/* Add Task Input - Bottom */}
+      <div 
+        className="mt-4 p-3 rounded-lg"
+        style={{
+          background: 'rgba(50, 50, 50, 0.6)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(10px)'
+        }}
+      >
+        <div className="flex gap-2 items-center">
+          <input
+            type="text"
+            value={newTaskTitle}
+            onChange={(e) => setNewTaskTitle(e.target.value)}
+            placeholder="Escribe una nueva tarea..."
+            className="flex-1 px-3 py-2 rounded-md text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-blue-500/50 text-sm"
+            style={{
+              background: 'rgba(40, 40, 40, 0.6)',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleCreateTask();
+              }
+            }}
+          />
+          
+          <input
+            type="text"
+            value={newTaskSubtitle}
+            onChange={(e) => setNewTaskSubtitle(e.target.value)}
+            placeholder="Subtítulo (opcional)"
+            className="w-32 px-3 py-2 rounded-md text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-blue-500/50 text-sm"
+            style={{
+              background: 'rgba(40, 40, 40, 0.6)',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleCreateTask();
+              }
+            }}
+          />
+          
+          <button
+            onClick={handleCreateTask}
+            style={buttonStyle}
+            className="hover:bg-blue-600/20 transition-colors"
+            disabled={!newTaskTitle.trim()}
+          >
+            <Plus size={14} />
+            Añadir
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
