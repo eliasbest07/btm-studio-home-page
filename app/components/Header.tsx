@@ -7,53 +7,93 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import CreateProjectModal from "./CreateProjectModal";
 import { useTranslations } from "next-intl";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function Header() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [nombreUsuario, setNombreUsuario] = useState("");
+  const [isSessionValid, setIsSessionValid] = useState(false);
   const t = useTranslations("header");
   const pathname = usePathname();
+  const supabase = createClientComponentClient();
 
-  useEffect(() => {
-  const leerUsuario = () => {
+  // Función para verificar sesión de Supabase y sincronizar con localStorage
+  const verificarYSincronizarSesion = async () => {
     try {
-      const raw = localStorage.getItem("userData");
-      setNombreUsuario(raw ? (JSON.parse(raw)?.nombre ?? "") : "");
-    } catch {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error("Error verificando sesión:", error);
+        setIsSessionValid(false);
+        setNombreUsuario("");
+        // Limpiar localStorage si hay error de sesión
+        localStorage.removeItem("userData");
+        localStorage.removeItem("loggedIn");
+        return;
+      }
+
+      if (session?.user) {
+        // Hay sesión válida de Supabase
+        setIsSessionValid(true);
+        
+        // Ahora leer datos del usuario desde localStorage
+        try {
+          const raw = localStorage.getItem("userData");
+          setNombreUsuario(raw ? (JSON.parse(raw)?.nombre ?? "") : "");
+        } catch {
+          setNombreUsuario("");
+        }
+      } else {
+        // No hay sesión de Supabase, limpiar todo
+        console.log("No hay sesión activa de Supabase");
+        setIsSessionValid(false);
+        setNombreUsuario("");
+        localStorage.removeItem("userData");
+        localStorage.removeItem("loggedIn");
+      }
+    } catch (error) {
+      console.error("Error en verificarYSincronizarSesion:", error);
+      setIsSessionValid(false);
       setNombreUsuario("");
+      localStorage.removeItem("userData");
+      localStorage.removeItem("loggedIn");
     }
   };
 
-  const onFocus = () => leerUsuario();
-  const onVisibility = () => leerUsuario();
-  const onStorage = (e: StorageEvent) => {
-    if (e.key === "userData") leerUsuario();
-  };
-  const onChanged = () => leerUsuario(); // evento personalizado mismo tab
+  useEffect(() => {
+    const onFocus = () => verificarYSincronizarSesion();
+    const onVisibility = () => verificarYSincronizarSesion();
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "userData") verificarYSincronizarSesion();
+    };
+    const onChanged = () => verificarYSincronizarSesion(); // evento personalizado mismo tab
 
-  leerUsuario(); // al montar
+    // Verificar al montar el componente
+    verificarYSincronizarSesion();
 
-  window.addEventListener("focus", onFocus);
-  document.addEventListener("visibilitychange", onVisibility);
-  window.addEventListener("storage", onStorage); // otras pestañas
-  window.addEventListener("userData:changed", onChanged); // misma pestaña
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("storage", onStorage); // otras pestañas
+    window.addEventListener("userData:changed", onChanged); // misma pestaña
 
-  return () => {
-    window.removeEventListener("focus", onFocus);
-    document.removeEventListener("visibilitychange", onVisibility);
-    window.removeEventListener("storage", onStorage);
-    window.removeEventListener("userData:changed", onChanged);
-  };
-}, []);
+    // Escuchar cambios de autenticación de Supabase
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Cambio en estado de auth:", event);
+      verificarYSincronizarSesion();
+    });
+
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("userData:changed", onChanged);
+      subscription.unsubscribe();
+    };
+  }, []);
 
 useEffect(() => {
-  // re-lee al cambiar de ruta
-  try {
-    const raw = localStorage.getItem("userData");
-    setNombreUsuario(raw ? (JSON.parse(raw)?.nombre ?? "") : "");
-  } catch {
-    setNombreUsuario("");
-  }
+  // re-verificar sesión al cambiar de ruta
+  verificarYSincronizarSesion();
 }, [pathname]);
 
   // If you clear userData in this same tab, also do:
@@ -83,7 +123,7 @@ useEffect(() => {
               <span className="font-bold text-lg text-gray-100">BTM-Studio</span>
             </Link>
 
-            {nombreUsuario && (
+            {isSessionValid && nombreUsuario && (
               <Link href="/profile" className="text-gray-200 hover:text-white underline">
                 /{nombreUsuario}
               </Link>

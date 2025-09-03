@@ -23,6 +23,7 @@ import {
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
 import ProductCheckModal from "@/app/components/showInputProducto";
+import { WeeklyCalendar, WeeklyGlobalEvent } from "@/app/components/calendario_plan";
 
 const supabaseClient = createClientComponentClient();
 
@@ -94,6 +95,10 @@ export default function ProjectPage({
   });
   const [isDelegating, setIsDelegating] = React.useState(false);
   const [delegateMessage, setDelegateMessage] = React.useState("");
+
+  // Estados para el calendario
+  const [calendarEvents, setCalendarEvents] = React.useState<WeeklyGlobalEvent[]>([]);
+  const [isLoadingCalendar, setIsLoadingCalendar] = React.useState(false);
 
   const router = useRouter();
   const visibilityKey = `project-${id}-visibility`;
@@ -558,6 +563,235 @@ export default function ProjectPage({
       setDelegateMessage(`❌ ${error.message}`);
     } finally {
       setIsDelegating(false);
+    }
+  };
+
+  // Cargar eventos del calendario
+  const loadCalendarEvents = React.useCallback(async () => {
+    setIsLoadingCalendar(true);
+    try {
+      if (isFromSupabase && supabaseProject) {
+        // Cargar desde Supabase
+        const response = await fetch(`/api/proyectos/${supabaseProject.id}/eventos`);
+        if (response.ok) {
+          const data = await response.json();
+          const events = data.eventos.map((evento: any) => ({
+            id: evento.id.toString(),
+            title: evento.title,
+            subtitle: evento.subtitle,
+            dayIndex: evento.day_index,
+            startHour: evento.start_hour,
+            endHour: evento.end_hour,
+            color: evento.color,
+            time: evento.time
+          }));
+          setCalendarEvents(events);
+        }
+      } else {
+        // Cargar desde localStorage para proyectos locales
+        const calendarKey = `project-${id}-calendar`;
+        const storedEvents = safeLocalGet(calendarKey);
+        if (storedEvents) {
+          const events = JSON.parse(storedEvents);
+          setCalendarEvents(events);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading calendar events:', error);
+    } finally {
+      setIsLoadingCalendar(false);
+    }
+  }, [isFromSupabase, supabaseProject, id]);
+
+  // Guardar eventos del calendario en localStorage para proyectos locales
+  const saveCalendarEventsLocal = React.useCallback((events: WeeklyGlobalEvent[]) => {
+    if (!isFromSupabase) {
+      const calendarKey = `project-${id}-calendar`;
+      safeLocalSet(calendarKey, JSON.stringify(events));
+    }
+  }, [isFromSupabase, id]);
+
+  // Cargar eventos cuando se carga el proyecto
+  React.useEffect(() => {
+    if (isFromSupabase && supabaseProject && !loading) {
+      loadCalendarEvents();
+    }
+  }, [isFromSupabase, supabaseProject, loading, loadCalendarEvents]);
+
+  // Cargar eventos para proyectos locales
+  React.useEffect(() => {
+    if (!isFromSupabase && !loading && plan) {
+      loadCalendarEvents();
+    }
+  }, [isFromSupabase, loading, plan, loadCalendarEvents]);
+
+  // Funciones para el calendario
+  const handleEventMove = async (eventId: string, dayIndex: number, hour?: number) => {
+    // Actualizar estado local inmediatamente
+    const updatedEvents = calendarEvents.map(e => {
+      if (e.id === eventId) {
+        return {
+          ...e,
+          dayIndex,
+          startHour: hour ?? e.startHour,
+        };
+      }
+      return e;
+    });
+    
+    setCalendarEvents(updatedEvents);
+
+    // Si es proyecto de Supabase, actualizar en la base de datos
+    if (isFromSupabase && supabaseProject) {
+      try {
+        await fetch(`/api/proyectos/${supabaseProject.id}/eventos`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventId,
+            dayIndex,
+            startHour: hour
+          })
+        });
+      } catch (error) {
+        console.error('Error updating event:', error);
+        // Revertir cambio en caso de error
+        loadCalendarEvents();
+      }
+    } else {
+      // Para proyectos locales, guardar en localStorage
+      saveCalendarEventsLocal(updatedEvents);
+    }
+  };
+
+  const handleEventRemove = async (eventId: string) => {
+    // Actualizar estado local inmediatamente
+    const updatedEvents = calendarEvents.filter(e => e.id !== eventId);
+    setCalendarEvents(updatedEvents);
+
+    // Si es proyecto de Supabase, eliminar de la base de datos
+    if (isFromSupabase && supabaseProject) {
+      try {
+        await fetch(`/api/proyectos/${supabaseProject.id}/eventos?eventId=${eventId}`, {
+          method: 'DELETE'
+        });
+      } catch (error) {
+        console.error('Error deleting event:', error);
+        // Recargar eventos en caso de error
+        loadCalendarEvents();
+      }
+    } else {
+      // Para proyectos locales, guardar en localStorage
+      saveCalendarEventsLocal(updatedEvents);
+    }
+  };
+
+  const handleCellClick = (dayIndex: number, hour: number) => {
+    console.log(`Clicked cell: Day ${dayIndex}, Hour ${hour}`);
+  };
+
+  const handleAddCalendarTask = async () => {
+    const newEvent: WeeklyGlobalEvent = {
+      id: Date.now().toString(),
+      title: "Nueva tarea",
+      subtitle: "Del proyecto",
+      dayIndex: -1, // Unscheduled by default
+      startHour: 9,
+      color: "rgba(59, 130, 246, 0.9)"
+    };
+
+    // Actualizar estado local inmediatamente
+    const updatedEvents = [...calendarEvents, newEvent];
+    setCalendarEvents(updatedEvents);
+
+    // Si es proyecto de Supabase, guardar en la base de datos
+    if (isFromSupabase && supabaseProject) {
+      try {
+        const response = await fetch(`/api/proyectos/${supabaseProject.id}/eventos`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: newEvent.title,
+            subtitle: newEvent.subtitle,
+            dayIndex: newEvent.dayIndex,
+            startHour: newEvent.startHour,
+            color: newEvent.color
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // Actualizar el evento con el ID real de la base de datos
+          setCalendarEvents(prev => prev.map(e => 
+            e.id === newEvent.id 
+              ? { ...e, id: data.evento.id.toString() }
+              : e
+          ));
+        }
+      } catch (error) {
+        console.error('Error creating event:', error);
+        // Remover el evento local en caso de error
+        setCalendarEvents(prev => prev.filter(e => e.id !== newEvent.id));
+      }
+    } else {
+      // Para proyectos locales, guardar en localStorage
+      saveCalendarEventsLocal(updatedEvents);
+    }
+  };
+
+  const handleSuggestCalendarTask = async () => {
+    const suggestions = [
+      { title: "Revisar progreso", subtitle: "Proyecto", color: "rgba(16, 185, 129, 0.9)" },
+      { title: "Reunión de equipo", subtitle: "30 min", color: "rgba(245, 158, 11, 0.9)" },
+      { title: "Revisar código", subtitle: "Code review", color: "rgba(147, 51, 234, 0.9)" },
+      { title: "Testing", subtitle: "QA", color: "rgba(239, 68, 68, 0.9)" },
+      { title: "Documentación", subtitle: "Actualizar docs", color: "rgba(236, 72, 153, 0.9)" }
+    ];
+    
+    const randomSuggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
+    const suggestedTask: WeeklyGlobalEvent = {
+      id: Date.now().toString(),
+      ...randomSuggestion,
+      dayIndex: -1,
+      startHour: 10
+    };
+    
+    // Actualizar estado local inmediatamente
+    const updatedEvents = [...calendarEvents, suggestedTask];
+    setCalendarEvents(updatedEvents);
+
+    // Si es proyecto de Supabase, guardar en la base de datos
+    if (isFromSupabase && supabaseProject) {
+      try {
+        const response = await fetch(`/api/proyectos/${supabaseProject.id}/eventos`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: suggestedTask.title,
+            subtitle: suggestedTask.subtitle,
+            dayIndex: suggestedTask.dayIndex,
+            startHour: suggestedTask.startHour,
+            color: suggestedTask.color
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // Actualizar el evento con el ID real de la base de datos
+          setCalendarEvents(prev => prev.map(e => 
+            e.id === suggestedTask.id 
+              ? { ...e, id: data.evento.id.toString() }
+              : e
+          ));
+        }
+      } catch (error) {
+        console.error('Error creating suggested event:', error);
+        // Remover el evento local en caso de error
+        setCalendarEvents(prev => prev.filter(e => e.id !== suggestedTask.id));
+      }
+    } else {
+      // Para proyectos locales, guardar en localStorage
+      saveCalendarEventsLocal(updatedEvents);
     }
   };
 
@@ -1297,9 +1531,54 @@ export default function ProjectPage({
                             variant="outline"
                             size="sm"
                             className="text-green-300 border-green-500/30 hover:bg-green-500/20 hover:text-white bg-green-500/10"
-                            onClick={() => {
-                              // TODO: Implementar funcionalidad de agregar a calendario
-                              console.log(`Agregar tarea "${taskObj.descripcion}" al calendario`);
+                            onClick={async () => {
+                              const newCalendarEvent: WeeklyGlobalEvent = {
+                                id: `task-${Date.now()}`,
+                                title: taskObj.descripcion,
+                                subtitle: "Tarea del proyecto",
+                                dayIndex: -1, // Unscheduled by default
+                                startHour: 9,
+                                color: "rgba(16, 185, 129, 0.9)"
+                              };
+                              
+                              // Actualizar estado local inmediatamente
+                              const updatedEvents = [...calendarEvents, newCalendarEvent];
+                              setCalendarEvents(updatedEvents);
+                              setExpandedTaskIndex(null);
+
+                              // Si es proyecto de Supabase, guardar en la base de datos
+                              if (isFromSupabase && supabaseProject) {
+                                try {
+                                  const response = await fetch(`/api/proyectos/${supabaseProject.id}/eventos`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      title: newCalendarEvent.title,
+                                      subtitle: newCalendarEvent.subtitle,
+                                      dayIndex: newCalendarEvent.dayIndex,
+                                      startHour: newCalendarEvent.startHour,
+                                      color: newCalendarEvent.color
+                                    })
+                                  });
+
+                                  if (response.ok) {
+                                    const data = await response.json();
+                                    // Actualizar el evento con el ID real de la base de datos
+                                    setCalendarEvents(prev => prev.map(e => 
+                                      e.id === newCalendarEvent.id 
+                                        ? { ...e, id: data.evento.id.toString() }
+                                        : e
+                                    ));
+                                  }
+                                } catch (error) {
+                                  console.error('Error creating calendar event from task:', error);
+                                  // Remover el evento local en caso de error
+                                  setCalendarEvents(prev => prev.filter(e => e.id !== newCalendarEvent.id));
+                                }
+                              } else {
+                                // Para proyectos locales, guardar en localStorage
+                                saveCalendarEventsLocal(updatedEvents);
+                              }
                             }}
                           >
                             📅 Agregar a mi calendario
@@ -1406,6 +1685,24 @@ export default function ProjectPage({
                 <Plus className="h-5 w-5" />
                 Añadir Tarea
               </button>
+            </div>
+          </section>
+
+          {/* Sección del Calendario */}
+          <section className="p-6 rounded-lg border border-white/10 bg-black/20 mt-6">
+            <h2 className="text-2xl font-semibold mb-4">Calendario del Proyecto</h2>
+            <div className="space-y-4">
+              <WeeklyCalendar
+                events={calendarEvents}
+                onEventMove={handleEventMove}
+                onEventRemove={handleEventRemove}
+                onCellClick={handleCellClick}
+                onAddTask={handleAddCalendarTask}
+                onSuggestTask={handleSuggestCalendarTask}
+                startHour={7}
+                endHour={22}
+                className="flex-1"
+              />
             </div>
           </section>
 

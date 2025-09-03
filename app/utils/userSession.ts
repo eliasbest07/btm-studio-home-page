@@ -30,3 +30,14 @@ export const clearUserData = () => {
   localStorage.removeItem("loggedIn");
   window.dispatchEvent(new Event(EVT));
 };
+
+// Función para verificar si hay una sesión válida (debe ser llamada desde componentes que usen Supabase)
+export const isUserSessionValid = (): boolean => {
+  try {
+    const userData = readUserData();
+    const loggedIn = localStorage.getItem("loggedIn");
+    return !!(userData && loggedIn);
+  } catch {
+    return false;
+  }
+};
