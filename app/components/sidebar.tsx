@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Home, Settings, LogOut, Menu, X, User } from "lucide-react";
+import { Home, Settings, LogOut, Menu, X, User, Calendar } from "lucide-react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { clearUserData } from "@/app/utils/userSession";
 
 type Props = {
   userName?: string | null;
@@ -14,6 +16,9 @@ export default function Sidebar({ userName = "Usuario", avatarUrl }: Props) {
   const pathname = usePathname() || "/profile";
   const [open, setOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const router = useRouter();
+  const supabase = createClientComponentClient();
 
   // CSS para ocultar scrollbars
   const hideScrollbarStyle = `
@@ -41,21 +46,75 @@ export default function Sidebar({ userName = "Usuario", avatarUrl }: Props) {
   };
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    // Leer datos del usuario desde localStorage en lugar de API
+    const loadUserFromStorage = () => {
       try {
-        const response = await fetch('/api/get-user');
-        const data = await response.json();
-        
-        if (response.ok) {
-          setUserProfile(data.user.profile);
+        const userData = localStorage.getItem("userData");
+        if (userData) {
+          const parsedData = JSON.parse(userData);
+          setUserProfile(parsedData);
         }
       } catch (error) {
-        console.error('Error fetching user profile:', error);
+        console.error('Error reading user from localStorage:', error);
       }
     };
 
-    fetchUserProfile();
+    // Cargar datos al montar
+    loadUserFromStorage();
+
+    // Escuchar cambios en localStorage
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "userData") {
+        loadUserFromStorage();
+      }
+    };
+
+    const handleUserDataChange = () => {
+      loadUserFromStorage();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("userData:changed", handleUserDataChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("userData:changed", handleUserDataChange);
+    };
   }, []);
+
+  const handleSignOut = async () => {
+    if (isSigningOut) return; // Prevenir clicks múltiples
+    
+    setIsSigningOut(true);
+    console.log("🔐 Iniciando cierre de sesión...");
+
+    try {
+      // 1. Cerrar sesión en Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("❌ Error cerrando sesión en Supabase:", error);
+      } else {
+        console.log("✅ Sesión de Supabase cerrada");
+      }
+
+      // 2. Limpiar localStorage (independientemente del resultado de Supabase)
+      clearUserData();
+      console.log("✅ localStorage limpiado");
+
+      // 3. Redirigir a la página principal
+      router.push('/');
+      
+    } catch (error) {
+      console.error("💥 Error crítico cerrando sesión:", error);
+      
+      // Aún así limpiar localStorage en caso de error
+      clearUserData();
+      router.push('/');
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
 
   return (
     <>
@@ -97,44 +156,33 @@ export default function Sidebar({ userName = "Usuario", avatarUrl }: Props) {
       <div className="flex-1 flex flex-col p-4 sm:p-6 overflow-hidden hide-scrollbar">
         {/* Top Content */}
         <div className="space-y-4 sm:space-y-6">
-          {/* User Profile Card */}
-          <div
-            className="p-3 rounded-xl text-white"
-            style={glassmorphismStyle}
-          >
-            <div className="flex items-center gap-2 sm:gap-3">
-              {(userProfile?.avatar || avatarUrl) ? (
-                <img
-                  src={userProfile?.avatar || avatarUrl}
-                  alt={`${userProfile?.nombre || userName} avatar`}
-                  className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg object-cover border-2 border-white/20"
-                />
-              ) : (
-                <div
-                  className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg flex items-center justify-center text-white font-medium border-2 border-white/20 text-xs sm:text-sm"
-                  style={{
-                    background: "linear-gradient(135deg, rgba(99, 102, 241, 0.8), rgba(168, 85, 247, 0.8))"
-                  }}
-                >
-                  C
+          {/* Calendar Button */}
+          <Link href="/time">
+            <div
+              className="p-3 rounded-xl text-white hover:brightness-110 transition-all duration-200 cursor-pointer group"
+              style={glassmorphismStyle}
+            >
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg flex items-center justify-center text-white border-2 border-white/20 group-hover:border-white/40 transition-colors">
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 group-hover:text-blue-300 transition-colors" />
                 </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="text-xs sm:text-sm font-medium text-white truncate">
-                  Calendario
-                </div>
-                <div className="text-xs text-gray-300 flex items-center gap-1">
-                  Ver tu itinerario
-                  {userProfile?.nivel !== undefined && (
-                    <>
-                      <span>•</span>
-                      <span className="text-yellow-400">Nv.{userProfile.nivel}</span>
-                    </>
-                  )}
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs sm:text-sm font-medium text-white truncate group-hover:text-gray-100">
+                    Calendario
+                  </div>
+                  <div className="text-xs text-gray-300 flex items-center gap-1 group-hover:text-gray-200">
+                    Ver tu itinerario
+                    {userProfile?.nivel !== undefined && (
+                      <>
+                        <span>•</span>
+                        <span className="text-yellow-400">Nv.{userProfile.nivel}</span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </Link>
 
           {/* Navigation */}
           <nav className="space-y-1 sm:space-y-2" aria-label="Navegación principal">
@@ -175,15 +223,16 @@ export default function Sidebar({ userName = "Usuario", avatarUrl }: Props) {
           <div className="border-t border-white/10" />
 
           {/* Sign out */}
-          <form action="/api/auth/signout" method="post">
-            <button
-              type="submit"
-              className="w-full flex items-center gap-2 sm:gap-3 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium text-gray-300 hover:text-white hover:bg-red-500/20 transition-all duration-200 group"
-            >
-              <LogOut className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 group-hover:text-red-400" />
-              <span className="truncate">Cerrar sesión</span>
-            </button>
-          </form>
+          <button
+            onClick={handleSignOut}
+            disabled={isSigningOut}
+            className="w-full flex items-center gap-2 sm:gap-3 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium text-gray-300 hover:text-white hover:bg-red-500/20 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <LogOut className={`h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 group-hover:text-red-400 ${isSigningOut ? 'animate-spin' : ''}`} />
+            <span className="truncate">
+              {isSigningOut ? 'Cerrando sesión...' : 'Cerrar sesión'}
+            </span>
+          </button>
         </div>
        
       </div>

@@ -13,88 +13,120 @@ export default function Header() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [isSessionValid, setIsSessionValid] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [lastSessionCheck, setLastSessionCheck] = useState(0); // Timestamp de última verificación
   const t = useTranslations("header");
   const pathname = usePathname();
   const supabase = createClientComponentClient();
 
-  // Función para verificar sesión de Supabase y sincronizar con localStorage
-  const verificarYSincronizarSesion = async () => {
+  // Función que lee localStorage inmediatamente y verifica sesión periódicamente
+  const verificarYSincronizarSesion = async (forceSessionCheck = false) => {
+    if (isVerifying) return;
+    
+    setIsVerifying(true);
     try {
-      const { data: { session }, error } = await supabase.auth.getSession();
+      // Leer datos locales primero (siempre rápido)
+      const localUserData = localStorage.getItem("userData");
+      const isLoggedIn = localStorage.getItem("loggedIn");
       
-      if (error) {
-        console.error("Error verificando sesión:", error);
-        setIsSessionValid(false);
-        setNombreUsuario("");
-        // Limpiar localStorage si hay error de sesión
-        localStorage.removeItem("userData");
-        localStorage.removeItem("loggedIn");
-        return;
-      }
-
-      if (session?.user) {
-        // Hay sesión válida de Supabase
+      if (localUserData && isLoggedIn) {
+        // Mostrar datos inmediatamente
         setIsSessionValid(true);
-        
-        // Ahora leer datos del usuario desde localStorage
         try {
-          const raw = localStorage.getItem("userData");
-          setNombreUsuario(raw ? (JSON.parse(raw)?.nombre ?? "") : "");
+          const userData = JSON.parse(localUserData);
+          setNombreUsuario(userData?.nombre ?? "");
+          console.log("✅ Mostrando usuario desde localStorage:", userData?.nombre);
         } catch {
           setNombreUsuario("");
+          setIsSessionValid(false);
+          return;
+        }
+
+        // Verificar sesión de Supabase solo si hace más de 1 hora desde la última verificación
+        const now = Date.now();
+        const ONE_HOUR = 60 * 60 * 1000;
+        
+        // Obtener timestamp de última verificación desde localStorage
+        const lastCheck = parseInt(localStorage.getItem("lastSessionCheck") || "0");
+        
+        if (forceSessionCheck || (now - lastCheck) > ONE_HOUR) {
+          console.log("🔍 Verificando sesión de Supabase (última verificación hace más de 1 hora)...");
+          
+          // Guardar timestamp de verificación en localStorage
+          localStorage.setItem("lastSessionCheck", now.toString());
+          setLastSessionCheck(now);
+          
+          try {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            
+            if (error || !session?.user) {
+              // Sesión expirada o inválida
+              console.warn("⚠️ Sesión de Supabase expirada, limpiando datos locales");
+              setIsSessionValid(false);
+              setNombreUsuario("");
+              localStorage.removeItem("userData");
+              localStorage.removeItem("loggedIn");
+              localStorage.removeItem("lastSessionCheck");
+              window.dispatchEvent(new Event("userData:changed"));
+            } else {
+              console.log("✅ Sesión de Supabase válida");
+            }
+          } catch (sessionError) {
+            console.error("Error verificando sesión de Supabase:", sessionError);
+            // No limpiar inmediatamente por errores de red, mantener datos locales
+          }
+        } else {
+          console.log("⏭️ Sesión verificada recientemente, omitiendo verificación");
         }
       } else {
-        // No hay sesión de Supabase, limpiar todo
-        console.log("No hay sesión activa de Supabase");
+        // No hay datos locales
         setIsSessionValid(false);
         setNombreUsuario("");
-        localStorage.removeItem("userData");
-        localStorage.removeItem("loggedIn");
       }
     } catch (error) {
       console.error("Error en verificarYSincronizarSesion:", error);
       setIsSessionValid(false);
       setNombreUsuario("");
-      localStorage.removeItem("userData");
-      localStorage.removeItem("loggedIn");
+    } finally {
+      setIsVerifying(false);
     }
   };
 
-  useEffect(() => {
-    const onFocus = () => verificarYSincronizarSesion();
-    const onVisibility = () => verificarYSincronizarSesion();
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === "userData") verificarYSincronizarSesion();
-    };
-    const onChanged = () => verificarYSincronizarSesion(); // evento personalizado mismo tab
 
-    // Verificar al montar el componente
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "userData" || e.key === "loggedIn") {
+        verificarYSincronizarSesion();
+      }
+    };
+    
+    const onChanged = () => verificarYSincronizarSesion();
+    
+    // Listener para verificar sesión cuando se hace focus (usuario vuelve a la tab)
+    const onFocus = () => {
+      // Solo verificar si hay datos locales
+      const localUserData = localStorage.getItem("userData");
+      if (localUserData) {
+        verificarYSincronizarSesion(true); // Forzar verificación
+      }
+    };
+
+    // Verificar al montar
     verificarYSincronizarSesion();
 
-    window.addEventListener("focus", onFocus);
-    document.addEventListener("visibilitychange", onVisibility);
-    window.addEventListener("storage", onStorage); // otras pestañas
-    window.addEventListener("userData:changed", onChanged); // misma pestaña
-
-    // Escuchar cambios de autenticación de Supabase
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Cambio en estado de auth:", event);
-      verificarYSincronizarSesion();
-    });
+    // Listeners
+    window.addEventListener("storage", onStorage); 
+    window.addEventListener("userData:changed", onChanged);
+    window.addEventListener("focus", onFocus); // Verificar al volver a la tab
 
     return () => {
-      window.removeEventListener("focus", onFocus);
-      document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("userData:changed", onChanged);
-      subscription.unsubscribe();
+      window.removeEventListener("focus", onFocus);
     };
   }, []);
 
-useEffect(() => {
-  // re-verificar sesión al cambiar de ruta
-  verificarYSincronizarSesion();
-}, [pathname]);
+// Eliminar el useEffect de pathname para evitar verificaciones excesivas
 
   // If you clear userData in this same tab, also do:
   // localStorage.removeItem("userData"); setNombreUsuario("");
