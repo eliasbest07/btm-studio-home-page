@@ -24,7 +24,8 @@ import {
   MessageSquare,
   ChevronDown,
   ChevronUp,
-  Loader2
+  Loader2,
+  Star
 } from "lucide-react"
 
 const supabase = createClient(
@@ -61,6 +62,7 @@ interface Tarea {
   descripcion: string
   created_at: string
   nombre_producto: string
+  proyecto_icono?: string | null
   usuario?: Usuario | null
   propuestas?: Propuesta[]
 }
@@ -227,6 +229,7 @@ export default function EstoyTrabajando() {
         descripcion,
         created_at,
         nombre_producto,
+        proyecto_icono,
         usuario:usuario ( id, nombre, avatar, id_usuario, correo ),
         propuestas:propuestas (
           id, tarea_id, usuario_id, cuerpo, fecha, estado,
@@ -270,6 +273,7 @@ export default function EstoyTrabajando() {
           descripcion: t.descripcion,
           created_at: t.created_at,
           nombre_producto: t.nombre_producto,
+          proyecto_icono: t.proyecto_icono,
           usuario,
           propuestas,
         } as Tarea;
@@ -440,6 +444,16 @@ export default function EstoyTrabajando() {
     return usuario?.nombre || `Usuario ${usuario?.id || 'Desconocido'}`;
   }
 
+  const renderStars = (nivel: string) => {
+    const levelNumber = parseInt(nivel) || 1;
+    return Array.from({ length: 5 }, (_, i) => (
+      <Star
+        key={i}
+        className={`w-3 h-3 ${i < levelNumber ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+      />
+    ));
+  }
+
   const hasUserTotalTimeProposal = (tarea: Tarea): { has: boolean, propuestaId?: string } => {    
     if (!isUserLoggedIn || !userData || !tarea.propuestas) {
       return { has: false }
@@ -529,10 +543,35 @@ export default function EstoyTrabajando() {
                     <div className="min-w-0 flex-1">
                       <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white truncate">{getUserName(tarea.usuario ?? null)}</h3>
                       <h4 className="text-sm sm:text-base text-slate-300 mb-2">{tarea.nombre_producto}</h4>
-                      <span className={`inline-block px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${getLevelColor(tarea.nivel)}`}>
-                        Nivel {tarea.nivel}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-block px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${getLevelColor(tarea.nivel)}`}>
+                          Nivel {tarea.nivel}
+                        </span>
+                        <div className="flex gap-1">
+                          {renderStars(tarea.nivel)}
+                        </div>
+                      </div>
                     </div>
+                    {/* Proyecto Icono */}
+                    {tarea.proyecto_icono && (
+                      <div className="flex-shrink-0">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg border border-slate-600 bg-slate-700/50 overflow-hidden">
+                          <img
+                            src={tarea.proyecto_icono}
+                            alt={`Icono de ${tarea.nombre_producto}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              if (target.parentElement) {
+                                target.parentElement.style.background = 'linear-gradient(135deg, #334155, #475569)';
+                                target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-slate-400 text-xs font-medium">IMG</div>';
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
