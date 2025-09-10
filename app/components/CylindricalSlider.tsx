@@ -7,6 +7,7 @@ const CylindricalSlider = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
 
     // Glassmorphism style matching your site
     const glassmorphismStyle = {
@@ -24,7 +25,7 @@ const CylindricalSlider = () => {
             id: 1,
             name: "Elias Montilla",
             role: "Desarrollador Flutter Senior",
-            image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop&crop=face",
+            image: "/elias-montilla.png",
             rating: 3,
             location: "Texas, USA",
             description: "CEO & Co-Founder at BTM-Studio"
@@ -33,7 +34,7 @@ const CylindricalSlider = () => {
             id: 2,
             name: "Jesús Diaz",
             role: "Desarrollador Frontend",
-            image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face",
+            image: "https://images.unsplash.com/phot1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face",
             rating: 2,
             location: "Mérida, Venezuela",
             description: "Diseñador creativo especializado en experiencias digitales innovadoras"
@@ -42,7 +43,7 @@ const CylindricalSlider = () => {
             id: 3,
             name: "José Mogollón",
             role: "Desarrollador Full Stack",
-            image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop&crop=face",
+            image: "https://images.unsplash.com/photo-14361681033-6461ffad8d80?w=300&h=300&fit=crop&crop=face",
             rating: 2,
             location: "Valencia, Venezuela",
             description: "Programador apasionado por crear soluciones web eficientes y escalables"
@@ -140,7 +141,7 @@ const CylindricalSlider = () => {
                                             <img
                                                 src={slide.image}
                                                 alt={slide.name}
-                                                className="w-full h-full object-cover"
+                                                className="w-full h-full object-cover relative z-10"
                                                 onError={(e) => {
                                                     const target = e.target as HTMLImageElement;
                                                     target.style.display = 'none';
@@ -150,7 +151,7 @@ const CylindricalSlider = () => {
                                                 }}
                                             />
                                         ) : null}
-                                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center" style={{ display: slide.image ? 'none' : 'flex' }}>
                                             <User className="w-4 h-4 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-white" />
                                         </div>
                                     </div>
