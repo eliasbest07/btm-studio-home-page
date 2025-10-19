@@ -1770,10 +1770,11 @@ export default function ProjectPage({
                   <SelectValue placeholder="Selecciona el nivel" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-800 border-gray-600">
-                  <SelectItem value="junior" className="text-white hover:bg-gray-700">Junior</SelectItem>
-                  <SelectItem value="semi-senior" className="text-white hover:bg-gray-700">Semi-Senior</SelectItem>
-                  <SelectItem value="senior" className="text-white hover:bg-gray-700">Senior</SelectItem>
-                  <SelectItem value="lead" className="text-white hover:bg-gray-700">Lead</SelectItem>
+                  <SelectItem value="1" className="text-white hover:bg-gray-700">1</SelectItem>
+                  <SelectItem value="2" className="text-white hover:bg-gray-700">2</SelectItem>
+                  <SelectItem value="3" className="text-white hover:bg-gray-700">3</SelectItem>
+                  <SelectItem value="4" className="text-white hover:bg-gray-700">4</SelectItem>
+                  <SelectItem value="5" className="text-white hover:bg-gray-700">5</SelectItem>
                 </SelectContent>
               </Select>
             </div>
