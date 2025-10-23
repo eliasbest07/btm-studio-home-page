@@ -75,7 +75,7 @@ export default function Hero() {
               {t("ctaContinue")}
             </Button>
             <Button variant="outline" size="lg" className="font-semibold border-gray-200 text-gray-200 bg-transparent hover:bg-white/20 hover:text-white hover:border-white/30">
-              <Link href="/estoy-trabajando">{t("ctaPortfolio")}</Link>
+              <a href="/estoy-trabajando">{t("ctaPortfolio")}</a>
             </Button>
         </div>
       <ShowProjectsModal isOpen={isModalOpen} onOpenChange={setIsModalOpen} />

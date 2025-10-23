@@ -23,6 +23,8 @@ interface LocalProject {
   path: string;
   lastModified: string;
   type: string;
+  tasks?: number;
+  description?: string;
 }
 
 interface UserProfile {
@@ -64,19 +66,56 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const getUser = async () => {
+      // Cargar datos desde localStorage primero
+      loadUserFromLocal();
+      loadProjectsFromLocal();
+      
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user || null);
+      
       if (session?.user) {
-        fetchProjects(session.user.id);
-        fetchUserProfile();
-      } else {
-        setLoading(false);
+        // Solo buscar proyectos remotos si no hay cache local reciente
+        const shouldFetchRemote = shouldFetchRemoteData();
+        if (shouldFetchRemote) {
+          console.log("📡 Buscando datos remotos (cache expirado)...");
+          await fetchProjects(session.user.id);
+          await fetchUserProfile();
+        } else {
+          console.log("💾 Usando datos locales (cache válido)");
+        }
       }
+      
+      setLoading(false);
     };
 
     getUser();
-    fetchLocalProjects();
+    loadRealLocalProjects();
   }, []);
+
+  // Cargar datos del usuario desde localStorage
+  const loadUserFromLocal = () => {
+    try {
+      const userData = localStorage.getItem("userData");
+      if (userData) {
+        const parsedData = JSON.parse(userData);
+        setUserProfile(parsedData);
+        setProfileError("");
+        console.log("✅ Perfil cargado desde localStorage");
+      }
+    } catch (error) {
+      console.error('Error cargando perfil local:', error);
+    }
+  };
+
+  // Verificar si debe buscar datos remotos (cada 24 horas)
+  const shouldFetchRemoteData = () => {
+    const lastFetch = localStorage.getItem("lastDataFetch");
+    if (!lastFetch) return true;
+    
+    const now = Date.now();
+    const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+    return (now - parseInt(lastFetch)) > TWENTY_FOUR_HOURS;
+  };
 
   const fetchUserProfile = async () => {
     try {
@@ -86,11 +125,15 @@ export default function ProfilePage() {
       if (response.ok) {
         setUserProfile(data.user.profile);
         setProfileError("");
+        
+        // Guardar en localStorage
+        localStorage.setItem("userData", JSON.stringify(data.user.profile));
+        localStorage.setItem("lastDataFetch", Date.now().toString());
+        console.log("✅ Perfil actualizado y guardado localmente");
       } else {
         console.error('Error fetching user profile:', data.error);
         setProfileError(data.error);
 
-        // Si el usuario no existe en la tabla, intentar crearlo
         if (data.code === 'USER_NOT_FOUND') {
           await createUserProfile();
         }
@@ -129,6 +172,20 @@ export default function ProfilePage() {
     }
   };
 
+  // Cargar proyectos desde localStorage
+  const loadProjectsFromLocal = () => {
+    try {
+      const cachedProjects = localStorage.getItem("userProjects");
+      if (cachedProjects) {
+        const projects = JSON.parse(cachedProjects);
+        setProjects(projects);
+        console.log("✅ Proyectos cargados desde localStorage:", projects.length);
+      }
+    } catch (error) {
+      console.error('Error cargando proyectos locales:', error);
+    }
+  };
+
   const fetchProjects = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -141,48 +198,56 @@ export default function ProfilePage() {
         console.error('Error fetching projects:', error);
       } else {
         setProjects(data || []);
+        
+        // Guardar en localStorage
+        localStorage.setItem("userProjects", JSON.stringify(data || []));
+        localStorage.setItem("lastDataFetch", Date.now().toString());
+        console.log("✅ Proyectos actualizados y guardados localmente:", (data || []).length);
       }
     } catch (error) {
       console.error('Error:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
-  const fetchLocalProjects = async () => {
+  // Cargar proyectos reales del localStorage (los mismos del modal ShowProjects)
+  const loadRealLocalProjects = () => {
     try {
-      // Simular proyectos locales - en una implementación real, esto vendría de una API local o sistema de archivos
-      const mockLocalProjects: LocalProject[] = [
-        {
-          id: "local-1",
-          name: "Mi App React",
-          path: "/Users/usuario/proyectos/mi-app-react",
-          lastModified: new Date(Date.now() - 86400000).toISOString(), // 1 día atrás
-          type: "React"
-        },
-        {
-          id: "local-2",
-          name: "API Node.js",
-          path: "/Users/usuario/proyectos/api-nodejs",
-          lastModified: new Date(Date.now() - 172800000).toISOString(), // 2 días atrás
-          type: "Node.js"
-        },
-        {
-          id: "local-3",
-          name: "Landing Page",
-          path: "/Users/usuario/proyectos/landing-page",
-          lastModified: new Date(Date.now() - 259200000).toISOString(), // 3 días atrás
-          type: "HTML/CSS"
-        }
-      ];
+      const stored = localStorage.getItem("allProjectPlans");
+      
+      if (stored) {
+        try {
+          const parsedProjects = JSON.parse(stored);
+          const browserProjects: LocalProject[] = parsedProjects.map((project: any, index: number) => ({
+            id: `project-${index}`,
+            name: project.projectContext?.description || `Proyecto ${index + 1}`,
+            path: `/proyectos/${index + 1}`,
+            lastModified: project.timestamp || new Date().toISOString(),
+            type: 'Plan de Proyecto',
+            tasks: project.tasks?.length || 0,
+            description: project.projectContext?.stylePrompt || 'Sin descripción'
+          }));
 
-      // Simular delay de carga
-      setTimeout(() => {
-        setLocalProjects(mockLocalProjects);
-        setLoadingLocal(false);
-      }, 1000);
+          // Ordenar por fecha de modificación más reciente
+          browserProjects.sort((a, b) => 
+            new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
+          );
+
+          setLocalProjects(browserProjects);
+          console.log("✅ Proyectos locales cargados desde allProjectPlans:", browserProjects.length);
+        } catch (parseError) {
+          console.error("Error parsing allProjectPlans:", parseError);
+          setLocalProjects([]);
+        }
+      } else {
+        console.log("📭 No hay proyectos locales guardados");
+        setLocalProjects([]);
+      }
+      
+      setLoadingLocal(false);
+      
     } catch (error) {
-      console.error('Error fetching local projects:', error);
+      console.error('Error loading real local projects:', error);
+      setLocalProjects([]);
       setLoadingLocal(false);
     }
   };
@@ -449,54 +514,45 @@ export default function ProfilePage() {
         ) : localProjects.length > 0 ? (
           <div className="space-y-3 sm:space-y-4">
             {localProjects.map((project) => (
-              <div
-                key={project.id}
-                className="p-3 sm:p-4 rounded-lg bg-black/20 border border-white/10 hover:bg-black/30 transition-all duration-200 group"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <FolderOpen className="h-4 w-4 sm:h-5 sm:w-5 text-orange-400 flex-shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-sm sm:text-base font-medium text-white truncate">
-                        {project.name}
-                      </h3>
-                      <p className="text-xs text-gray-400 truncate">
-                        {project.path}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                    <div className="text-right">
-                      <span className="text-xs text-gray-300 bg-gray-700/50 px-2 py-1 rounded">
-                        {project.type}
-                      </span>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {new Date(project.lastModified).toLocaleDateString()}
-                      </p>
+              <Link key={project.id} href={project.path}>
+                <div className="p-3 sm:p-4 rounded-lg bg-black/20 border border-white/10 hover:bg-black/30 transition-all duration-200 group cursor-pointer">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <FolderOpen className="h-4 w-4 sm:h-5 sm:w-5 text-orange-400 flex-shrink-0 group-hover:text-orange-300 transition-colors" />
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-sm sm:text-base font-medium text-white truncate group-hover:text-gray-100">
+                          {project.name}
+                        </h3>
+                        <p className="text-xs text-gray-400 truncate">
+                          {project.description}
+                        </p>
+                        {project.tasks !== undefined && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {project.tasks} tareas
+                          </p>
+                        )}
+                      </div>
                     </div>
 
-                    <Button
-                      size="sm"
-                      className="bg-orange-600/20 hover:bg-orange-600/40 text-orange-300 border border-orange-500/30 rounded-lg text-xs"
-                    >
-                      <FolderOpen className="h-3 w-3 mr-1" />
-                      Abrir
-                    </Button>
+                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                      <div className="text-right">
+                        <span className="text-xs text-gray-300 bg-gray-700/50 px-2 py-1 rounded group-hover:bg-gray-600/50 transition-colors">
+                          {project.type}
+                        </span>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {new Date(project.lastModified).toLocaleDateString()}
+                        </p>
+                      </div>
+
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Eye className="h-4 w-4 text-orange-300" />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
 
-            <div className="pt-2 border-t border-white/10">
-              <Button
-                variant="outline"
-                className="w-full text-black border-white/20 hover:bg-white text-white/10 text-sm"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Agregar proyecto local
-              </Button>
-            </div>
           </div>
         ) : (
           <div className="text-center py-8">

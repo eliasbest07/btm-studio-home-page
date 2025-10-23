@@ -43,7 +43,7 @@ export default function SettingsPage() {
 
   const fetchUserProfile = async () => {
     try {
-      const response = await fetch('/api/get-user');
+      const response = await fetch('../api/get-user');
       const data = await response.json();
       
       if (response.ok) {

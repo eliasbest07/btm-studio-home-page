@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import clsx from "clsx";
 
 export type WeeklyEvent = {
@@ -154,6 +154,7 @@ export function WeeklyCalendar({
   const [draggedEvent, setDraggedEvent] = useState<WeeklyEvent | null>(null);
   const [isDraggingFromCalendar, setIsDraggingFromCalendar] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const gridContainerRef = useRef<HTMLDivElement>(null);
 
   // Update current time every minute
   useEffect(() => {
@@ -163,6 +164,52 @@ export function WeeklyCalendar({
 
     return () => clearInterval(interval);
   }, []);
+
+  // Auto-scroll to current time on mount
+  useEffect(() => {
+    const scrollToCurrentTime = () => {
+      if (!gridContainerRef.current) return;
+
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinutes = now.getMinutes();
+      
+      // Solo hacer scroll si estamos dentro del rango de horas mostradas
+      if (currentHour >= startHour && currentHour <= endHour) {
+        // Encontrar el elemento del grid que contiene la hora actual
+        const gridContainer = gridContainerRef.current;
+        const hourIndex = currentHour - startHour;
+        
+        // Calcular la posición aproximada de la hora actual
+        // Cada hora tiene aproximadamente 72px de altura (incluyendo padding)
+        const hourHeight = 90; // Altura aproximada de cada fila de hora
+        const stickyHeaderHeight = 80; // Altura del header sticky
+        
+        const targetPosition = (hourIndex * hourHeight) + (currentMinutes / 60 * hourHeight);
+        
+        // Scroll al contenedor padre que tiene overflow
+        let scrollableParent = gridContainer.parentElement;
+        while (scrollableParent && getComputedStyle(scrollableParent).overflowY !== 'auto') {
+          scrollableParent = scrollableParent.parentElement;
+        }
+        
+        if (scrollableParent) {
+          const scrollTop = targetPosition - (scrollableParent.clientHeight * 0.3);
+          scrollableParent.scrollTo({
+            top: Math.max(0, scrollTop),
+            behavior: 'smooth'
+          });
+          
+          console.log(`📍 Auto-scroll a ${currentHour}:${currentMinutes.toString().padStart(2, '0')} (posición: ${targetPosition}px)`);
+        }
+      }
+    };
+
+    // Hacer scroll después de que el componente se monte y renderice
+    const timer = setTimeout(scrollToCurrentTime, 200);
+    
+    return () => clearTimeout(timer);
+  }, [startHour, endHour]);
 
   const hours = Array.from({ length: endHour - startHour + 1 }, (_, i) => startHour + i);
   const cols = Array.from({ length: days }, (_, i) => i);
@@ -296,6 +343,7 @@ export function WeeklyCalendar({
 
         {/* Grid */}
         <div
+          ref={gridContainerRef}
           className="grid relative"
           style={{
             gridTemplateColumns: `120px repeat(${days}, minmax(0, 1fr))`,
