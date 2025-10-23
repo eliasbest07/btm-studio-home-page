@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Star, MapPin, User, Circle } from 'lucide-react';
+import Link from 'next/link';
 
 const CylindricalSlider = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -25,10 +26,11 @@ const CylindricalSlider = () => {
             id: 1,
             name: "Elias Montilla",
             role: "Desarrollador Flutter Senior",
-            image: "/elias-montilla.png",
+            image: "/background.webp",
             rating: 3,
             location: "Texas, USA",
-            description: "CEO & Co-Founder at BTM-Studio"
+            description: "CEO & Co-Founder at BTM-Studio",
+            link: "/ceo"
         },
         {
             id: 2,
@@ -37,7 +39,8 @@ const CylindricalSlider = () => {
             image: "https://images.unsplash.com/phot1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face",
             rating: 2,
             location: "Mérida, Venezuela",
-            description: "Diseñador creativo especializado en experiencias digitales innovadoras"
+            description: "Diseñador creativo especializado en experiencias digitales innovadoras",
+            link: undefined
         },
         {
             id: 3,
@@ -46,7 +49,8 @@ const CylindricalSlider = () => {
             image: "https://images.unsplash.com/photo-14361681033-6461ffad8d80?w=300&h=300&fit=crop&crop=face",
             rating: 2,
             location: "Valencia, Venezuela",
-            description: "Programador apasionado por crear soluciones web eficientes y escalables"
+            description: "Programador apasionado por crear soluciones web eficientes y escalables",
+            link: undefined
         }
     ];
 
@@ -125,14 +129,10 @@ const CylindricalSlider = () => {
                         className="relative w-0 h-0 transition-transform duration-500 ease-in-out"
                         style={{ transformStyle: 'preserve-3d' }}
                     >
-                        {slides.map((slide, index) => (
-                            <div
-                                key={slide.id}
-                                className="absolute w-48 h-56 sm:w-64 sm:h-72 lg:w-72 lg:h-80 transition-all duration-500 ease-in-out"
-                                style={getSlideStyle(index)}
-                            >
+                        {slides.map((slide, index) => {
+                            const CardContent = (
                                 <div
-                                    className="w-full h-full rounded-lg shadow-xl p-3 sm:p-4 lg:p-6 flex flex-col items-center text-center transform hover:scale-105 transition-transform duration-300"
+                                    className="w-full h-full rounded-lg shadow-xl p-3 sm:p-4 lg:p-6 flex flex-col items-center text-center transform hover:scale-105 transition-transform duration-300 cursor-pointer"
                                     style={glassmorphismStyle}
                                 >
                                     {/* Avatar */}
@@ -190,14 +190,30 @@ const CylindricalSlider = () => {
                                         </span>
                                     </p>
                                 </div>
-                                
+                            );
+
+                            return (
+                                <div
+                                    key={slide.id}
+                                    className="absolute w-48 h-56 sm:w-64 sm:h-72 lg:w-72 lg:h-80 transition-all duration-500 ease-in-out"
+                                    style={getSlideStyle(index)}
+                                >
+                                    {slide.link ? (
+                                        <Link href={slide.link}>
+                                            {CardContent}
+                                        </Link>
+                                    ) : (
+                                        CardContent
+                                    )}
+
                                     {/* Connected Status */}
                                     <div className="flex items-center gap-1 text-green-400 mb-2 sm:mb-3">
                                         <Circle className="w-2 h-2 sm:w-4 sm:h-4 fill-current" />
                                         <span className="text-xs sm:text-sm font-small">Conectado</span>
                                     </div>
-                            </div>
-                        ))}
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
 
