@@ -26,7 +26,7 @@ const CylindricalSlider = () => {
             id: 1,
             name: "Elias Montilla",
             role: "Desarrollador Flutter Senior",
-            image: "/background.webp",
+            image: "/elias-montilla.png",
             rating: 3,
             location: "Texas, USA",
             description: "CEO & Co-Founder at BTM-Studio",
