@@ -195,6 +195,61 @@
       "descriptionMissing": "Please describe your project."
     },
     "continueButton": "Continue"
+  },
+
+  "TrabajoSemanal": {
+    "title": "Digital Assistant - Weekly Work",
+    "subtitle": "Join our team as a digital assistant. 5 hours daily to provide comprehensive assistance in customer service, social media, and content creation.",
+    "description": {
+      "title": "Job Description",
+      "intro": "We are looking for a responsible and creative person to provide comprehensive digital assistance for 4 hours daily, focused on three main areas:",
+      "customerService": {
+        "title": "Customer Service:",
+        "item1": "Respond to messages, emails, and inquiries on social media.",
+        "item2": "Maintain cordial and professional communication."
+      },
+      "socialMedia": {
+        "title": "Social Media Management:",
+        "item1": "Create and publish engaging content consistent with the brand.",
+        "item2": "Monitor interactions and keep accounts active."
+      },
+      "content": {
+        "title": "Manual and Video Development:",
+        "item1": "Create clear visual guides about products or services.",
+        "item2": "Create short informative or promotional videos."
+      }
+    },
+    "requirements": {
+      "title": "Requirements",
+      "item1": "Stable internet connection.",
+      "item2": "Proficiency with editing tools such as Canva and CapCut.",
+      "item3": "Availability to work fixed hours.",
+      "item4": "Mandatory use of a web application to track time worked and tasks completed."
+    },
+    "skills": {
+      "title": "Desired Skills",
+      "item1": "Good written and visual communication.",
+      "item2": "Creativity and attention to detail.",
+      "item3": "Organization and responsibility."
+    },
+    "form": {
+      "title": "Application Form",
+      "nombre": "Full Name",
+      "nombrePlaceholder": "Your full name",
+      "email": "Email",
+      "emailPlaceholder": "your@email.com",
+      "whatsapp": "WhatsApp Number",
+      "whatsappPlaceholder": "+1 234 567 8900",
+      "horario": "Preferred Schedule",
+      "horarioPlaceholder": "Select a schedule",
+      "manana": "Morning",
+      "tarde": "Afternoon",
+      "submit": "Submit Application",
+      "sending": "Sending...",
+      "successTitle": "Application submitted successfully!",
+      "successMessage": "Thank you for your interest. We will contact you soon.",
+      "submitAnother": "Submit another application"
+    }
   }
 
 

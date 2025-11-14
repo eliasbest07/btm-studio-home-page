@@ -196,6 +196,61 @@
   "showProjectsModal": {
     "noProjects": "No hay proyectos disponibles",
     "access": "Acceder"
+  },
+
+  "TrabajoSemanal": {
+    "title": "Asistente Digital - Trabajo Semanal",
+    "subtitle": "Únete a nuestro equipo como asistente digital. 5 horas diarias para brindar asistencia integral en atención al cliente, redes sociales y creación de contenido.",
+    "description": {
+      "title": "Descripción del trabajo",
+      "intro": "Se busca una persona responsable y creativa para brindar asistencia digital integral durante 4 horas diarias, enfocada en tres áreas principales:",
+      "customerService": {
+        "title": "Atención a clientes:",
+        "item1": "Responder mensajes, correos y consultas en redes sociales.",
+        "item2": "Mantener una comunicación cordial y profesional."
+      },
+      "socialMedia": {
+        "title": "Gestión de redes sociales:",
+        "item1": "Crear y publicar contenido atractivo y coherente con la marca.",
+        "item2": "Monitorear interacciones y mantener las cuentas activas."
+      },
+      "content": {
+        "title": "Desarrollo de manuales y videos:",
+        "item1": "Elaborar guías visuales claras sobre productos o servicios.",
+        "item2": "Crear videos cortos informativos o promocionales."
+      }
+    },
+    "requirements": {
+      "title": "Requisitos",
+      "item1": "Conexión estable a internet.",
+      "item2": "Manejo de herramientas de edición como Canva y CapCut.",
+      "item3": "Disponibilidad para trabajar en horario fijo.",
+      "item4": "Uso obligatorio de una aplicación web para registrar el tiempo trabajado y las tareas realizadas."
+    },
+    "skills": {
+      "title": "Habilidades deseadas",
+      "item1": "Buena comunicación escrita y visual.",
+      "item2": "Creatividad y atención al detalle.",
+      "item3": "Organización y responsabilidad."
+    },
+    "form": {
+      "title": "Formulario de Aplicación",
+      "nombre": "Nombre completo",
+      "nombrePlaceholder": "Tu nombre completo",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "tu@correo.com",
+      "whatsapp": "Número de WhatsApp",
+      "whatsappPlaceholder": "+58 412 1234567",
+      "horario": "Horario preferido",
+      "horarioPlaceholder": "Selecciona un horario",
+      "manana": "Mañana",
+      "tarde": "Tarde",
+      "submit": "Enviar Aplicación",
+      "sending": "Enviando...",
+      "successTitle": "¡Aplicación enviada con éxito!",
+      "successMessage": "Gracias por tu interés. Nos pondremos en contacto contigo pronto.",
+      "submitAnother": "Enviar otra aplicación"
+    }
   }
 
 }
