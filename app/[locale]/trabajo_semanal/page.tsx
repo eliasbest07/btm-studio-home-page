@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,14 +15,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { CheckCircle2 } from "lucide-react";
+import ShapeCaptcha from "@/app/components/ShapeCaptcha";
 
 const formSchema = z.object({
   nombre: z.string().min(2, {
@@ -34,15 +28,16 @@ const formSchema = z.object({
   whatsapp: z.string().min(10, {
     message: "Por favor ingresa un número de WhatsApp válido.",
   }),
-  horario: z.enum(["manana", "tarde"], {
-    required_error: "Por favor selecciona un horario.",
-  }),
 });
 
 export default function TrabajoSemanalPage() {
   const t = useTranslations("TrabajoSemanal");
+  const locale = useLocale();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [captchaSolved, setCaptchaSolved] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [hasDuplicateError, setHasDuplicateError] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,12 +45,13 @@ export default function TrabajoSemanalPage() {
       nombre: "",
       email: "",
       whatsapp: "",
-      horario: undefined,
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
+    setErrorMessage(null);
+    setHasDuplicateError(false);
 
     try {
       const response = await fetch("/api/trabajo-semanal", {
@@ -63,17 +59,47 @@ export default function TrabajoSemanalPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          ...values,
+          locale,
+          captchaVerified: captchaSolved,
+        }),
       });
+
+      const data = await response.json();
 
       if (response.ok) {
         setIsSubmitted(true);
         form.reset();
+        setCaptchaSolved(false);
+        setErrorMessage(null);
+        setHasDuplicateError(false);
       } else {
-        console.error("Error al enviar el formulario");
+        // Mostrar mensaje de error
+        setErrorMessage(data.error || "Error al enviar el formulario");
+
+        // Detectar si es un error de duplicado (409 Conflict)
+        if (response.status === 409) {
+          setHasDuplicateError(true);
+        }
+
+        // Si el error es de un campo específico, establecer el error en ese campo
+        if (data.field) {
+          form.setError(data.field as "email" | "whatsapp", {
+            type: "manual",
+            message: data.error,
+          });
+        }
+
+        console.error("Error al enviar el formulario:", data.error);
       }
     } catch (error) {
       console.error("Error:", error);
+      setErrorMessage(
+        locale === "es"
+          ? "Error de conexión. Por favor intenta de nuevo."
+          : "Connection error. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -223,7 +249,11 @@ export default function TrabajoSemanalPage() {
                 </h3>
                 <p className="text-gray-200">{t("form.successMessage")}</p>
                 <Button
-                  onClick={() => setIsSubmitted(false)}
+                  onClick={() => {
+                    setIsSubmitted(false);
+                    setErrorMessage(null);
+                    setHasDuplicateError(false);
+                  }}
                   className="mt-6"
                   variant="outline"
                 >
@@ -236,6 +266,15 @@ export default function TrabajoSemanalPage() {
                   onSubmit={form.handleSubmit(onSubmit)}
                   className="space-y-6"
                 >
+                  {/* Error Message */}
+                  {errorMessage && (
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                      <p className="text-red-300 text-sm">
+                        ⚠️ {errorMessage}
+                      </p>
+                    </div>
+                  )}
+
                   <FormField
                     control={form.control}
                     name="nombre"
@@ -269,6 +308,14 @@ export default function TrabajoSemanalPage() {
                             type="email"
                             placeholder={t("form.emailPlaceholder")}
                             {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              // Limpiar error de duplicado cuando el usuario cambia el email
+                              if (hasDuplicateError) {
+                                setHasDuplicateError(false);
+                                setErrorMessage(null);
+                              }
+                            }}
                             className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
                           />
                         </FormControl>
@@ -289,6 +336,14 @@ export default function TrabajoSemanalPage() {
                           <Input
                             placeholder={t("form.whatsappPlaceholder")}
                             {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              // Limpiar error de duplicado cuando el usuario cambia el whatsapp
+                              if (hasDuplicateError) {
+                                setHasDuplicateError(false);
+                                setErrorMessage(null);
+                              }
+                            }}
                             className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
                           />
                         </FormControl>
@@ -297,46 +352,39 @@ export default function TrabajoSemanalPage() {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="horario"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-white">
-                          {t("form.horario")}
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                              <SelectValue
-                                placeholder={t("form.horarioPlaceholder")}
-                              />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="manana">
-                              {t("form.manana")}
-                            </SelectItem>
-                            <SelectItem value="tarde">
-                              {t("form.tarde")}
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {/* CAPTCHA */}
+                  <div className="mt-8">
+                    <ShapeCaptcha
+                      onSuccess={() => setCaptchaSolved(true)}
+                      locale={locale}
+                    />
+                  </div>
 
                   <Button
                     type="submit"
-                    className="w-full bg-white text-black hover:bg-gray-200 font-semibold"
-                    disabled={isLoading}
+                    className="w-full bg-white text-black hover:bg-gray-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isLoading || !captchaSolved || hasDuplicateError}
                   >
                     {isLoading ? t("form.sending") : t("form.submit")}
                   </Button>
+
+                  {!captchaSolved && !hasDuplicateError && (
+                    <p className="text-center text-yellow-300 text-sm">
+                      {locale === "es"
+                        ? "⚠️ Completa la verificación de seguridad para enviar el formulario"
+                        : "⚠️ Complete the security verification to submit the form"
+                      }
+                    </p>
+                  )}
+
+                  {hasDuplicateError && (
+                    <p className="text-center text-red-300 text-sm font-semibold">
+                      {locale === "es"
+                        ? "⚠️ Por favor corrige el error antes de enviar nuevamente"
+                        : "⚠️ Please fix the error before submitting again"
+                      }
+                    </p>
+                  )}
                 </form>
               </Form>
             )}
